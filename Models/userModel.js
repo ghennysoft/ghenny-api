@@ -28,12 +28,6 @@ const UserSchema = mongoose.Schema(
         },
 
         // Profile Infos
-        statut: {
-            type: String,
-            enum: [
-                values
-            ]
-        },
         birthday: Date,
         city: String,
         bio: String,

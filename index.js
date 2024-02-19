@@ -12,6 +12,7 @@ app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 
 
+// mongoose.connect('mongodb://localhost:27017/SocialMedia')
 mongoose.connect('mongodb://localhost:27017/SocialMedia')
 .then(() => app.listen(5000, () => console.log('Listening')))
 .catch((error) => console.log(error));
