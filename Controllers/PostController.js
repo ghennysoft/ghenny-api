@@ -10,6 +10,15 @@ export const createPost = async (req, res) => {
     }
 }
 
+export const getAllPosts = async (req, res) => {
+    try {
+        const posts = await PostModel.find()
+        res.status(200).json(posts)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 export const getPost = async (req, res) => {
     const id = req.params.id;
     try {
@@ -46,6 +55,23 @@ export const deletePost = async (req, res) => {
             res.status(200).json('Post Deleted!')
         } else {
             res.status(403).json('Action Forbidden')
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const likePost = async (req, res) => {
+    const postId = req.params.id;
+    const {currentUserId} = req.body;
+    try {
+        const post = await PostModel.findById(postId)
+        if(!post.likes.includes(currentUserId)) {
+            await post.updateOne({$push: {likes:currentUserId}});
+            res.status(200).json('Post Liked!')
+        } else {
+            await post.updateOne({$pull: {likes:currentUserId}});
+            res.status(200).json('Post Unliked!')
         }
     } catch (error) {
         res.status(500).json(error)
