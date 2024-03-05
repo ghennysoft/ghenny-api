@@ -3,6 +3,17 @@ import { createError } from "../error.js";
 
 
 // Get a User
+export const getAllUsers = async (req, res, next) => {
+    try {
+        const users = await UserModel.find()
+        res.status(200).json(users)
+
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+
 export const getUser = async (req, res, next) => {
     const paramId = req.params.id;
 
