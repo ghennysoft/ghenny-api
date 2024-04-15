@@ -12,12 +12,12 @@ const app = express();
 dotenv.config()
 const corsOptions = {
     AccessControlAllowOrigin: "*",
-    origin: ["http://localhost:3001"],
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE"
+    origin: ["http://localhost:3000"],
+    methods: ["GET", "PUT", "POST", "DELETE"],
 }
 
 // Middleware
-app.use(cors())
+app.use(cors(corsOptions))
 app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 app.use(cookieParer())

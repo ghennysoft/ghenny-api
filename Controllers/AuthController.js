@@ -39,6 +39,10 @@ export const loginUser = async (req, res, next) => {
     const {email, password} = req.body;
     
     try {
+
+        if(!email, !password){
+            return res.status(400).json("Filled the data")
+        }
         const user = await UserModel.findOne({email:email}) 
         
         if(user) {
@@ -52,6 +56,7 @@ export const loginUser = async (req, res, next) => {
                 const {password, ...others} = user._doc
 
                 res.cookie("access_token", token, {
+                    expires: new Date(Date.now() + 25892000000),
                     httpOnly: true,
                 }).status(200).json(others)
             }
