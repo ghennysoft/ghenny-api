@@ -61,7 +61,7 @@ export const deletePost = async (req, res) => {
     }
 }
 
-export const likePost = async (req, res) => {
+export const likeDislikePost = async (req, res) => {
     const postId = req.params.id;
     const {currentUserId} = req.body;
     try {
