@@ -6,7 +6,7 @@ const router = express.Router()
 
 router.get('/', getAllUsers)
 router.get('/:id', getUser)
-router.put('/:id', verifyToken, updateUser)
+router.put('/:id', updateUser)
 router.delete('/:id', verifyToken, deleteUser)
 
 export default router

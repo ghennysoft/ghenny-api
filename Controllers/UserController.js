@@ -35,9 +35,8 @@ export const getUser = async (req, res, next) => {
 // Update User
 export const updateUser = async (req, res, next) => {
     const paramId = req.params.id;
-    const currentUserId = req.user.id;
-
-    if(paramId === currentUserId) {
+    
+    if(paramId) {
         try { 
             const user = await UserModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
             res.status(201).json(user)
