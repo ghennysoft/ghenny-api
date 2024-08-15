@@ -5,21 +5,22 @@ const UserSchema = mongoose.Schema(
         // User Infos
         username: {
             type: String,
+            trim: true,
+            unique: true,
         },
         firstname: {
             type: String,
-            required: true
+            required: true,
+            trim: true,
         },
-        // postname: {
-        //     type: String,
-        //     required: true
-        // },
         lastname: {
             type: String,
-            required: true
+            required: true,
+            trim: true,
         },
         email: {
             type: String,
+            trim: true,
         },
         phone: {
             type: String,
@@ -30,15 +31,62 @@ const UserSchema = mongoose.Schema(
             required: true
         },
 
-        // Profile Infos
-        birthday: Date,
-        city: String,
-        bio: String,
-        profilePicture: String,
-        coverPicture: String,
+
+        // Complete Infos
+        gender: {
+            type: String,
+            default: '',
+        },
+        birthday: {
+            type: Date,
+            default: '',
+        },
+        status: {
+            type: String,
+            default: '',
+        },
+        school: {
+            type: String,
+            default: '',
+        },
+        option: {
+            type: String,
+            default: '',
+        },
+        profilePicture: {
+            type: String,
+            default: '',
+        },
+
+
+        // Others Infos
+        bio: {
+            type: String,
+            default: '',
+            maxlength: 200,
+        },
+        coverPicture: {
+            type: String,
+            default: '',
+        },
         isAdmin: {
             type: Boolean,
             default: false
+        },
+        pins: [{type:mongoose.Types.ObjectId, ref: 'user'}],
+
+        // Location Infos
+        city: {
+            type: String,
+            default: '',
+        },
+        country: {
+            type: String,
+            default: '',
+        },
+        continent: {
+            type: String,
+            default: '',
         },
     },
     {timestamps: true},

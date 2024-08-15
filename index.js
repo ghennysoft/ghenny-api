@@ -14,7 +14,7 @@ const port = 5000
 dotenv.config()
 const corsOptions = {
     AccessControlAllowOrigin: "*",
-    origin: ["http://localhost:3001"],
+    origin: ["http://localhost:3000"],
     methods: ["GET", "PUT", "POST", "DELETE"],
 }
 
@@ -25,7 +25,8 @@ app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 app.use(cookieParer())
 
 
-mongoose.connect(process.env.MONGODB_LOCAL_URL)
+// mongoose.connect(process.env.MONGODB_LOCAL_URL)
+mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .then(() => {
     console.log('DB Connected');
 })
