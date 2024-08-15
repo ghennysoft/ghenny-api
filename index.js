@@ -7,12 +7,14 @@ import cookieParer from 'cookie-parser';
 import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/UserRoute.js';
 import PostRoute from './Routes/PostRoute.js';
+import UploadRoute from './Routes/Upload.js';
 
 const app = express();
+const port = 5000
 dotenv.config()
 const corsOptions = {
     AccessControlAllowOrigin: "*",
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3001"],
     methods: ["GET", "PUT", "POST", "DELETE"],
 }
 
@@ -35,6 +37,7 @@ mongoose.connect(process.env.MONGODB_LOCAL_URL)
 app.use('/api/auth', AuthRoute)
 app.use('/api/user', UserRoute)
 app.use('/api/post', PostRoute)
+app.use('/api', UploadRoute)
 
 app.use((err, req, res, next) => {
     const status = err.status || 500;
@@ -46,6 +49,6 @@ app.use((err, req, res, next) => {
     });
 })
 
-app.listen(5000, () => {
-    console.log('Connected')
+app.listen(port, () => {
+    console.log(`Server connected at ${port}`)
 })

@@ -10,10 +10,10 @@ const UserSchema = mongoose.Schema(
             type: String,
             required: true
         },
-        postname: {
-            type: String,
-            required: true
-        },
+        // postname: {
+        //     type: String,
+        //     required: true
+        // },
         lastname: {
             type: String,
             required: true
