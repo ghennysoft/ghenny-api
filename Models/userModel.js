@@ -73,8 +73,9 @@ const UserSchema = mongoose.Schema(
             type: Boolean,
             default: false
         },
-        pins: [{type:mongoose.Types.ObjectId, ref: 'user'}],
+        pins: [{type:mongoose.Types.ObjectId, ref: 'users'}],
 
+        
         // Location Infos
         city: {
             type: String,
