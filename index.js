@@ -23,6 +23,8 @@ app.use(cors(corsOptions))
 app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 app.use(cookieParer())
+// Multer path
+// app.use(express.static(__dirname, 'public'));
 
 
 mongoose.connect(process.env.MONGODB_LOCAL_URL)

@@ -2,9 +2,14 @@ import PostModel from "../Models/postModel.js"
 
 export const createPost = async (req, res) => {
     try {
-        const newPost = new PostModel(req.body);
-        await newPost.save();
-        res.status(200).json(newPost)
+        if(!req.body.content && !req.body.images) {
+            res.status(400).json('Ajoutez du contenu...')
+        } else {
+            const newPost = new PostModel(req.body);
+            await newPost.save();
+            res.status(200).json(newPost)
+        }
+        
     } catch (error) {
         res.status(500).json(error)
     }
@@ -12,7 +17,7 @@ export const createPost = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
     try {
-        const posts = await PostModel.find()
+        const posts = await PostModel.find().populate("author", "-_id username firstname lastname profilePicture studyAt domain")
         res.status(200).json(posts)
     } catch (error) {
         res.status(500).json(error)

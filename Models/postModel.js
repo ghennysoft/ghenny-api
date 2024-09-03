@@ -1,13 +1,19 @@
 import mongoose from "mongoose";
 
 const postSchema = mongoose.Schema({
-    author: {type:mongoose.Types.ObjectId, ref: 'users'},
+    author: {
+        type:mongoose.Types.ObjectId, 
+        ref: 'Users', 
+        required: true,
+    },
     content: String,
     images: {
         type: Array,
-        default: '',
     },
-    likes: [{type:mongoose.Types.ObjectId, ref: 'users'}],
+    postBg: {
+        type: String,
+    },
+    likes: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
 },
 {
     timestamps: true
