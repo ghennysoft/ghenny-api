@@ -4,9 +4,9 @@ import cloudinary from 'cloudinary'
 const router = express.Router()
 
 cloudinary.config({
-    cloud_name: '',
-    api_key: '',
-    api_secret: '',
+    cloud_name: process.env.CLOUDINARY_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
 })
 
 // Upload image
@@ -26,7 +26,7 @@ router.post('/upload', (res, req) => {
             return res.status(400).json({msg: 'File format is incorrect'})
         }
 
-        cloudinary.v2.uploader.upload(file.tempFilePath, {folder: "test"}, async(err, result)=> {
+        cloudinary.v2.uploader.upload(file.tempFilePath, {folder: "image"}, async(err, result)=> {
             if(err) throw err
             removeTmp(file.tempFilePath)
             res.json({public_id: result.public_id, url: result.secure_url})

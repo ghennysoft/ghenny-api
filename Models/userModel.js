@@ -45,11 +45,11 @@ const UserSchema = mongoose.Schema(
             type: String,
             default: '',
         },
-        school: {
+        studyAt: {
             type: String,
             default: '',
         },
-        option: {
+        domain: {
             type: String,
             default: '',
         },
