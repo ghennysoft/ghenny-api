@@ -35,40 +35,54 @@ const UserSchema = mongoose.Schema(
         // Complete Infos
         gender: {
             type: String,
-            default: '',
         },
         birthday: {
             type: Date,
-            default: '',
+            enum: ['M', 'F'],
         },
         status: {
             type: String,
-            default: '',
+            enum: ['Pupil', 'Student', 'Other'],
+            default: 'Pupil',
         },
         studyAt: {
             type: String,
-            default: '',
         },
         domain: {
             type: String,
-            default: '',
         },
         profilePicture: {
-            type: String,
-            default: '',
+            publicId: {
+                type: String,
+                required: true,
+            },
+            url: {
+                type: String,
+                required: true,
+            },
         },
 
 
         // Others Infos
         bio: {
             type: String,
-            default: '',
             maxlength: 200,
         },
         coverPicture: {
-            type: String,
-            default: '',
+            publicId: {
+                type: String,
+                required: true,
+            },
+            url: {
+                type: String,
+                required: true,
+            },
         },
+        // role: {
+        //     type: String,
+        //     enum: ['admin', 'user'],
+        //     default: 'user',
+        // },
         isAdmin: {
             type: Boolean,
             default: false
@@ -79,15 +93,12 @@ const UserSchema = mongoose.Schema(
         // Location Infos
         city: {
             type: String,
-            default: '',
         },
         country: {
             type: String,
-            default: '',
         },
         continent: {
             type: String,
-            default: '',
         },
     },
     {timestamps: true},
