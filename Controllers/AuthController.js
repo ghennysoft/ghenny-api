@@ -29,14 +29,14 @@ export const registerUser = async (req, res, next) => {
 }
 
 export const loginUser = async (req, res, next) => {
-    const {email, password} = req.body;
+    const {phone, password} = req.body;
     
     try {
 
-        if(!email, !password){
+        if(!phone || !password){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
-            const user = await UserModel.findOne({email:email}) 
+            const user = await UserModel.findOne({phone:phone})
             if(user) {
                 const validity = await bcrypt.compare(password, user.password)
                 

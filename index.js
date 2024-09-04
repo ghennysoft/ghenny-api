@@ -8,6 +8,7 @@ import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/UserRoute.js';
 import PostRoute from './Routes/PostRoute.js';
 import UploadRoute from './Routes/Upload.js';
+import MulterRoute from './Routes/Multer.js';
 
 const app = express();
 const port = 5000
@@ -24,7 +25,7 @@ app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 app.use(cookieParer())
 // Multer path
-// app.use(express.static(__dirname, 'public'));
+app.use(express.static('public'))
 
 
 mongoose.connect(process.env.MONGODB_LOCAL_URL)
@@ -41,6 +42,7 @@ app.use('/api/auth', AuthRoute)
 app.use('/api/user', UserRoute)
 app.use('/api/post', PostRoute)
 app.use('/api', UploadRoute)
+app.use('/api/local', MulterRoute)
 
 app.use((err, req, res, next) => {
     const status = err.status || 500;
