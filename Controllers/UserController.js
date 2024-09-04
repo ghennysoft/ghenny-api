@@ -2,19 +2,18 @@ import UserModel from "../Models/userModel.js";
 import { createError } from "../error.js";
 
 
-// Get a User
-export const getAllUsers = async (req, res, next) => {
+// Search users
+export const searchUsers = async (req, res) => {
     try {
-        const users = await UserModel.find()
+        const users = await UserModel.find({firstname: {$regex: req.query.firstname}}).limit(10).select("firstname lastname profilPicture")
         res.status(200).json(users)
-
     } catch (error) {
         res.status(500).json(error)
     }
 }
 
 
-export const getUser = async (req, res, next) => {
+export const getUser = async (req, res) => {
     const paramId = req.params.id;
 
     try {
@@ -33,7 +32,7 @@ export const getUser = async (req, res, next) => {
 
 
 // Update User
-export const updateUser = async (req, res, next) => {
+export const updateUser = async (req, res) => {
     const paramId = req.params.id;
     
     if(paramId) {
@@ -44,13 +43,13 @@ export const updateUser = async (req, res, next) => {
             res.status(500).json(error)
         }
     } else {
-        return next(createError(403, "Access Denied, you can only update your profile!"))
+        retur(createError(403, "Access Denied, you can only update your profile!"))
     }
 }
 
 
 // Delete User
-export const deleteUser = async (req, res, next) => {
+export const deleteUser = async (req, res) => {
     const paramId = req.params.id;
     const currentUserId = req.user.id;
 
@@ -59,9 +58,9 @@ export const deleteUser = async (req, res, next) => {
             const user = await UserModel.findByIdAndDelete(paramId);
             res.status(201).json("User deleted successfully")
         } catch (err) {
-            next(err);
+    (err);
         }
     } else {
-        return next(createError(403, "Access Denied, you can only delete your profile!"))
+        retur(createError(403, "Access Denied, you can only delete your profile!"))
     }
 }

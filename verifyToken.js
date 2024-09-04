@@ -15,19 +15,22 @@ export const verifyToken = (req, res, next) => {
 
 //Save euth data in the Header and not Cookies
 // const jwt = require("jsonwebtoken");
-// var Article = require('../model/article.model');
+// const User = require('../models/userModel');
 
-// module.exports = { checkUser: function(req, res, next) {
-//   const token = req.header("authorization");
-//   if (!token) return res.status(401).json({ message: "Auth Error" });
-
+// const authUser = (req, res, next) => {
+    
 //   try {
-//     const decoded = jwt.verify(token, "randomString");
-//     req.user = decoded.user;
-//     next();
-//   } catch (e) {
-//     console.error(e);
-//     res.status(500).send({ message: "Invalid Token" });
-//   }
+    //   const token = req.header("authorization");
+    //   if (!token) return res.status(401).json({ message: "Auth Error" });
+    //     const decoded = jwt.verify(token, process.env.JWT_KEY);
+    //     const user = User.findOne({_id:decoded.id});
+    //     req.user = user:
+    //     next();
+    //   } catch (err) {
+    //     console.error(err);
+    //     res.status(500).send({ message: err.message });
+    //   }
+    // }
 // }
-// }
+
+// module.exports = authUser
