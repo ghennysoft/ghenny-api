@@ -17,7 +17,7 @@ export const createPost = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
     try {
-        const posts = await PostModel.find().populate("author", "-_id username firstname lastname profilePicture studyAt domain")
+        const posts = await PostModel.find().sort({createdAt: 1}).populate("author", "-_id username firstname lastname profilePicture studyAt domain")
         res.status(200).json(posts)
     } catch (error) {
         res.status(500).json(error)

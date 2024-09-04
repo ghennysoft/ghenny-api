@@ -38,7 +38,7 @@ const UserSchema = mongoose.Schema(
         },
         birthday: {
             type: Date,
-            enum: ['M', 'F'],
+            enum: ['H', 'F'],
         },
         status: {
             type: String,
@@ -54,11 +54,9 @@ const UserSchema = mongoose.Schema(
         profilePicture: {
             publicId: {
                 type: String,
-                required: true,
             },
             url: {
                 type: String,
-                required: true,
             },
         },
 
@@ -71,18 +69,16 @@ const UserSchema = mongoose.Schema(
         coverPicture: {
             publicId: {
                 type: String,
-                required: true,
             },
             url: {
                 type: String,
-                required: true,
             },
         },
-        // role: {
-        //     type: String,
-        //     enum: ['admin', 'user'],
-        //     default: 'user',
-        // },
+        role: {
+            type: String,
+            enum: ['admin', 'user'],
+            default: 'user',
+        },
         isAdmin: {
             type: Boolean,
             default: false
