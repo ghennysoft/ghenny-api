@@ -15,9 +15,8 @@ export const searchUsers = async (req, res) => {
 
 export const getUser = async (req, res) => {
     const paramId = req.params.id;
-
     try {
-        const user = await UserModel.findById(paramId);
+        const user = await UserModel.findOne({username: paramId});
         if(user){
             const {password, ...other} = user._doc
             res.status(200).json(other)

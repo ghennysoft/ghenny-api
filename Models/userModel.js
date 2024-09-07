@@ -22,9 +22,16 @@ const UserSchema = mongoose.Schema(
             type: String,
             trim: true,
         },
-        phone: {
-            type: String,
-            required: true
+        contact: {
+            phone: {
+                type: String,
+            },
+            phone_code: {
+                type: String,
+            },
+            phone_code_2: {
+                type: String,
+            },
         },
         password: {
             type: String,
@@ -38,12 +45,10 @@ const UserSchema = mongoose.Schema(
         },
         birthday: {
             type: Date,
-            enum: ['H', 'F'],
         },
         status: {
             type: String,
             enum: ['Pupil', 'Student', 'Other'],
-            default: 'Pupil',
         },
         studyAt: {
             type: String,
@@ -65,6 +70,7 @@ const UserSchema = mongoose.Schema(
         bio: {
             type: String,
             maxlength: 200,
+            default:'',
         },
         coverPicture: {
             publicId: {
