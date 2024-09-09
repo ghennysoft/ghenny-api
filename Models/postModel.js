@@ -7,9 +7,18 @@ const postSchema = mongoose.Schema({
         required: true,
     },
     content: String,
-    images: {
-        type: Array,
-    },
+    // media: {
+    //     [
+    //         {
+    //             publicId: {
+    //                 type: String,
+    //             },
+    //             url: {
+    //                 type: String,
+    //             },
+    //         },
+    //     ],
+    // },
     postBg: {
         img: {
             type: String

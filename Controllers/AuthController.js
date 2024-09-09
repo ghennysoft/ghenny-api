@@ -2,17 +2,23 @@ import jwt from "jsonwebtoken";
 import UserModel from "../Models/userModel.js";
 import bcrypt from 'bcrypt'
 
-
-export const registerUser = async (req, res, next) => {
-    const {username, firstname, lastname, contact, my_password} = req.body;
+export const registerUser = async (req, res) => {
     
-    // if(!firstname, !lastname, !contact, !my_password){
-    //     res.status(400).json("Veillez remplir tous les champs")
-    // } else {
-        try {
+    try {
+        if(!req.body.username){
+            res.status(400).json("Veillez remplir le mot de passe")
+        } else {
             const salt = await bcrypt.genSalt(10)
-            const hashedPass = await bcrypt.hash(my_password, salt)
-            const newUser = new UserModel({username, firstname, lastname, contact, password:hashedPass});
+            const hashedPass = await bcrypt.hash(req.body.password, salt)
+            const newUser = new UserModel({
+                username: req.body.username, 
+                firstname: req.body.firstname, 
+                lastname: req.bodylastname, 
+                contact: req.body.contact, 
+                password: hashedPass,
+            });
+
+            console.log(req.body, hashedPass);
             
             const user = await newUser.save();
             const token = jwt.sign({id:user._id}, process.env.JWT_KEY, {expiresIn: "1h"})
@@ -20,24 +26,25 @@ export const registerUser = async (req, res, next) => {
             res.cookie("access_token", token, {
                 httpOnly: true,
             }).status(200).json(others)
-    
-        } catch (err) {
-            next(err)
-        }
-    // }
-
+        } 
+    }
+    catch (err) {
+        res.status(500).json(err)
+        console.log(err);
+    }
 }
 
 
 export const loginUser = async (req, res, next) => {
-    const {phone, password} = req.body;
+    const {contact, password} = req.body;
+    console.log(contact, password);
     
     try {
 
-        if(!phone || !password){
+        if(!contact || !password){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
-            const user = await UserModel.findOne({phone:phone})
+            const user = await UserModel.findOne({contact:contact})
             if(user) {
                 const validity = await bcrypt.compare(password, user.password)
                 
@@ -57,13 +64,10 @@ export const loginUser = async (req, res, next) => {
                 res.status(400).json("Données incorrects, réessayez!")
             }
         }
-        
-        
 
     } catch (err) {
         next(err)
     }
-
 }
 
 
@@ -72,11 +76,15 @@ export const competeUser = async (req, res) => {
     const paramId = req.params.id;
     
     if(paramId) {
-        try { 
-            const user = await UserModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
-            res.status(201).json(user)
-        } catch (error) {
-            res.status(500).json(error)
+        if(!req.body.gender, !req.body.birthday, !req.body.status, !req.body.domain){
+            return res.status(400).json("Veillez remplir tous les champs")
+        } else {
+            try { 
+                const user = await UserModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
+                res.status(201).json(user)
+            } catch (error) {
+                res.status(500).json(error)
+            }
         }
     } else {
         retur(createError(403, "Access Denied, you can only update your profile!"))
