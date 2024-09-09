@@ -48,7 +48,7 @@ export const updatePost = async (req, res) => {
     } catch (error) {
         res.status(500).json(error)
     }
-}
+} 
 
 export const deletePost = async (req, res) => {
     const postId = req.params.id;
@@ -67,10 +67,10 @@ export const deletePost = async (req, res) => {
 }
 
 export const likeDislikePost = async (req, res) => {
-    const postId = req.params.id;
-    const {currentUserId} = req.body;
+    const {currentUserId, postId} = req.body;
     try {
         const post = await PostModel.findById(postId)
+        consola.log(post)
         if(!post.likes.includes(currentUserId)) {
             await post.updateOne({$push: {likes:currentUserId}});
             res.status(200).json('Post Liked!')

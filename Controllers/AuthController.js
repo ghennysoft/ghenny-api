@@ -37,6 +37,7 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res, next) => {
     const {contact, password} = req.body;
+    console.log(req.body);
     console.log(contact, password);
     
     try {
@@ -44,7 +45,12 @@ export const loginUser = async (req, res, next) => {
         if(!contact || !password){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
-            const user = await UserModel.findOne({contact:contact})
+            const user = await UserModel.findOne({contact:{phone: contact}})
+            // const user2 = await UserModel.findOne({contact:{phone_code: contact}})
+            // const user3 = await UserModel.findOne({contact:{phone_code_2: contact}})
+            // const user = user1 || user2 || user3
+            console.log('user :', user);
+            
             if(user) {
                 const validity = await bcrypt.compare(password, user.password)
                 
@@ -72,7 +78,7 @@ export const loginUser = async (req, res, next) => {
 
 
 // Complete user infos
-export const competeUser = async (req, res) => {
+export const completeUser = async (req, res) => {
     const paramId = req.params.id;
     
     if(paramId) {
