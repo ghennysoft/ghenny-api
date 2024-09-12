@@ -2,7 +2,7 @@ import PostModel from "../Models/postModel.js"
 
 export const createPost = async (req, res) => {
     try {
-        if(!req.body.content) {
+        if(!req.body.content && !req.body.media) {
             res.status(400).json('Ajoutez du contenu...')
         } else {
             const newPost = new PostModel(req.body);
