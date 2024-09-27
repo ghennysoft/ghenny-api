@@ -14,7 +14,9 @@ export const registerUser = async (req, res) => {
                 username: req.body.username, 
                 firstname: req.body.firstname, 
                 lastname: req.body.lastname, 
-                contact: req.body.contact, 
+                phone: req.body.phone,
+                phone_code: req.body.phone_code,
+                phone_code_2: req.body.phone_code_2,
                 password: hashedPass,
             });
 

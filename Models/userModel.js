@@ -22,16 +22,17 @@ const UserSchema = mongoose.Schema(
             type: String,
             trim: true,
         },
-        contact: {
-            phone: {
-                type: String,
-            },
-            phone_code: {
-                type: String,
-            },
-            phone_code_2: {
-                type: String,
-            },
+        phone: {
+            type: String,
+            required: true
+        },
+        phone_code: {
+            type: String,
+            required: true
+        },
+        phone_code_2: {
+            type: String,
+            required: true
         },
         password: {
             type: String,
