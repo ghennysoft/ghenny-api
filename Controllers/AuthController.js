@@ -13,7 +13,7 @@ export const registerUser = async (req, res) => {
             const newUser = new UserModel({
                 username: req.body.username, 
                 firstname: req.body.firstname, 
-                lastname: req.bodylastname, 
+                lastname: req.body.lastname, 
                 contact: req.body.contact, 
                 password: hashedPass,
             });
