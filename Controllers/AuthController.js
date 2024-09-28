@@ -53,7 +53,6 @@ export const loginUser = async (req, res, next) => {
             } else {
                 user = null;
             }
-            console.log(user);
             
             if(user) {
                 const validity = await bcrypt.compare(password, user.password)
