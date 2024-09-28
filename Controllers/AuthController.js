@@ -6,7 +6,7 @@ export const registerUser = async (req, res) => {
     
     try {
         if(!req.body.username){
-            res.status(400).json("Veillez remplir le mot de passe")
+            res.status(400).json("Veillez remplir tous les champs")
         } else {
             const salt = await bcrypt.genSalt(10)
             const hashedPass = await bcrypt.hash(req.body.password, salt)
@@ -38,20 +38,22 @@ export const registerUser = async (req, res) => {
 
 
 export const loginUser = async (req, res, next) => {
-    const {contact, password} = req.body;
-    console.log(req.body);
-    console.log(contact, password);
-    
+    const {data, password} = req.body;    
     try {
-
-        if(!contact || !password){
+        if(!data || !password){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
-            const user = await UserModel.findOne({contact:{phone: contact}})
-            // const user2 = await UserModel.findOne({contact:{phone_code: contact}})
-            // const user3 = await UserModel.findOne({contact:{phone_code_2: contact}})
-            // const user = user1 || user2 || user3
-            console.log('user :', user);
+            let user;
+            if(data.slice(0, 1) === '+') {
+                user = await UserModel.findOne({phone_code: data})
+            } else if (data.slice(0, 2) === '00') {
+                user = await UserModel.findOne({phone_code_2: data})
+            } else if (data.slice(0, 1) === '0') {
+                user = await UserModel.findOne({phone: data})
+            } else {
+                user = null;
+            }
+            console.log(user);
             
             if(user) {
                 const validity = await bcrypt.compare(password, user.password)
@@ -72,7 +74,6 @@ export const loginUser = async (req, res, next) => {
                 res.status(400).json("Données incorrects, réessayez!")
             }
         }
-
     } catch (err) {
         next(err)
     }
