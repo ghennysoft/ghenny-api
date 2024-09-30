@@ -15,7 +15,7 @@ const port = 5000
 dotenv.config()
 const corsOptions = {
     AccessControlAllowOrigin: "*",
-    origin: ["http://localhost:3000", "https://ghenny.vercel.app/", "https://ghenny.onrender.com/"],
+    origin: ["http://localhost:3000", "https://ghenny.onrender.com"],
     methods: ["GET", "PUT", "POST", "DELETE"],
 }
 
