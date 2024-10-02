@@ -98,3 +98,14 @@ export const completeUser = async (req, res) => {
         retur(createError(403, "Access Denied, you can only update your profile!"))
     }
 }
+
+
+// studyAt suggestion
+export const studyAtSearch = async (req, res) => {
+    try {
+        const study = await UserModel.findOne({studyAt: {$regex: req.query.term, $options: "i"}}).select("studyAt")
+        res.status(200).json(study)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
