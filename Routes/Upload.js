@@ -1,13 +1,7 @@
 import express from 'express'
-import cloudinary from 'cloudinary'
+import cloudinary from '../cloudinary.js'
 
 const router = express.Router()
-
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET,
-})
 
 // Upload image
 router.post('/upload', (res, req) => {

@@ -20,6 +20,7 @@ const postSchema = mongoose.Schema({
         },
     },
     likes: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
+    comments: [{type:mongoose.Types.ObjectId, ref: 'Comments'}],
 },
 {
     timestamps: true

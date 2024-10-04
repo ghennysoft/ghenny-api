@@ -1,4 +1,5 @@
 import UserModel from "../Models/userModel.js";
+import cloudinary from "../cloudinary.js";
 import { createError } from "../error.js";
 
 
@@ -36,6 +37,7 @@ export const updateUser = async (req, res) => {
     
     if(paramId) {
         try { 
+            // const upload = await cloudinary.uploader.upload(req.body.image, {folder: profile})
             const user = await UserModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
             res.status(201).json(user)
         } catch (error) {
