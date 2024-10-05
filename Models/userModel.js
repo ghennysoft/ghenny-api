@@ -40,47 +40,7 @@ const UserSchema = mongoose.Schema(
         },
 
 
-        // Complete Infos
-        gender: {
-            type: String,
-        },
-        birthday: {
-            type: Date,
-        },
-        status: {
-            type: String,
-            enum: ['Pupil', 'Student', 'Other'],
-        },
-        studyAt: {
-            type: String,
-        },
-        domain: {
-            type: String,
-        },
-        profilePicture: {
-            publicId: {
-                type: String,
-            },
-            url: {
-                type: String,
-            },
-        },
-
-
         // Others Infos
-        bio: {
-            type: String,
-            maxlength: 200,
-            default:'',
-        },
-        coverPicture: {
-            publicId: {
-                type: String,
-            },
-            url: {
-                type: String,
-            },
-        },
         role: {
             type: String,
             enum: ['admin', 'user'],
@@ -90,8 +50,6 @@ const UserSchema = mongoose.Schema(
             type: Boolean,
             default: false
         },
-        pins: [{type:mongoose.Types.ObjectId, ref: 'users'}],
-
         
         // Location Infos
         city: {
