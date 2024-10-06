@@ -39,7 +39,7 @@ mongoose.connect(process.env.MONGODB_LOCAL_URL)
 
 // Usage of route
 app.use('/api/auth', AuthRoute)
-app.use('/api/user', UserRoute)
+app.use('/api/profile', UserRoute)
 app.use('/api/post', PostRoute)
 app.use('/api', UploadRoute)
 app.use('/api/local', MulterRoute)

@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const ProfileSchema = mongoose.Schema(
     {
         // User Infos
-        user: {
+        userId: {
             type:mongoose.Types.ObjectId, 
             ref: 'Users', 
             required: true,
@@ -55,5 +55,5 @@ const ProfileSchema = mongoose.Schema(
     {timestamps: true},
 )
 
-const ProfileModel = mongoose.model("Users", ProfileSchema)
+const ProfileModel = mongoose.model("Profiles", ProfileSchema)
 export default ProfileModel

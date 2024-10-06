@@ -1,4 +1,5 @@
 import UserModel from "../Models/userModel.js";
+import ProfileModel from "../Models/profileModel.js";
 import cloudinary from "../cloudinary.js";
 import { createError } from "../error.js";
 
@@ -31,17 +32,20 @@ export const getUser = async (req, res) => {
 }
 
 
-// Update User
-export const updateUser = async (req, res) => {
+// Update Profile & Complete perofile infos after register
+export const updateProfile = async (req, res) => {
     const paramId = req.params.id;
-    
+    console.log(paramId);
     if(paramId) {
-        try { 
-            // const upload = await cloudinary.uploader.upload(req.body.image, {folder: profile})
-            const user = await UserModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
-            res.status(201).json(user)
-        } catch (error) {
-            res.status(500).json(error)
+        if(!req.body.gender, !req.body.birthday, !req.body.status, !req.body.domain){
+            return res.status(400).json("Veillez remplir tous les champs")
+        } else {
+            try {
+                const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
+                res.status(201).json(profile)
+            } catch (error) {
+                res.status(500).json(error)
+            }
         }
     } else {
         retur(createError(403, "Access Denied, you can only update your profile!"))
