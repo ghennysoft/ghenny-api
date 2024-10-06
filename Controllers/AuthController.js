@@ -14,7 +14,7 @@ export const registerUser = async (req, res) => {
             if(user_name) return res.status(400).json("Le nom d'utilisateur existe déjà")
 
             // Check the password length
-            if(password.length < 6) res.status(400).json("Le mot de passe doit avoir au moins 6 caractères")
+            if(req.body.password.length < 6) res.status(400).json("Le mot de passe doit avoir au moins 6 caractères")
             
             const salt = await bcrypt.genSalt(10)
             const hashedPass = await bcrypt.hash(req.body.password, salt)
@@ -28,16 +28,17 @@ export const registerUser = async (req, res) => {
                 password: hashedPass,
             });
 
-            const user_profile = await ProfileModel.findOne({userId: newUser._id})
-            if(user_profile) return res.status(400).json("Le profile existe déjà")
+            const user_profile_exist = await ProfileModel.findOne({userId: newUser._id})
+            if(user_profile_exist) return res.status(400).json("Le profile existe déjà")
             
             const newProfile = new ProfileModel({
                 userId: newUser._id,
             });
-            
             const user = await newUser.save();
             const profile = await newProfile.save();
 
+            const user_profile = await ProfileModel.findOne({userId: newUser._id}).populate("userId", "-password")
+            
             const access_token = createAccessToken({id: newProfile._id});
             const refresh_token = createRefreshToken({id: newProfile._id});
             console.log(access_token, refresh_token);
@@ -50,8 +51,7 @@ export const registerUser = async (req, res) => {
             })
 
             res.status(200).json({
-                'user': others,
-                'profile': profile,
+                'profile': user_profile,
                 'token': access_token,
             })
         } 
@@ -79,6 +79,8 @@ export const loginUser = async (req, res, next) => {
             } else {
                 user = null;
             }
+            console.log(uer);
+            
             
             if(user) {
                 const validity = await bcrypt.compare(password, user.password)
@@ -92,6 +94,7 @@ export const loginUser = async (req, res, next) => {
                     const access_token = createAccessToken({id: profile._id});
                     const refresh_token = createRefreshToken({id: profile._id});
                     console.log(access_token, refresh_token);
+                    console.log(profile);
     
                     res.cookie("refresh_token", refresh_token, {
                         httpOnly: true,
@@ -141,10 +144,10 @@ export const generateAccessToken = async (req, res) => {
     }
 }
 const createAccessToken = (payload) => {
-    return jwt.sign(payload, process.env.ACCESS_TOKEN, {expires: "1d"})
+    return jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "1d"})
 }
 const createRefreshToken = (payload) => {
-    return jwt.sign(payload, process.env.REFRESH_TOKEN, {expires: "30d"})
+    return jwt.sign(payload, process.env.REFRESH_TOKEN, {expiresIn: "30d"})
 }
 
 

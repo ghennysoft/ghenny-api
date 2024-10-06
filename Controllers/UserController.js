@@ -15,17 +15,16 @@ export const searchUsers = async (req, res) => {
 }
 
 
-export const getUser = async (req, res) => {
+export const getProfile = async (req, res) => {
     const paramId = req.params.id;
     try {
         const user = await UserModel.findOne({username: paramId});
-        if(user){
-            const {password, ...other} = user._doc
-            res.status(200).json(other)
+        const profile = await ProfileModel.findOne({userId: user._id}).populate("userId", "-password");
+        if(profile){
+            res.status(200).json(profile)
         }else{
-            res.status(404).json("No such user exist")
+            res.status(404).json("No such profile exist")
         }
-
     } catch (error) {
         res.status(500).json(error)
     }
@@ -41,8 +40,8 @@ export const updateProfile = async (req, res) => {
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
             try {
-                const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true});
-                res.status(201).json(profile)
+                const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true}).populate("userId", "-password");
+                res.status(201).json({"profile": profile})
             } catch (error) {
                 res.status(500).json(error)
             }
