@@ -41,8 +41,6 @@ export const registerUser = async (req, res) => {
             
             const access_token = createAccessToken({id: newProfile._id});
             const refresh_token = createRefreshToken({id: newProfile._id});
-            console.log(access_token, refresh_token);
-            
 
             res.cookie("refresh_token", refresh_token, {
                 httpOnly: true,
@@ -89,68 +87,12 @@ export const loginUser = async (req, res) => {
                     const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
                     res.status(201).json({ message: "User logged in successfully", profile: profile });
                 }
-                
             }
         }
       } catch (err) {
         res.status(500).json(err)
         console.error(err);
       }
-    // try {
-    //     if(!req.body.username, !req.body.firstname, !req.body.lastname, !req.body.phone, !req.body.phone_code, !req.body.phone_code_2, !req.body.password){
-    //         res.status(400).json("Veillez remplir tous les champs")
-    //     } else {
-    //         // Check if the username already exist
-    //         const user_name = await UserModel.findOne({username: req.body.username})
-    //         if(user_name) return res.status(400).json("Le nom d'utilisateur existe déjà")
-
-    //         // Check the password length
-    //         if(req.body.password.length < 6) res.status(400).json("Le mot de passe doit avoir au moins 6 caractères")
-            
-    //         const salt = await bcrypt.genSalt(10)
-    //         const hashedPass = await bcrypt.hash(req.body.password, salt)
-    //         const newUser = new UserModel({
-    //             username: req.body.username,
-    //             firstname: req.body.firstname,
-    //             lastname: req.body.lastname,
-    //             phone: req.body.phone,
-    //             phone_code: req.body.phone_code,
-    //             phone_code_2: req.body.phone_code_2,
-    //             password: hashedPass,
-    //         });
-
-    //         const user_profile_exist = await ProfileModel.findOne({userId: newUser._id})
-    //         if(user_profile_exist) return res.status(400).json("Le profile existe déjà")
-            
-    //         const newProfile = new ProfileModel({
-    //             userId: newUser._id,
-    //         });
-    //         const user = await newUser.save();
-    //         const profile = await newProfile.save();
-
-    //         const user_profile = await ProfileModel.findOne({userId: newUser._id}).populate("userId", "-password")
-            
-    //         const access_token = createAccessToken({id: newProfile._id});
-    //         const refresh_token = createRefreshToken({id: newProfile._id});
-    //         console.log(access_token, refresh_token);
-            
-
-    //         res.cookie("refresh_token", refresh_token, {
-    //             httpOnly: true,
-    //             path: "/api/auth/refresh_token", 
-    //             maxAge: 24*30*60*60*1000,    //30days
-    //         })
-
-    //         res.status(200).json({
-    //             'profile': user_profile,
-    //             'token': access_token,
-    //         })
-    //     } 
-    // }
-    // catch (err) {
-    //     res.status(500).json(err)
-    //     console.log(err);
-    // }
 }
 
 
