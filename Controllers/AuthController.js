@@ -65,8 +65,8 @@ export const loginUser = async (req, res) => {
     const {data, password} = req.body
     
     try {
-        if(!data || !password ){
-          res.status(400).json('Remplissez tous les champs')
+        if(!data, !password){
+          res.status(400).json({message: 'Remplissez tous les champs'})
         } else {
             let user;
             if(data.slice(0, 1) == '+') {
@@ -78,14 +78,14 @@ export const loginUser = async (req, res) => {
             }
 
             if(!user){
-                res.status(400).json({message:'Incorrect password or data' }) 
+                res.status(400).json({message:'Numéro ou mot de passe incorrect' }) 
             } else {
                 const auth = await bcrypt.compare(password,user.password)
                 if (!auth) {
-                    res.status(400).json({message:'Incorrect password or data' }) 
+                    res.status(400).json({message:'Numéro ou mot de passe incorrect' }) 
                 } else {
                     const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
-                    res.status(201).json({ message: "User logged in successfully", profile: profile });
+                    res.status(201).json({profile: profile });
                 }
             }
         }
@@ -133,8 +133,27 @@ const createRefreshToken = (payload) => {
 // studyAt suggestion
 export const studyAtSearch = async (req, res) => {
     try {
-        const study = await UserModel.findOne({studyAt: {$regex: req.query.term, $options: "i"}}).select("studyAt")
-        res.status(200).json(study.studyAt)
+        if(req.query.term.trim()){
+            const study = await ProfileModel.find({studyAt: {$regex:  req.query.term, $options: "i"}}).select("studyAt -_id")
+            res.status(200).json(study)
+        } else {
+            res.status(200).json([]) 
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+
+// studyAt suggestion
+export const domainSearch = async (req, res) => {
+    try {
+        if(req.query.term.trim()){
+            const domain = await ProfileModel.find({domain: {$regex:  req.query.term, $options: "i"}}).select("domain -_id")
+            res.status(200).json(domain)
+        } else {
+            res.status(200).json([]) 
+        }
     } catch (error) {
         res.status(500).json(error)
     }
