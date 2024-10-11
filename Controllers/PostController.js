@@ -17,7 +17,26 @@ export const createPost = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
     try {
-        const posts = await PostModel.find().sort({createdAt: -1}).populate('author comments likes')
+        const posts = await PostModel.find().sort({createdAt: -1})
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture studyAt domain',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
         res.status(200).json(posts)
     } catch (error) {
         res.status(500).json(error)
@@ -30,6 +49,36 @@ export const getPost = async (req, res) => {
     const id = req.params.id;
     try {
         const post = await PostModel.findById(id)
+        res.status(200).json(post)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getUserPost = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const profile = await ProfileModel.findById(id)
+        const post = await PostModel.find({author: profile._id})
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture studyAt domain',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
         res.status(200).json(post)
     } catch (error) {
         res.status(500).json(error)

@@ -29,8 +29,8 @@ app.use(cookieParer())
 app.use(express.static('public'))
 
 
-// mongoose.connect(process.env.MONGODB_LOCAL_URL)
-mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
+mongoose.connect(process.env.MONGODB_LOCAL_URL)
+// mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .then(() => {
     console.log('DB Connected');
 })
