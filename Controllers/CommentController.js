@@ -1,29 +1,32 @@
-import CommentModel from "../Models/commentModel.js"
-import PostModel from "../Models/postModel.js"
+import CommentModel from "../Models/commentModel.js";
+import PostModel from "../Models/postModel.js";
 
 export const addComment = async (req, res) => {
+    const {author, content, reply, postId} = req.body
     try {
         if(!req.body.content) {
             res.status(400).json('Tapez votre commentaire...')
+        } else if(!req.body.postId) {
+            res.status(400).json('Post id empty...')
         } else {
-            const newComment = new CommentModel(req.body);
-            const updatePost = PostModel.findByIdAndUpdate({_id: req.body.postId}, {
-                $push: {
-                    "comments": {newComment}
-                }
-            });
-            await newComment.save();
-            res.status(200).json(newComment)
+            const newComment = new CommentModel({author, content, reply});
+            const comment = await newComment.save();
+
+            const find_post = await PostModel.findById(postId)
+            const post = await find_post.updateOne({$push: {"comments": newComment._id}})
+            res.status(200).json({message: "Commentaire ajouté avec success!"})
         }
-        
     } catch (error) {
         res.status(500).json(error)
+        console.log(error);
+        
     }
 }
 
-export const getAllPosts = async (req, res) => {
+
+export const getAllComments = async (req, res) => {
     try {
-        const posts = await CommentModel.find().sort({createdAt: -1}).populate("author", "-_id username firstname lastname profilePicture studyAt domain")
+        const posts = await CommentModel.find().sort({createdAt: -1}).populate("author author.userId")
         res.status(200).json(posts)
     } catch (error) {
         res.status(500).json(error)

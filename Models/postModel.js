@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 const postSchema = mongoose.Schema({
     author: {
         type:mongoose.Types.ObjectId, 
-        ref: 'Users', 
+        ref: 'Profiles', 
         required: true,
     },
     content: String,
@@ -19,7 +19,7 @@ const postSchema = mongoose.Schema({
             type: String
         },
     },
-    likes: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
+    likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
     comments: [{type:mongoose.Types.ObjectId, ref: 'Comments'}],
 },
 {

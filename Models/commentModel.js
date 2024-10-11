@@ -3,16 +3,15 @@ import mongoose from "mongoose";
 const commentSchema = mongoose.Schema({
     author: {
         type:mongoose.Types.ObjectId, 
-        ref: 'Users', 
+        ref: 'Profiles',
         required: true,
     },
-    post: {
-        type:mongoose.Types.ObjectId, 
-        ref: 'Posts', 
+    content: {
+        type:String,
         required: true,
     },
-    content: String,
-    likes: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
+    reply: mongoose.Types.ObjectId,
+    likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
 },
 {
     timestamps: true

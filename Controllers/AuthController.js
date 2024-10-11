@@ -4,7 +4,6 @@ import ProfileModel from "../Models/profileModel.js";
 import bcrypt from 'bcrypt'
 
 export const registerUser = async (req, res) => {
-    
     try {
         if(!req.body.username, !req.body.firstname, !req.body.lastname, !req.body.phone, !req.body.phone_code, !req.body.phone_code_2, !req.body.password){
             res.status(400).json("Veillez remplir tous les champs")
@@ -63,7 +62,6 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {  
     const {data, password} = req.body
-    
     try {
         if(!data, !password){
           res.status(400).json({message: 'Remplissez tous les champs'})
@@ -82,17 +80,17 @@ export const loginUser = async (req, res) => {
             } else {
                 const auth = await bcrypt.compare(password,user.password)
                 if (!auth) {
-                    res.status(400).json({message:'Numéro ou mot de passe incorrect' }) 
+                    res.status(400).json({message:'Numéro ou mot de passe incorrect'})
                 } else {
                     const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
                     res.status(201).json({profile: profile });
                 }
             }
         }
-      } catch (err) {
+    } catch (err) {
         res.status(500).json(err)
         console.error(err);
-      }
+    }
 }
 
 

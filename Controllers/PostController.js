@@ -1,4 +1,5 @@
 import PostModel from "../Models/postModel.js"
+import ProfileModel from "../Models/profileModel.js";
 
 export const createPost = async (req, res) => {
     try {
@@ -9,7 +10,6 @@ export const createPost = async (req, res) => {
             await newPost.save();
             res.status(200).json(newPost)
         }
-        
     } catch (error) {
         res.status(500).json(error)
     }
@@ -17,10 +17,12 @@ export const createPost = async (req, res) => {
 
 export const getAllPosts = async (req, res) => {
     try {
-        const posts = await PostModel.find().sort({createdAt: -1}).populate("author", "-_id username firstname lastname profilePicture studyAt domain")
+        const posts = await PostModel.find().sort({createdAt: -1}).populate('author comments likes')
         res.status(200).json(posts)
     } catch (error) {
         res.status(500).json(error)
+        console.log(error);
+        
     }
 }
 
@@ -70,7 +72,7 @@ export const likeDislikePost = async (req, res) => {
     const {currentUserId, postId} = req.body;
     try {
         const post = await PostModel.findById(postId)
-        consola.log(post)
+        console.log(post)
         if(!post.likes.includes(currentUserId)) {
             await post.updateOne({$push: {likes:currentUserId}});
             res.status(200).json('Post Liked!')
@@ -121,4 +123,4 @@ export const getTimelinePosts = async (req, res) => {
     } catch (error) {
       res.status(500).json(error);
     }
-  };
+};
