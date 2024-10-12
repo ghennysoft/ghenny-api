@@ -2,24 +2,21 @@ import CommentModel from "../Models/commentModel.js";
 import PostModel from "../Models/postModel.js";
 
 export const addComment = async (req, res) => {
-    const {author, content, reply, postId} = req.body
     try {
         if(!req.body.content) {
             res.status(400).json('Tapez votre commentaire...')
         } else if(!req.body.postId) {
             res.status(400).json('Post id empty...')
         } else {
-            const newComment = new CommentModel({author, content, reply});
-            const comment = await newComment.save();
+            const newComment = new CommentModel(req.body);
+            await newComment.save();
 
-            const find_post = await PostModel.findById(postId)
-            const post = await find_post.updateOne({$push: {"comments": newComment._id}})
+            const find_post = await PostModel.findById(req.body.postId)
+            await find_post.updateOne({$push: {"comments": newComment._id}})
             res.status(200).json({message: "Commentaire ajouté avec success!"})
         }
     } catch (error) {
         res.status(500).json(error)
-        console.log(error);
-        
     }
 }
 

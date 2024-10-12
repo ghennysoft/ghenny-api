@@ -1,14 +1,41 @@
-import PostModel from "../Models/postModel.js"
+import QuestionModel from "../Models/questionModel.js"
+import SubjectModel from "../Models/subjectModel.js"
 import ProfileModel from "../Models/profileModel.js";
 
-export const createPost = async (req, res) => {
+export const addSubject = async (req, res) => {
+    try {
+        if(!req.body.name) {
+            res.status(400).json('Ajoutez un sujet...')
+        } else {
+            const newSubject = new SubjectModel(req.body);
+            await newSubject.save();
+            res.status(200).json(newSubject)
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getSubjects = async (req, res) => {
+    try {
+        const subjects = await SubjectModel.find().select('_id name')
+        res.status(200).json(subjects)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+
+
+
+export const addQuestion = async (req, res) => {
     try {
         if(!req.body.content && !req.body.media) {
             res.status(400).json('Ajoutez du contenu...')
         } else {
-            const newPost = new PostModel(req.body);
-            await newPost.save();
-            res.status(200).json(newPost)
+            const newQuestion = new QuestionModel(req.body);
+            await newQuestion.save();
+            res.status(200).json(newQuestion)
         }
     } catch (error) {
         res.status(500).json(error)

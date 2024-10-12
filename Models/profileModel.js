@@ -50,7 +50,8 @@ const ProfileSchema = mongoose.Schema(
                 type: String,
             },
         },
-        pins: [{type:mongoose.Types.ObjectId, ref: 'users'}],
+        pins: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
+        subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
     },
     {timestamps: true},
 )

@@ -7,6 +7,7 @@ import cookieParer from 'cookie-parser';
 import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/UserRoute.js';
 import PostRoute from './Routes/PostRoute.js';
+import QuestionRoute from './Routes/QuestionRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import UploadRoute from './Routes/Upload.js';
 import MulterRoute from './Routes/Multer.js';
@@ -29,8 +30,8 @@ app.use(cookieParer())
 app.use(express.static('public'))
 
 
-mongoose.connect(process.env.MONGODB_LOCAL_URL)
-// mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
+// mongoose.connect(process.env.MONGODB_LOCAL_URL)
+mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .then(() => {
     console.log('DB Connected');
 })
@@ -43,6 +44,7 @@ app.use('/api/auth', AuthRoute)
 app.use('/api/profile', UserRoute)
 app.use('/api/post', PostRoute)
 app.use('/api/comment', CommentRoute)
+app.use('/api/question', QuestionRoute)
 app.use('/api', UploadRoute)
 app.use('/api/local', MulterRoute)
 
