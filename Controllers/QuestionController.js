@@ -25,6 +25,22 @@ export const getSubjects = async (req, res) => {
     }
 }
 
+export const addUserSubject = async (req, res) => {
+    try {
+        if(!req.body.subjects) {
+            res.status(400).json('Ajoutez des sujets...')
+        } else if(!req.body.profileId) {
+            res.status(400).json('Profile non défini')
+        } else {
+            const profile = await ProfileModel.findById(req.body.profileId).populate('userId', '-password')
+            await profile.updateOne({$push: {"subjects": req.body.subjects}})
+            res.status(200).json(profile)
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 
 
 
