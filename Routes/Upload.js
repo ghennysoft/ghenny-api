@@ -1,7 +1,29 @@
 import express from 'express'
 import cloudinary from '../cloudinary.js'
+import multer from "multer"
 
 const router = express.Router()
+
+const storage = multer.diskStorage({
+    destination: (req, res, cb) => {
+        cb(null, "public/images");
+    },
+    filename: (req, file, cb) => {
+        cb(null, `img-${Date.now()}.${file.originalname}`);
+    },
+});
+
+const isImage = (req, res, cb) => {
+        if(res.mimetype.startsWith('image')){
+            cb(null, true);
+        } else {
+            cb(new Error('Only images is allowed'));
+        };
+    };
+const upload = multer({
+    storage: storage,
+    fileFilter: isImage,
+})
 
 // Upload image
 router.post('/upload', (res, req) => {
@@ -39,7 +61,7 @@ router.post('/destroy', (req, res) => {
 
         cloudinary.v2.uploader.destroy(public_id, async(err, result)=> {
             if(err) throw err
-            res.json({msg: 'Image deleted'})
+            res.status(201).json({msg: 'Image deleted'})
         })
     } catch (error) {
         return res.status(500)._construct({msg: error.message})
@@ -52,4 +74,4 @@ const removeTmp = (path) => {
     })
 }
 
-export default router
+export default router           
