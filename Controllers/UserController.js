@@ -16,7 +16,7 @@ export const searchUsers = async (req, res) => {
 
 
 export const getProfile = async (req, res) => {
-    const paramId = req.params.id;
+    const paramId = req.params.id;    
     try {
         const user = await UserModel.findOne({username: paramId});
         const profile = await ProfileModel.findOne({userId: user._id}).populate("userId", "-password");

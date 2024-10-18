@@ -32,8 +32,9 @@ export const addUserSubject = async (req, res) => {
         } else if(!req.body.profileId) {
             res.status(400).json('Profile non défini')
         } else {
+            const subjects = await SubjectModel.find().select('-_id name')
             const profile = await ProfileModel.findById(req.body.profileId).populate('userId', '-password')
-            await profile.updateOne({$push: {"subjects": req.body.subjects}})
+            await profile.updateOne({$push: {"subjects": [...req.body.subjects]}})
             res.status(200).json(profile)
         }
     } catch (error) {
@@ -41,12 +42,9 @@ export const addUserSubject = async (req, res) => {
     }
 }
 
-
-
-
 export const addQuestion = async (req, res) => {
     try {
-        if(!req.body.content && !req.body.media) {
+        if(!req.body.content) {
             res.status(400).json('Ajoutez du contenu...')
         } else {
             const newQuestion = new QuestionModel(req.body);
@@ -58,33 +56,23 @@ export const addQuestion = async (req, res) => {
     }
 }
 
-export const getAllPosts = async (req, res) => {
+export const getQuestions = async (req, res) => {
     try {
-        const posts = await PostModel.find().sort({createdAt: -1})
-        .populate({
-            path: 'comments',
-            populate: {
-                path: 'author',
-                select: 'userId profilePicture status studyAt domain',
-                populate: {
-                    path: 'userId',
-                    select: 'username firstname lastname',
-                }
-            }
-        })
-        .populate({
-            path: 'author',
-            select: 'userId profilePicture status studyAt domain',
-            populate: {
-                path: 'userId',
-                select: 'username firstname lastname',
-            }
-        })
-        res.status(200).json(posts)
+        const questions = await QuestionModel.find().sort({createdAt: -1})
+        // .populate({
+        //     path: 'comments',
+        //     populate: {
+        //         path: 'author',
+        //         select: 'userId profilePicture status studyAt domain',
+        //         populate: {
+        //             path: 'userId',
+        //             select: 'username firstname lastname',
+        //         }
+        //     }
+        // })
+        res.status(200).json(questions)
     } catch (error) {
         res.status(500).json(error)
-        console.log(error);
-        
     }
 }
 

@@ -52,7 +52,7 @@ const ProfileSchema = mongoose.Schema(
         },
         pins: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
         subjects: {
-            type: [],
+            type: [{type: String}],
         },
     },
     {timestamps: true},
