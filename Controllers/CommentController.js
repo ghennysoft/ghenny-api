@@ -54,7 +54,6 @@ export const deleteComment = async (req, res) => {
 
 export const likeDislikeComment = async (req, res) => {
     const {currentUserId, commentId} = req.body;
-    console.log(currentUserId, commentId);
     
     try {
         const comment = await CommentModel.findById(commentId)

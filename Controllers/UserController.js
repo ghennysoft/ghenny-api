@@ -31,20 +31,39 @@ export const getProfile = async (req, res) => {
 }
 
 
-// Update Profile & Complete perofile infos after register
-export const updateProfile = async (req, res) => {
+// Complete profile infos after register
+export const completeProfile = async (req, res) => {
     const paramId = req.params.id;
-    console.log(paramId);
+    console.log({paramId, 'data': req.body});
+    
     if(paramId) {
         if(!req.body.gender, !req.body.birthday, !req.body.status, !req.body.domain){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
             try {
-                const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}, {new:true}).populate("userId", "-password");
+                const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}).populate("userId", "-password");
                 res.status(201).json({"profile": profile})
             } catch (error) {
                 res.status(500).json(error)
             }
+        }
+    } else {
+        retur(createError(403, "Access Denied, you can only update your profile!"))
+    }
+}
+
+
+// Update Profile
+export const updateProfile = async (req, res) => {
+    const paramId = req.params.id;
+    console.log({paramId, 'data': req.body});
+    
+    if(paramId) {
+        try {
+            const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}).populate("userId", "-password");
+            res.status(200).json(profile)
+        } catch (error) {
+            res.status(500).json(error)
         }
     } else {
         retur(createError(403, "Access Denied, you can only update your profile!"))
