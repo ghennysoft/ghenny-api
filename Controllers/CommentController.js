@@ -20,34 +20,14 @@ export const addComment = async (req, res) => {
     }
 }
 
-
-export const getAllComments = async (req, res) => {
-    try {
-        const comments = await CommentModel.find().sort({createdAt: -1}).populate("author")
-        res.status(200).json(comments)
-    } catch (error) {
-        res.status(500).json(error)
-    }
-}
-
-export const getPost = async (req, res) => {
-    const id = req.params.id;
-    try {
-        const post = await CommentModel.findById(id)
-        res.status(200).json(post)
-    } catch (error) {
-        res.status(500).json(error)
-    }
-}
-
-export const updatePost = async (req, res) => {
-    const postId = req.params.id;
+export const updateComment = async (req, res) => {
+    const commentId = req.params.id;
     const {currentUserId} = req.body;
     try {
-        const post = await CommentModel.findById(postId)
-        if(post.userId === currentUserId) {
-            await post.updateOne({$set:req.body})
-            res.status(200).json('Post Updated!')
+        const comment = await CommentModel.findById(commentId)
+        if(comment.userId === currentUserId) {
+            await comment.updateOne({$set:req.body})
+            res.status(200).json('Comment Updated!')
         } else {
             res.status(403).json('Action Forbidden')
         }
@@ -56,14 +36,14 @@ export const updatePost = async (req, res) => {
     }
 } 
 
-export const deletePost = async (req, res) => {
-    const postId = req.params.id;
+export const deleteComment = async (req, res) => {
+    const commentId = req.params.id;
     const {currentUserId} = req.body;
     try {
-        const post = await CommentModel.findById(postId)
-        if(post.userId === currentUserId) {
-            await post.deleteOne();
-            res.status(200).json('Post Deleted!')
+        const comment = await CommentModel.findById(commentId)
+        if(comment.userId === currentUserId) {
+            await comment.deleteOne();
+            res.status(200).json('Comment Deleted!')
         } else {
             res.status(403).json('Action Forbidden')
         }
@@ -72,17 +52,18 @@ export const deletePost = async (req, res) => {
     }
 }
 
-export const likeDislikePost = async (req, res) => {
-    const {currentUserId, postId} = req.body;
+export const likeDislikeComment = async (req, res) => {
+    const {currentUserId, commentId} = req.body;
+    console.log(currentUserId, commentId);
+    
     try {
-        const post = await CommentModel.findById(postId)
-        consola.log(post)
-        if(!post.likes.includes(currentUserId)) {
-            await post.updateOne({$push: {likes:currentUserId}});
-            res.status(200).json('Post Liked!')
+        const comment = await CommentModel.findById(commentId)
+        if(!comment.likes.includes(currentUserId)) {
+            await comment.updateOne({$push: {likes:currentUserId}});
+            res.status(200).json({msg: 'Comment Liked!', comment: comment})
         } else {
-            await post.updateOne({$pull: {likes:currentUserId}});
-            res.status(200).json('Post Unliked!')
+            await comment.updateOne({$pull: {likes:currentUserId}});
+            res.status(200).json({msg: 'Comment Unliked!', comment: comment})
         }
     } catch (error) {
         res.status(500).json(error)
