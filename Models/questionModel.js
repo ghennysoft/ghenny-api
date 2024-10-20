@@ -6,10 +6,10 @@ const questionSchema = mongoose.Schema({
         ref: 'Profiles', 
         required: true,
     },
-    subject: [{
+    subjects: [{
         type:mongoose.Types.ObjectId, 
         ref: 'Subjects', 
-        required: true,
+        // required: true,
     }],
     content: String,
     // answers: [{type:mongoose.Types.ObjectId, ref: 'Comments'}],

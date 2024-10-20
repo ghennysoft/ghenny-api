@@ -43,6 +43,8 @@ export const addUserSubject = async (req, res) => {
 }
 
 export const addQuestion = async (req, res) => {
+    console.log(req.body);
+    
     try {
         if(!req.body.content) {
             res.status(400).json('Ajoutez du contenu...')
@@ -59,17 +61,14 @@ export const addQuestion = async (req, res) => {
 export const getQuestions = async (req, res) => {
     try {
         const questions = await QuestionModel.find().sort({createdAt: -1})
-        // .populate({
-        //     path: 'comments',
-        //     populate: {
-        //         path: 'author',
-        //         select: 'userId profilePicture status studyAt domain',
-        //         populate: {
-        //             path: 'userId',
-        //             select: 'username firstname lastname',
-        //         }
-        //     }
-        // })
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
         res.status(200).json(questions)
     } catch (error) {
         res.status(500).json(error)

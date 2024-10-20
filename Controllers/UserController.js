@@ -56,8 +56,6 @@ export const completeProfile = async (req, res) => {
 // Update Profile
 export const updateProfile = async (req, res) => {
     const paramId = req.params.id;
-    console.log({paramId, 'data': req.body});
-    
     if(paramId) {
         try {
             const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}).populate("userId", "-password");
