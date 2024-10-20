@@ -23,8 +23,8 @@ export const addComment = async (req, res) => {
 
 export const getAllComments = async (req, res) => {
     try {
-        const posts = await CommentModel.find().sort({createdAt: -1}).populate("author")
-        res.status(200).json(posts)
+        const comments = await CommentModel.find().sort({createdAt: -1}).populate("author")
+        res.status(200).json(comments)
     } catch (error) {
         res.status(500).json(error)
     }
