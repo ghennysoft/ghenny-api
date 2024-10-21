@@ -12,8 +12,9 @@ const questionSchema = mongoose.Schema({
         // required: true,
     }],
     content: String,
-    // answers: [{type:mongoose.Types.ObjectId, ref: 'Comments'}],
-    // likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
+    answers: [{type:mongoose.Types.ObjectId, ref: 'Answers'}],
+    likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
+    dislikes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
 },
 {
     timestamps: true
