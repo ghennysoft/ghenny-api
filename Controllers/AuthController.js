@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
 import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
+// import SchoolModel from "../Models/schoolModel.js";
 import bcrypt from 'bcrypt'
+
 
 export const registerUser = async (req, res) => {
     try {
@@ -128,22 +130,40 @@ const createRefreshToken = (payload) => {
 }
 
 
-// studyAt suggestion
-export const studyAtSearch = async (req, res) => {
-    try {
-        if(req.query.term.trim()){
-            const study = await ProfileModel.find({studyAt: {$regex:  req.query.term, $options: "i"}}).select("studyAt -_id")
-            res.status(200).json(study)
-        } else {
-            res.status(200).json([]) 
-        }
-    } catch (error) {
-        res.status(500).json(error)
-    }
-}
+// export const addSchool = async (req, res) => {
+//     try {
+//         if(!req.body.name) {
+//             res.status(400).json('Ajoutez une ecole...')
+//         } else if(!req.body.type) {
+//             res.status(400).json('Renseignez un type...')
+//         } else {
+//             const newSchool = new SchoolModel(req.body);
+//             await newSchool.save();
+//             res.status(200).json(newSchool)
+//         }
+//     } catch (error) {
+//         res.status(500).json(error)
+//     }
+// }
 
 
 // studyAt suggestion
+// export const studyAtSearch = async (req, res) => {
+//     try {
+//         if(req.query.term.trim()){
+//             const schools = await SchoolModel.find({name: {$regex:  req.query.term, $options: "i"}}).select("name -_id")
+//             res.status(200).json(schools)
+//         } else {
+//             res.status(200).json([]) 
+//         }
+//     } catch (error) {
+//         res.status(500).json(error)
+//     }
+// }
+
+
+// studyAt suggestion
+
 export const domainSearch = async (req, res) => {
     try {
         if(req.query.term.trim()){

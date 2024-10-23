@@ -9,7 +9,6 @@ import UserRoute from './Routes/UserRoute.js';
 import PostRoute from './Routes/PostRoute.js';
 import QuestionRoute from './Routes/QuestionRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
-import UploadRoute from './Routes/Upload.js';
 import MulterRoute from './Routes/Multer.js';
 
 const app = express();
@@ -45,8 +44,7 @@ app.use('/api/profile', UserRoute)
 app.use('/api/post', PostRoute)
 app.use('/api/comment', CommentRoute)
 app.use('/api/question', QuestionRoute)
-app.use('/api', UploadRoute)
-app.use('/api/local', MulterRoute)
+app.use('/api', MulterRoute)
 
 app.use((err, req, res, next) => {
     const status = err.status || 500;

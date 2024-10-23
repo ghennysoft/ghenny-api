@@ -72,19 +72,11 @@ export const updateProfile = async (req, res) => {
 // Update Profile & Complete perofile infos after register
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
-    
-    const result = await cloudinary.uploader.upload(req.body.image, {
-        folder: profile,
-    })
-
     if(paramId) {
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {profilePicture: {
-                    publicId: result.public_id,
-                    url: result.secure_url,
-                }}
-            }, {new:true});
+                $set: {profilePicture: req.body.image}
+            });
             res.status(201).json({"picture": picture})
         } catch (error) {
             res.status(500).json(error)

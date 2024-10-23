@@ -41,8 +41,6 @@ export const getAllPosts = async (req, res) => {
         res.status(200).json(posts)
     } catch (error) {
         res.status(500).json(error)
-        console.log(error);
-        
     }
 }
 
@@ -122,7 +120,6 @@ export const likeDislikePost = async (req, res) => {
     const {currentUserId, postId} = req.body;
     try {
         const post = await PostModel.findById(postId)
-        console.log(post)
         if(!post.likes.includes(currentUserId)) {
             await post.updateOne({$push: {likes:currentUserId}});
             res.status(200).json('Post Liked!')
@@ -171,11 +168,10 @@ export const getTimelinePosts = async (req, res) => {
         })
         );
     } catch (error) {
-        console.log(error);
-        
       res.status(500).json(error);
     }
 };
+
 // export const getTimelinePosts = async (req, res) => {
 //     const userId = req.params.id;
   
