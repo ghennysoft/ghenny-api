@@ -43,8 +43,6 @@ export const addUserSubject = async (req, res) => {
 }
 
 export const addQuestion = async (req, res) => {
-    console.log(req.body);
-    
     try {
         if(!req.body.content) {
             res.status(400).json('Ajoutez du contenu...')
@@ -69,6 +67,17 @@ export const getQuestions = async (req, res) => {
                 select: 'username firstname lastname',
             }
         })
+        .populate({
+            path: 'answers',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
         res.status(200).json(questions)
     } catch (error) {
         res.status(500).json(error)
@@ -79,13 +88,32 @@ export const getSingleQuestion = async (req, res) => {
     const id = req.params.id;
     try {
         const question = await QuestionModel.findById(id)
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        .populate({
+            path: 'answers',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
         res.status(200).json(question)
     } catch (error) {
         res.status(500).json(error)
     }
 }
 
-export const getUserPost = async (req, res) => {
+export const getUserQuestion = async (req, res) => {
     const id = req.params.id;
     try {
         const profile = await ProfileModel.findById(id)
@@ -115,7 +143,7 @@ export const getUserPost = async (req, res) => {
     }
 }
 
-export const updatePost = async (req, res) => {
+export const updateQuestion = async (req, res) => {
     const postId = req.params.id;
     const {currentUserId} = req.body;
     try {
@@ -131,7 +159,7 @@ export const updatePost = async (req, res) => {
     }
 } 
 
-export const deletePost = async (req, res) => {
+export const deleteQuestion = async (req, res) => {
     const postId = req.params.id;
     const {currentUserId} = req.body;
     try {
@@ -147,7 +175,7 @@ export const deletePost = async (req, res) => {
     }
 }
 
-export const likeDislikePost = async (req, res) => {
+export const likeDislikeQuestion = async (req, res) => {
     const {currentUserId, postId} = req.body;
     try {
         const post = await PostModel.findById(postId)
@@ -202,4 +230,4 @@ export const getTimelinePosts = async (req, res) => {
     } catch (error) {
       res.status(500).json(error);
     }
-};
+}

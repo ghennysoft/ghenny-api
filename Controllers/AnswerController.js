@@ -12,8 +12,13 @@ export const addAnswer = async (req, res) => {
             await newAnswer.save();
 
             const find_question = await QuestionModel.findById(req.body.questionId)
-            await find_question.updateOne({$push: {"Answers": newAnswer._id}})
-            res.status(200).json({message: "Reponse ajouté avec success!", answer: newAnswer})
+            await find_question.updateOne({$push: {"answers": newAnswer._id}})
+            find_question.save()
+            res.status(200).json({
+                message: "Reponse ajouté avec success!", 
+                answer: newAnswer,
+                question: find_question,
+            })
         }
     } catch (error) {
         res.status(500).json(error)
