@@ -78,6 +78,10 @@ export const getQuestions = async (req, res) => {
                 }
             }
         })
+        .populate({
+            path: 'subjects',
+            select: '_id name',
+        })
         res.status(200).json(questions)
     } catch (error) {
         res.status(500).json(error)
@@ -106,6 +110,10 @@ export const getSingleQuestion = async (req, res) => {
                     select: 'username firstname lastname',
                 }
             }
+        })
+        .populate({
+            path: 'subjects',
+            select: '_id name',
         })
         res.status(200).json(question)
     } catch (error) {

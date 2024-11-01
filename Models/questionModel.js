@@ -6,12 +6,8 @@ const questionSchema = mongoose.Schema({
         ref: 'Profiles', 
         required: true,
     },
-    subjects: [{
-        type:mongoose.Types.ObjectId, 
-        ref: 'Subjects', 
-        // required: true,
-    }],
     content: String,
+    subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
     answers: [{type:mongoose.Types.ObjectId, ref: 'Answers'}],
     likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
     dislikes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
