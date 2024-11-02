@@ -183,17 +183,45 @@ export const deleteQuestion = async (req, res) => {
     }
 }
 
-export const likeDislikeQuestion = async (req, res) => {
-    const {currentUserId, postId} = req.body;
+export const likeQuestion = async (req, res) => {
+    const {currentUserId, questionId} = req.body;
+    
     try {
-        const post = await PostModel.findById(postId)
-        console.log(post)
-        if(!post.likes.includes(currentUserId)) {
-            await post.updateOne({$push: {likes:currentUserId}});
-            res.status(200).json('Post Liked!')
+        const question = await QuestionModel.findById(questionId)
+        if(!question.likes.includes(currentUserId)) {
+            if(!question.dislikes.includes(currentUserId)) {
+                await question.updateOne({$push: {likes:currentUserId}});
+                res.status(200).json('Question push Like!')
+            } else {
+                await question.updateOne({$pull: {dislikes:currentUserId}});
+                await question.updateOne({$push: {likes:currentUserId}});
+                res.status(200).json('Question pull dislike & push like!')
+            }
         } else {
-            await post.updateOne({$pull: {likes:currentUserId}});
-            res.status(200).json('Post Unliked!')
+            await question.updateOne({$pull: {likes:currentUserId}});
+            res.status(200).json('Question pull like!')
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const dislikeQuestion = async (req, res) => {
+    const {currentUserId, questionId} = req.body;
+    try {
+        const question = await QuestionModel.findById(questionId)
+        if(!question.dislikes.includes(currentUserId)) {
+            if(!question.likes.includes(currentUserId)) {
+                await question.updateOne({$push: {dislikes:currentUserId}});
+                res.status(200).json('Question push dislike!')
+            } else {
+                await question.updateOne({$pull: {likes:currentUserId}});
+                await question.updateOne({$push: {dislikes:currentUserId}});
+                res.status(200).json('Question pull like & push dislike!')
+            }
+        } else {
+            await question.updateOne({$pull: {dislikes:currentUserId}});
+            res.status(200).json('Question pull dislike!')
         }
     } catch (error) {
         res.status(500).json(error)
