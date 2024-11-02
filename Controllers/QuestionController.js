@@ -121,6 +121,41 @@ export const getSingleQuestion = async (req, res) => {
     }
 }
 
+export const getSubjectQuestions = async (req, res) => {
+    const id = req.params.id;
+    console.log(id);
+    
+    try {
+        const question = await QuestionModel.find({subjects: {$in: id}})
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        .populate({
+            path: 'answers',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'subjects',
+            select: '_id name',
+        })
+        res.status(200).json(question)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 export const getUserQuestion = async (req, res) => {
     const id = req.params.id;
     try {
