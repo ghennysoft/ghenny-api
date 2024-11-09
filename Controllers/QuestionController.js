@@ -61,7 +61,7 @@ export const getQuestions = async (req, res) => {
         const questions = await QuestionModel.find().sort({createdAt: -1})
         .populate({
             path: 'author',
-            select: 'userId profilePicture',
+            select: 'userId profilePicture -_id',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',

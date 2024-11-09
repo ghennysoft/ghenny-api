@@ -3,6 +3,7 @@ import ProfileModel from "../Models/profileModel.js";
 import mongoose from "mongoose";
 
 export const createPost = async (req, res) => {
+    console.log(req.body);
     try {
         if(!req.body.content && !req.body.media) {
             res.status(400).json('Ajoutez du contenu...')
@@ -134,43 +135,47 @@ export const likeDislikePost = async (req, res) => {
 
 // Get Timeline POsts
 export const getTimelinePosts = async (req, res) => {
-    const {id} = req.body;
+    const {id} = req.params;
   
     try {
-      const currentUserPosts = await PostModel.find({ author: id });
-      const followingPosts = await ProfileModel.aggregate([
-        {
-          $match: {
-            _id: new mongoose.Types.ObjectId(id),
-          },
-        },
-        {
-          $lookup: {
-            from: "Posts",
-            localField: "studyAt",
-            foreignField: "author.studyAt",
-            as: "followingPosts",
-          },
-        },
-        {
-          $project: {
-            followingPosts: 1,
-            _id: 0,
-          },
-        },
-      ]);
+        const currentUser = await ProfileModel.findById(id);
+        const sameUser = await ProfileModel.find({$or: [{studyAt: currentUser.studyAt}, {domain: currentUser.domain}]}).select('_id userId gender status studyAt domain gender')
+        res.status(200).json(sameUser);
+    //   const currentUser = await ProfileModel.findById(id);
+    //   const followingPosts = await ProfileModel.aggregate([
+    //     {
+    //       $match: {
+    //         _id: new mongoose.Types.ObjectId(id),
+    //       },
+    //     },
+    //     {
+    //       $lookup: {
+    //         from: "Posts",
+    //         localField: "studyAt",
+    //         foreignField: "author.studyAt",
+    //         as: "followingPosts",
+    //       },
+    //     },
+    //     {
+    //       $project: {
+    //         followingPosts: 1,
+    //         _id: 0,
+    //       },
+    //     },
+    //   ]);
   
-      res
-        .status(200)
-        .json(currentUserPosts.concat(...followingPosts[0].followingPosts)
-        .sort((a,b)=>{
-            return b.createdAt - a.createdAt;
-        })
-        );
+    //   res
+    //     .status(200)
+    //     .json(currentUserPosts.concat(...followingPosts[0].followingPosts)
+    //     .sort((a,b)=>{
+    //         return b.createdAt - a.createdAt;
+    //     })
+    //     );
     } catch (error) {
       res.status(500).json(error);
     }
 };
+
 
 // export const getTimelinePosts = async (req, res) => {
 //     const userId = req.params.id;

@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
 import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
-// import SchoolModel from "../Models/schoolModel.js";
 import bcrypt from 'bcrypt'
 
 
@@ -61,7 +60,6 @@ export const registerUser = async (req, res) => {
     }
 }
 
-
 export const loginUser = async (req, res) => {  
     const {data, password} = req.body
     try {
@@ -95,7 +93,6 @@ export const loginUser = async (req, res) => {
     }
 }
 
-
 export const logout = async (req, res) => {
     try {
         res.clearCookie('refresh_token', {path: "/api/auth/refresh_token"})
@@ -104,7 +101,6 @@ export const logout = async (req, res) => {
         
     }
 }
-
 
 export const generateAccessToken = async (req, res) => {
     try {
@@ -129,49 +125,11 @@ const createRefreshToken = (payload) => {
     return jwt.sign(payload, process.env.REFRESH_TOKEN, {expiresIn: "30d"})
 }
 
-
-// export const addSchool = async (req, res) => {
-//     try {
-//         if(!req.body.name) {
-//             res.status(400).json('Ajoutez une ecole...')
-//         } else if(!req.body.type) {
-//             res.status(400).json('Renseignez un type...')
-//         } else {
-//             const newSchool = new SchoolModel(req.body);
-//             await newSchool.save();
-//             res.status(200).json(newSchool)
-//         }
-//     } catch (error) {
-//         res.status(500).json(error)
-//     }
-// }
-
-
-// studyAt suggestion
-// export const studyAtSearch = async (req, res) => {
-//     try {
-//         if(req.query.term.trim()){
-//             const schools = await SchoolModel.find({name: {$regex:  req.query.term, $options: "i"}}).select("name -_id")
-//             res.status(200).json(schools)
-//         } else {
-//             res.status(200).json([]) 
-//         }
-//     } catch (error) {
-//         res.status(500).json(error)
-//     }
-// }
-
-
-// studyAt suggestion
-
-export const domainSearch = async (req, res) => {
+export const completeProfileSuggestions = async (req, res) => {
     try {
-        if(req.query.term.trim()){
-            const domain = await ProfileModel.find({domain: {$regex:  req.query.term, $options: "i"}}).select("domain -_id")
-            res.status(200).json(domain)
-        } else {
-            res.status(200).json([]) 
-        }
+        const studyAt = await ProfileModel.distinct('studyAt')
+        const domain = await ProfileModel.distinct('domain')
+        res.status(200).json({studyAt, domain})
     } catch (error) {
         res.status(500).json(error)
     }

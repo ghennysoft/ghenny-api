@@ -1,10 +1,11 @@
 import express from 'express'
 import {  } from '../Controllers/CommentController.js'
-import { addAnswer } from '../Controllers/AnswerController.js'
+import { addAnswer, dislikeAnswer, likeAnswer } from '../Controllers/AnswerController.js'
 
 const router = express.Router()
 
 router.post('/add', addAnswer)
-// router.put('/like', likeDislikeComment)
+router.post('/like', likeAnswer)
+router.post('/dislike', dislikeAnswer)
 
 export default router
