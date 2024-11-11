@@ -1,14 +1,38 @@
 import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
-import cloudinary from "../cloudinary.js";
 import { createError } from "../error.js";
 
 
-// Search users
-export const searchUsers = async (req, res) => {
+// Search data
+export const searchData = async (req, res) => {
     try {
-        const users = await UserModel.find({firstname: {$regex: req.query.firstname}}).limit(10).select("firstname lastname profilPicture")
-        res.status(200).json(users)
+        const userProfile = await UserModel.aggregate([
+            {
+                $match: {
+                $or: [
+                    {firstname: {$regex: req.query.q, $options: 'i'}},
+                    {lastname: {$regex: req.query.q, $options: 'i'}},
+                ],
+                },
+            },
+            {
+                $lookup: {
+                from: "Profiles",
+                localField: "_id",
+                foreignField: "userId",
+                as: "profile",
+                },
+            },
+            {
+                $project: {
+                username: 1,
+                firstname: 1,
+                lastname: 1,
+                profile: 1,
+                },
+            },
+        ]);          
+        res.status(200).json(userProfile)
     } catch (error) {
         res.status(500).json(error)
     }

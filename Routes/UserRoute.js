@@ -1,10 +1,10 @@
 import express from 'express'
-import { completeProfile, deleteUser, getProfile, searchUsers, updatePicture, updateProfile } from '../Controllers/UserController.js'
+import { completeProfile, deleteUser, getProfile, searchData, updatePicture, updateProfile } from '../Controllers/UserController.js'
 import { verifyToken } from '../verifyToken.js'
 
 const router = express.Router()
 
-router.get('/search', searchUsers)
+router.get('/search', searchData)
 router.get('/:id', getProfile)
 router.put('/complete/:id', completeProfile)
 router.put('/:id', updateProfile)
