@@ -6,32 +6,14 @@ import { createError } from "../error.js";
 // Search data
 export const searchData = async (req, res) => {
     try {
-        const userProfile = await UserModel.aggregate([
-            {
-                $match: {
-                $or: [
-                    {firstname: {$regex: req.query.q, $options: 'i'}},
-                    {lastname: {$regex: req.query.q, $options: 'i'}},
-                ],
-                },
-            },
-            {
-                $lookup: {
-                from: "Profiles",
-                localField: "_id",
-                foreignField: "userId",
-                as: "profile",
-                },
-            },
-            {
-                $project: {
-                username: 1,
-                firstname: 1,
-                lastname: 1,
-                profile: 1,
-                },
-            },
-        ]);          
+        const userProfile = await UserModel.find({
+            $or: [
+                {firstname: {$regex: req.query.q, $options: 'i'}},
+                {lastname: {$regex: req.query.q, $options: 'i'}},
+            ],
+        })
+        .select('username firstname lastname')
+        .populate('profileId', 'profilePicture')
         res.status(200).json(userProfile)
     } catch (error) {
         res.status(500).json(error)
@@ -57,15 +39,16 @@ export const getProfile = async (req, res) => {
 
 // Complete profile infos after register
 export const completeProfile = async (req, res) => {
-    const paramId = req.params.id;
+    const {profileId, userId} = req.params;
 
-    if(paramId) {
-        if(!req.body.gender, !req.body.birthday, !req.body.status, !req.body.domain){
+    if(profileId) {
+        if(!req.body.gender, !req.body.birthday, !req.body.status){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
             try {
-                const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}).populate("userId", "-password");
-                res.status(200).json({"profile": profile})
+                const user = await UserModel.findByIdAndUpdate(userId, {$set: {profileId: profileId}})
+                const profile = await ProfileModel.findByIdAndUpdate(profileId, {$set: req.body}).populate("userId", "-password");
+                res.status(200).json({"profile": profile, "user": user})
             } catch (error) {
                 res.status(500).json(error)
             }

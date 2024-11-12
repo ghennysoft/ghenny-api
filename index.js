@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParer from 'cookie-parser';
 import AuthRoute from './Routes/AuthRoute.js';
-import UserRoute from './Routes/UserRoute.js';
+import UserRoute from './Routes/ProfileRoute.js';
 import PostRoute from './Routes/PostRoute.js';
 import QuestionRoute from './Routes/QuestionRoute.js';
 import AnswerRoute from './Routes/AnswerRoute.js';

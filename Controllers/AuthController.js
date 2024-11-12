@@ -34,8 +34,9 @@ export const registerUser = async (req, res) => {
             const newProfile = new ProfileModel({
                 userId: newUser._id,
             });
-            const user = await newUser.save();
-            const profile = await newProfile.save();
+
+            await newUser.save();
+            await newProfile.save();
 
             const user_profile = await ProfileModel.findOne({userId: newUser._id}).populate("userId", "-password")
             

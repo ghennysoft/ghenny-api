@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 
 const ProfileSchema = mongoose.Schema(
     {
-        // User Infos
+        // User id
         userId: {
             type:mongoose.Types.ObjectId, 
             ref: 'Users', 
@@ -10,21 +10,51 @@ const ProfileSchema = mongoose.Schema(
         },
 
         // Complete Infos
+        status: {
+            type: String,
+            enum: ['Pupil', 'Student', 'Other'],
+        },
+
+        school: {
+            type: String,
+        },
+        option: {
+            type: String,
+        },
+        school_start_year: {
+            type: Number,
+        },
+        school_end_year: {
+            type: Number,
+        },
+
+        university: {
+            type: String,
+        },
+        filiere: {
+            type: String,
+        },
+        university_start_year: {
+            type: Number,
+        },
+        university_end_year: {
+            type: Number,
+        },
+
+        entreprise: {
+            type: String,
+        },
+        profession: {
+            type: String,
+        },
+        
+        
+        // Others Infos
         gender: {
             type: String,
         },
         birthday: {
             type: Date,
-        },
-        status: {
-            type: String,
-            enum: ['Pupil', 'Student', 'Other'],
-        },
-        studyAt: {
-            type: String,
-        },
-        domain: {
-            type: String,
         },
         profilePicture: {
             publicId: {
@@ -34,14 +64,6 @@ const ProfileSchema = mongoose.Schema(
                 type: String,
             },
         },
-
-
-        // Others Infos
-        bio: {
-            type: String,
-            maxlength: 200,
-            default:'',
-        },
         coverPicture: {
             publicId: {
                 type: String,
@@ -50,7 +72,12 @@ const ProfileSchema = mongoose.Schema(
                 type: String,
             },
         },
-        pins: [{type:mongoose.Types.ObjectId, ref: 'Users'}],
+        bio: {
+            type: String,
+            maxlength: 200,
+            default:'',
+        },
+        pins: [{type:mongoose.Types.ObjectId}],
         subjects: {
             type: [{type: String}],
         },

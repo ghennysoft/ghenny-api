@@ -2,6 +2,13 @@ import mongoose from "mongoose";
 
 const UserSchema = mongoose.Schema(
     {
+        // Profile id
+        profileId: {
+            type:mongoose.Types.ObjectId, 
+            ref: 'Profiles', 
+            // required: true,
+        },
+
         // User Infos
         username: {
             type: String,
