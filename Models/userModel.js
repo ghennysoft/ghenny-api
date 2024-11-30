@@ -62,6 +62,9 @@ const UserSchema = mongoose.Schema(
         city: {
             type: String,
         },
+        region: {
+            type: String,
+        },
         country: {
             type: String,
         },

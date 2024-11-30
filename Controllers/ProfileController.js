@@ -1,12 +1,14 @@
 import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
 import { createError } from "../error.js";
+import PostModel from "../Models/postModel.js";
 
 
 // Search data
 export const searchData = async (req, res) => {
     try {
-        const userProfile = await UserModel.find({
+        // Search user
+        const profiles = await UserModel.find({
             $or: [
                 {firstname: {$regex: req.query.q, $options: 'i'}},
                 {lastname: {$regex: req.query.q, $options: 'i'}},
@@ -14,7 +16,11 @@ export const searchData = async (req, res) => {
         })
         .select('username firstname lastname')
         .populate('profileId', 'profilePicture')
-        res.status(200).json(userProfile)
+
+        // Search post
+        const posts = await PostModel.find({content: {$regex: req.query.q, $options: 'i'}})
+
+        res.status(200).json({profiles, posts})
     } catch (error) {
         res.status(500).json(error)
     }

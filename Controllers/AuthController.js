@@ -50,7 +50,7 @@ export const registerUser = async (req, res) => {
             })
 
             res.status(200).json({
-                'profile': user_profile,
+                'profile': user_profile._id,
                 'token': access_token,
             })
         } 
@@ -84,7 +84,7 @@ export const loginUser = async (req, res) => {
                     res.status(400).json({message:'Numéro ou mot de passe incorrect'})
                 } else {
                     const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
-                    res.status(201).json({profile: profile });
+                    res.status(201).json({profile: profile._id });
                 }
             }
         }

@@ -1,11 +1,10 @@
 import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
-import mongoose from "mongoose";
+// import mongoose from "mongoose";
 
 export const createPost = async (req, res) => {
-    console.log(req.body);
     try {
-        if(!req.body.content && !req.body.media) {
+        if(!req.body.content && req.body.media.length===0) {
             res.status(400).json('Ajoutez du contenu...')
         } else {
             const newPost = new PostModel(req.body);
@@ -24,7 +23,7 @@ export const getAllPosts = async (req, res) => {
             path: 'comments',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture status studyAt domain',
+                select: 'userId profilePicture status school option university filiere profession entreprise',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -33,7 +32,7 @@ export const getAllPosts = async (req, res) => {
         })
         .populate({
             path: 'author',
-            select: 'userId profilePicture status studyAt domain',
+            select: 'userId profilePicture status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
@@ -49,6 +48,25 @@ export const getPost = async (req, res) => {
     const id = req.params.id;
     try {
         const post = await PostModel.findById(id)
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture status school option university filiere profession entreprise',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture status school option university filiere profession entreprise',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
         res.status(200).json(post)
     } catch (error) {
         res.status(500).json(error)
@@ -59,12 +77,12 @@ export const getUserPost = async (req, res) => {
     const id = req.params.id;
     try {
         const profile = await ProfileModel.findById(id)
-        const post = await PostModel.find({author: profile._id})
+        const post = await PostModel.find({author: profile._id}).sort({createdAt: -1})
         .populate({
             path: 'comments',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture studyAt domain',
+                select: 'userId profilePicture status school option university filiere profession entreprise',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -73,7 +91,7 @@ export const getUserPost = async (req, res) => {
         })
         .populate({
             path: 'author',
-            select: 'userId profilePicture studyAt domain',
+            select: 'userId profilePicture status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
