@@ -26,7 +26,6 @@ export const searchData = async (req, res) => {
     }
 }
 
-
 export const getProfile = async (req, res) => {
     const paramId = req.params.id;  
     try {
@@ -41,7 +40,6 @@ export const getProfile = async (req, res) => {
         res.status(500).json(error)
     }
 }
-
 
 // Complete profile infos after register
 export const completeProfile = async (req, res) => {
@@ -64,7 +62,6 @@ export const completeProfile = async (req, res) => {
     }
 }
 
-
 // Update Profile
 export const updateProfile = async (req, res) => {
     const paramId = req.params.id;
@@ -79,7 +76,6 @@ export const updateProfile = async (req, res) => {
         retur(createError(403, "Access Denied, you can only update your profile!"))
     }
 }
-
 
 // Update Profile & Complete perofile infos after register
 export const updatePicture = async (req, res) => {

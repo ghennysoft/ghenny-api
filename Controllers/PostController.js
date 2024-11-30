@@ -151,46 +151,55 @@ export const likeDislikePost = async (req, res) => {
     }
 }
 
-// Get Timeline POsts
+// Get Timeline Posts
 export const getTimelinePosts = async (req, res) => {
     const {id} = req.params;
   
     try {
+        let sameUser;
         const currentUser = await ProfileModel.findById(id);
-        const sameUser = await ProfileModel.find({$or: [{studyAt: currentUser.studyAt}, {domain: currentUser.domain}]}).select('_id userId gender status studyAt domain gender')
-        res.status(200).json(sameUser);
-    //   const currentUser = await ProfileModel.findById(id);
-    //   const followingPosts = await ProfileModel.aggregate([
-    //     {
-    //       $match: {
-    //         _id: new mongoose.Types.ObjectId(id),
-    //       },
-    //     },
-    //     {
-    //       $lookup: {
-    //         from: "Posts",
-    //         localField: "studyAt",
-    //         foreignField: "author.studyAt",
-    //         as: "followingPosts",
-    //       },
-    //     },
-    //     {
-    //       $project: {
-    //         followingPosts: 1,
-    //         _id: 0,
-    //       },
-    //     },
-    //   ]);
-  
-    //   res
-    //     .status(200)
-    //     .json(currentUserPosts.concat(...followingPosts[0].followingPosts)
-    //     .sort((a,b)=>{
-    //         return b.createdAt - a.createdAt;
-    //     })
-    //     );
+        if(currentUser.status==='Pupil'){
+            sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}]}).select('_id userId gender status school option')
+        }
+        else if(currentUser.status==='Student'){
+            sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}]}).select('_id userId gender status university filiere')
+        }
+        else{
+            sameUser = null;
+        }
+        let idArr = [];
+        sameUser.forEach(item=>{
+            idArr.push(item._id)
+        })
+
+        let userFeed;
+        if(idArr.length!==0){
+            userFeed = await PostModel.find({author: {$in: idArr}}).sort({createdAt: -1})
+            .populate({
+                path: 'comments',
+                populate: {
+                    path: 'author',
+                    select: 'userId profilePicture status school option university filiere profession entreprise',
+                    populate: {
+                        path: 'userId',
+                        select: 'username firstname lastname',
+                    }
+                }
+            })
+            .populate({
+                path: 'author',
+                select: 'userId profilePicture status school option university filiere profession entreprise',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            })
+        }
+        res.status(200).json({userFeed});
     } catch (error) {
       res.status(500).json(error);
+      console.log(error);
+      
     }
 };
 
