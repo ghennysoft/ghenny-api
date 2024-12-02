@@ -77,10 +77,9 @@ const ProfileSchema = mongoose.Schema(
             maxlength: 200,
             default:'',
         },
-        pins: [{type:mongoose.Types.ObjectId}],
-        subjects: {
-            type: [{type: String}],
-        },
+        followings: [{type:mongoose.Types.ObjectId}],
+        followers: [{type:mongoose.Types.ObjectId}],
+        subjects: {type:mongoose.Types.ObjectId, ref: 'Subjects'},
     },
     {timestamps: true},
 )

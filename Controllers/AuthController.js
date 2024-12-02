@@ -26,6 +26,11 @@ export const registerUser = async (req, res) => {
                 phone_code: req.body.phone_code,
                 phone_code_2: req.body.phone_code_2,
                 password: hashedPass,
+                
+                city: req.body.city,
+                region: req.body.region,
+                country: req.body.country,
+                continent: req.body.continent,
             });
 
             const user_profile_exist = await ProfileModel.findOne({userId: newUser._id})

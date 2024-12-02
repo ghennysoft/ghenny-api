@@ -95,7 +95,6 @@ export const updatePicture = async (req, res) => {
     }
 }
 
-
 // Delete User
 export const deleteUser = async (req, res) => {
     const paramId = req.params.id;
@@ -110,5 +109,24 @@ export const deleteUser = async (req, res) => {
         }
     } else {
         retur(createError(403, "Access Denied, you can only delete your profile!"))
+    }
+}
+
+export const followUnfollowUser = async (req, res) => {
+    const {currentUserId, foreignUserId} = req.body;
+    try {
+        const currentProfile = await ProfileModel.findById(currentUserId)
+        const foreignProfile = await ProfileModel.findById(foreignUserId)
+        if(!currentProfile.followings.includes(foreignUserId)) {
+            await currentProfile.updateOne({$push: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$push: {followers:currentUserId}});
+            res.status(200).json('Profile pinned')
+        } else {
+            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
+            res.status(200).json('Profile unpinned!')
+        }
+    } catch (error) {
+        res.status(500).json(error)
     }
 }

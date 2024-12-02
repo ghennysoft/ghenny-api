@@ -159,14 +159,15 @@ export const getTimelinePosts = async (req, res) => {
         let sameUser;
         const currentUser = await ProfileModel.findById(id);
         if(currentUser.status==='Pupil'){
-            sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}]}).select('_id userId gender status school option')
+            sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}, {_id: [...currentUser.followings]}]}).populate('userId', 'firstname lastname')
         }
         else if(currentUser.status==='Student'){
-            sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}]}).select('_id userId gender status university filiere')
+            sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}, {_id: [...currentUser.followings]}]}).populate('userId', 'firstname lastname')
         }
         else{
             sameUser = null;
         }
+
         let idArr = [];
         sameUser.forEach(item=>{
             idArr.push(item._id)
@@ -195,7 +196,7 @@ export const getTimelinePosts = async (req, res) => {
                 }
             })
         }
-        res.status(200).json({userFeed});
+        res.status(200).json({idArr, userFeed});
     } catch (error) {
       res.status(500).json(error);
       console.log(error);
