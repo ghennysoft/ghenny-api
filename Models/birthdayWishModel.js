@@ -1,21 +1,26 @@
 import mongoose from "mongoose";
 
-const wishSchema = mongoose.Schema({
+const birthdayWishSchema = mongoose.Schema({
     user: {
         type:mongoose.Types.ObjectId, 
-        ref: 'Users', 
+        ref: 'Profiles', 
         required: true,
     },
-    postBg: [{
+    year: {
+        type: String,
+        required: true,
+    },
+    posts: [{
         author: {
             type:mongoose.Types.ObjectId, 
-            ref: 'Users', 
+            ref: 'Profiles', 
             required: true,
         },
         video: {
             type: String,
+            required: true,
         },
-        date: {
+        created_at: {
             type: Date,
             default: Date.now(),
         },
@@ -25,5 +30,5 @@ const wishSchema = mongoose.Schema({
     timestamps: true,
 });
 
-const WishModel = mongoose.model("Wishes", wishSchema)
-export default WishModel
+const birthdayWishModel = mongoose.model("birthdayWishes", birthdayWishSchema)
+export default birthdayWishModel

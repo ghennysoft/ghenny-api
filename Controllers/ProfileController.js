@@ -2,6 +2,7 @@ import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
 import { createError } from "../error.js";
 import PostModel from "../Models/postModel.js";
+import birthdayWishModel from "../Models/birthdayWishModel.js";
 
 
 // Search data
@@ -62,6 +63,19 @@ export const completeProfile = async (req, res) => {
     }
 }
 
+// Suggest studyAt infos in register
+export const suggestStudyAt = async (req, res) => {
+    try {
+        // Search user
+        const schools = await ProfileModel.find({school: {$regex: req.query.q, $options: 'i'}}).select('school')
+        const universities = await ProfileModel.find({university: {$regex: req.query.q, $options: 'i'}}).select('university')
+
+        res.status(200).json({schools, universities})
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 // Update Profile
 export const updateProfile = async (req, res) => {
     const paramId = req.params.id;
@@ -113,7 +127,7 @@ export const deleteUser = async (req, res) => {
 }
 
 export const followUnfollowUser = async (req, res) => {
-    const {currentUserId, foreignUserId} = req.body;
+    const {currentUserId, foreignUserId} = req.body;    
     try {
         const currentProfile = await ProfileModel.findById(currentUserId)
         const foreignProfile = await ProfileModel.findById(foreignUserId)
@@ -128,5 +142,34 @@ export const followUnfollowUser = async (req, res) => {
         }
     } catch (error) {
         res.status(500).json(error)
+    }
+}
+
+export const postBirthdayWish = async (req, res) => {
+    console.log(req.body);
+    
+    try {
+        const findWish = await birthdayWishModel.findOne({
+            $and: [
+                {user: req.body.mainUserId},
+                {year: req.body.year},
+            ],
+        })
+
+        if(findWish){
+            await findWish.updateOne({$push: {posts: req.body.post}});
+            res. status(200).json(findWish)
+        } else {
+            const addWish = new birthdayWishModel({
+                user: req.body.mainUserId,
+                year: req.body.year,
+                posts: [req.body.post],
+            })
+            await addWish.save()
+            res. status(200).json(addWish)
+        }
+    } catch (error) {
+        res.status(500).json(error)
+        console.log(error);
     }
 }
