@@ -79,7 +79,7 @@ const ProfileSchema = mongoose.Schema(
         },
         followings: [{type:mongoose.Types.ObjectId}],
         followers: [{type:mongoose.Types.ObjectId}],
-        subjects: {type:mongoose.Types.ObjectId, ref: 'Subjects'},
+        subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
     },
     {timestamps: true},
 )

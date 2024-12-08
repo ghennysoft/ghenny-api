@@ -11,6 +11,7 @@ const questionSchema = mongoose.Schema({
     answers: [{type:mongoose.Types.ObjectId, ref: 'Answers'}],
     likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
     dislikes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
+    viewers: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
 },
 {
     timestamps: true

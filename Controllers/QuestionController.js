@@ -57,8 +57,10 @@ export const addQuestion = async (req, res) => {
 }
 
 export const getQuestions = async (req, res) => {
+    const {userId} = req.params
     try {
-        const questions = await QuestionModel.find().sort({createdAt: -1})
+        const getUser = await ProfileModel.findById(userId)
+        const questions = await QuestionModel.find({subjects: {$in: getUser.subjects}}).sort({createdAt: -1})
         .populate({
             path: 'author',
             select: 'userId profilePicture -_id',
@@ -89,7 +91,7 @@ export const getQuestions = async (req, res) => {
 }
 
 export const getSingleQuestion = async (req, res) => {
-    const id = req.params.id;
+    const {id, userId} = req.params;
     try {
         const question = await QuestionModel.findById(id)
         .populate({
@@ -115,6 +117,14 @@ export const getSingleQuestion = async (req, res) => {
             path: 'subjects',
             select: '_id name',
         })
+
+        // Add viewer
+        if(userId){
+            if(!question.viewers.includes(userId)) {
+                await question.updateOne({$push: {viewers:userId}});
+            }
+        }
+        
         res.status(200).json(question)
     } catch (error) {
         res.status(500).json(error)

@@ -8,10 +8,10 @@ router.post('/subject/add', addSubject)
 router.get('/subject/all', getSubjects)
 
 router.post('/add', addQuestion)
-router.get('/all', getQuestions)
 router.post('/like', likeQuestion)
 router.post('/dislike', dislikeQuestion)
-router.get('/:id', getSingleQuestion)
+router.get('/all/:userId', getQuestions)
+router.get('/:id/:userId', getSingleQuestion)
 router.get('/subject/:id', getSubjectQuestions)
 
 export default router

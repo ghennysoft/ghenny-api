@@ -66,11 +66,12 @@ export const completeProfile = async (req, res) => {
 // Suggest studyAt infos in register
 export const suggestStudyAt = async (req, res) => {
     try {
-        // Search user
-        const schools = await ProfileModel.find({school: {$regex: req.query.q, $options: 'i'}}).select('school')
-        const universities = await ProfileModel.find({university: {$regex: req.query.q, $options: 'i'}}).select('university')
+        const schools = await ProfileModel.distinct('school')
+        const options = await ProfileModel.distinct('option')
+        const universities = await ProfileModel.distinct('university')
+        const filieres = await ProfileModel.distinct('filiere')
 
-        res.status(200).json({schools, universities})
+        res.status(200).json({schools, options, universities, filieres})
     } catch (error) {
         res.status(500).json(error)
     }
@@ -146,8 +147,6 @@ export const followUnfollowUser = async (req, res) => {
 }
 
 export const postBirthdayWish = async (req, res) => {
-    console.log(req.body);
-    
     try {
         const findWish = await birthdayWishModel.findOne({
             $and: [
@@ -168,6 +167,20 @@ export const postBirthdayWish = async (req, res) => {
             await addWish.save()
             res. status(200).json(addWish)
         }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getBirthdayWishes = async (req, res) => {    
+    try {
+        const wishes = await birthdayWishModel.findOne({
+            $and: [
+                {user: req.params.userId},
+                {year: req.params.year},
+            ],
+        })
+        res.status(200).json(wishes)
     } catch (error) {
         res.status(500).json(error)
         console.log(error);
