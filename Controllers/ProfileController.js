@@ -3,6 +3,7 @@ import ProfileModel from "../Models/profileModel.js";
 import { createError } from "../error.js";
 import PostModel from "../Models/postModel.js";
 import birthdayWishModel from "../Models/birthdayWishModel.js";
+import QuestionModel from "../Models/questionModel.js";
 
 
 // Search data
@@ -21,7 +22,10 @@ export const searchData = async (req, res) => {
         // Search post
         const posts = await PostModel.find({content: {$regex: req.query.q, $options: 'i'}})
 
-        res.status(200).json({profiles, posts})
+        // Search question
+        const questions = await QuestionModel.find({content: {$regex: req.query.q, $options: 'i'}})
+
+        res.status(200).json({profiles, posts, questions})
     } catch (error) {
         res.status(500).json(error)
     }
