@@ -190,3 +190,60 @@ export const getBirthdayWishes = async (req, res) => {
         console.log(error);
     }
 }
+
+export const getUserData = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const profile = await ProfileModel.findById(id)
+
+        const posts = await PostModel.find({author: profile._id}).sort({createdAt: -1})
+        .populate({
+            path: 'comments',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture status school option university filiere profession entreprise',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture status school option university filiere profession entreprise',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+
+        const questions = await QuestionModel.find({author: profile._id}).sort({createdAt: -1})
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture -_id',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        .populate({
+            path: 'answers',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'subjects',
+            select: '_id name',
+        })
+
+        res.status(200).json({posts, questions})
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}

@@ -1,16 +1,11 @@
 import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
-// import mongoose from "mongoose";
 
 export const createPost = async (req, res) => {
     try {
-        if(!req.body.content && req.body.media.length===0) {
-            res.status(400).json('Ajoutez du contenu...')
-        } else {
-            const newPost = new PostModel(req.body);
-            await newPost.save();
-            res.status(200).json(newPost)
-        }
+        const newPost = new PostModel(req.body);
+        await newPost.save();
+        res.status(200).json(newPost)
     } catch (error) {
         res.status(500).json(error)
     }
@@ -48,36 +43,6 @@ export const getPost = async (req, res) => {
     const id = req.params.id;
     try {
         const post = await PostModel.findById(id)
-        .populate({
-            path: 'comments',
-            populate: {
-                path: 'author',
-                select: 'userId profilePicture status school option university filiere profession entreprise',
-                populate: {
-                    path: 'userId',
-                    select: 'username firstname lastname',
-                }
-            }
-        })
-        .populate({
-            path: 'author',
-            select: 'userId profilePicture status school option university filiere profession entreprise',
-            populate: {
-                path: 'userId',
-                select: 'username firstname lastname',
-            }
-        })
-        res.status(200).json(post)
-    } catch (error) {
-        res.status(500).json(error)
-    }
-}
-
-export const getUserPost = async (req, res) => {
-    const id = req.params.id;
-    try {
-        const profile = await ProfileModel.findById(id)
-        const post = await PostModel.find({author: profile._id}).sort({createdAt: -1})
         .populate({
             path: 'comments',
             populate: {
