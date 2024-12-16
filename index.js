@@ -3,7 +3,7 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import cookieParer from 'cookie-parser';
+import cookieParser from 'cookie-parser';
 import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/ProfileRoute.js';
 import PostRoute from './Routes/PostRoute.js';
@@ -25,13 +25,13 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
-app.use(cookieParer())
+app.use(cookieParser())
 // Multer path
 app.use(express.static('public'))
 
 
-mongoose.connect(process.env.MONGODB_LOCAL_URL)
-// mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
+// mongoose.connect(process.env.MONGODB_LOCAL_URL)
+mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .then(() => {
     console.log('DB Connected');
 })

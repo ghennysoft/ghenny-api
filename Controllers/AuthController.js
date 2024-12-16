@@ -49,7 +49,9 @@ export const registerUser = async (req, res) => {
             const refresh_token = createRefreshToken({id: newProfile._id});
 
             res.cookie("refresh_token", refresh_token, {
-                httpOnly: true,
+                httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+                sameSite: "strict", // CSRF attacks cross-site request forgery attacks
+                secure: process.env.NODE_ENV !== "development",
                 path: "/api/auth/refresh_token", 
                 maxAge: 24*30*60*60*1000,    //30days
             })
@@ -89,20 +91,35 @@ export const loginUser = async (req, res) => {
                     res.status(400).json({message:'Numéro ou mot de passe incorrect'})
                 } else {
                     const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
-                    res.status(201).json({profile: profile });
+                    
+                    const access_token = createAccessToken({id: profile._id});
+                    const refresh_token = createRefreshToken({id: profile._id});
+                    res.cookie("refresh_token", refresh_token, {
+                        httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+                        sameSite: "strict", // CSRF attacks cross-site request forgery attacks
+                        secure: process.env.NODE_ENV !== "development",
+                        path: "/api/auth/refresh_token", 
+                        maxAge: 24*30*60*60*1000,    //30days
+                    })
+
+                    res.status(200).json({
+                        'profile': profile,
+                        'token': access_token,
+                    })
                 }
             }
         }
+    
     } catch (err) {
         res.status(500).json(err)
         console.error(err);
     }
 }
 
-export const logout = async (req, res) => {
+export const logoutUser = async (req, res) => {
     try {
-        res.clearCookie('refresh_token', {path: "/api/auth/refresh_token"})
-        res.json('Vous êtes deconnecté')
+        res.clearCookie('refresh_token', {maxAge: 0, path: "/api/auth/refresh_token"})
+        res.status(200).json('Vous êtes deconnecté')
     } catch (err) {
         
     }

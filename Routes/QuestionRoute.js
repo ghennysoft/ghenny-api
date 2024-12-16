@@ -1,5 +1,5 @@
 import express from 'express'
-import { addQuestion, addSubject, addUserSubject, dislikeQuestion, getQuestions, getSingleQuestion, getSubjectQuestions, getSubjects, likeQuestion } from '../Controllers/QuestionController.js'
+import { addQuestion, addSubject, addUserSubject, dislikeQuestion, getQuestions, getSingleQuestion, getSubjectQuestions, getSubjects, getUserQuestions, likeQuestion } from '../Controllers/QuestionController.js'
 
 const router = express.Router()
 
@@ -11,6 +11,7 @@ router.post('/add', addQuestion)
 router.post('/like', likeQuestion)
 router.post('/dislike', dislikeQuestion)
 router.get('/all/:userId', getQuestions)
+router.get('/user/:userId', getUserQuestions)
 router.get('/:id/:userId', getSingleQuestion)
 router.get('/subject/:id', getSubjectQuestions)
 

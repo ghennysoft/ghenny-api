@@ -1,6 +1,6 @@
 import express from 'express'
 import { completeProfile, deleteUser, followUnfollowUser, getBirthdayWishes, getProfile, postBirthdayWish, searchData, suggestStudyAt, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
-import { verifyToken } from '../verifyToken.js'
+import verifyToken from '../verifyToken.js'
 
 const router = express.Router()
 

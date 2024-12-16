@@ -90,6 +90,40 @@ export const getQuestions = async (req, res) => {
     }
 }
 
+export const getUserQuestions = async (req, res) => {
+    const {userId} = req.params
+    try {
+        const profile = await ProfileModel.findById(userId)
+        const questions = await QuestionModel.find({author: profile._id}).sort({createdAt: -1})
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture -_id',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        .populate({
+            path: 'answers',
+            populate: {
+                path: 'author',
+                select: 'userId profilePicture studyAt domain',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            }
+        })
+        .populate({
+            path: 'subjects',
+            select: '_id name',
+        })
+        res.status(200).json(questions)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 export const getSingleQuestion = async (req, res) => {
     const {id, userId} = req.params;
     try {
@@ -161,36 +195,6 @@ export const getSubjectQuestions = async (req, res) => {
             select: '_id name',
         })
         res.status(200).json(question)
-    } catch (error) {
-        res.status(500).json(error)
-    }
-}
-
-export const getUserQuestion = async (req, res) => {
-    const id = req.params.id;
-    try {
-        const profile = await ProfileModel.findById(id)
-        const post = await PostModel.find({author: profile._id})
-        .populate({
-            path: 'comments',
-            populate: {
-                path: 'author',
-                select: 'userId profilePicture studyAt domain',
-                populate: {
-                    path: 'userId',
-                    select: 'username firstname lastname',
-                }
-            }
-        })
-        .populate({
-            path: 'author',
-            select: 'userId profilePicture studyAt domain',
-            populate: {
-                path: 'userId',
-                select: 'username firstname lastname',
-            }
-        })
-        res.status(200).json(post)
     } catch (error) {
         res.status(500).json(error)
     }
