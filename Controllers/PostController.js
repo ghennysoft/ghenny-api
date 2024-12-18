@@ -117,7 +117,7 @@ export const likeDislikePost = async (req, res) => {
 }
 
 // Get Timeline Posts
-export const getTimelinePosts = async (req, res) => {
+export const    getTimelinePosts = async (req, res) => {
     const {id} = req.params;
   
     try {

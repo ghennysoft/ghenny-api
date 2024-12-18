@@ -74,8 +74,9 @@ export const suggestStudyAt = async (req, res) => {
         const options = await ProfileModel.distinct('option')
         const universities = await ProfileModel.distinct('university')
         const filieres = await ProfileModel.distinct('filiere')
+        const professions = await ProfileModel.distinct('profession')
 
-        res.status(200).json({schools, options, universities, filieres})
+        res.status(200).json({schools, options, universities, filieres, professions})
     } catch (error) {
         res.status(500).json(error)
     }

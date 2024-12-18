@@ -60,7 +60,7 @@ export const getQuestions = async (req, res) => {
     const {userId} = req.params
     try {
         const getUser = await ProfileModel.findById(userId)
-        const questions = await QuestionModel.find({subjects: {$in: getUser.subjects}}).sort({createdAt: -1})
+        const questions = await QuestionModel.find({$or: [{author: getUser._id}, {subjects: {$in: getUser.subjects}}]}).sort({createdAt: -1})
         .populate({
             path: 'author',
             select: 'userId profilePicture -_id',
@@ -167,10 +167,8 @@ export const getSingleQuestion = async (req, res) => {
 
 export const getSubjectQuestions = async (req, res) => {
     const id = req.params.id;
-    console.log(id);
-    
     try {
-        const question = await QuestionModel.find({subjects: {$in: id}})
+        const questions = await QuestionModel.find({subjects: {$in: id}})
         .populate({
             path: 'author',
             select: 'userId profilePicture',
@@ -194,7 +192,7 @@ export const getSubjectQuestions = async (req, res) => {
             path: 'subjects',
             select: '_id name',
         })
-        res.status(200).json(question)
+        res.status(200).json(questions)
     } catch (error) {
         res.status(500).json(error)
     }

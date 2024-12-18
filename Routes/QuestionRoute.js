@@ -12,7 +12,7 @@ router.post('/like', likeQuestion)
 router.post('/dislike', dislikeQuestion)
 router.get('/all/:userId', getQuestions)
 router.get('/user/:userId', getUserQuestions)
-router.get('/:id/:userId', getSingleQuestion)
 router.get('/subject/:id', getSubjectQuestions)
+router.get('/:id/:userId', getSingleQuestion)
 
 export default router
