@@ -4,7 +4,7 @@ import ProfileModel from "../Models/profileModel.js";
 import bcrypt from 'bcrypt'
 
 
-export const registerUser = async (req, res) => {
+export const registerUser = async (req, res) => {   
     try {
         if(!req.body.username, !req.body.firstname, !req.body.lastname, !req.body.phone, !req.body.phone_code, !req.body.phone_code_2, !req.body.password){
             res.status(400).json("Veillez remplir tous les champs")

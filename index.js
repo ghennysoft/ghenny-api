@@ -10,6 +10,7 @@ import PostRoute from './Routes/PostRoute.js';
 import QuestionRoute from './Routes/QuestionRoute.js';
 import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
+import ChatRoute from './Routes/ChatRoute.js';
 import MulterRoute from './Routes/Multer.js';
 
 const app = express();
@@ -46,6 +47,7 @@ app.use('/api/post', PostRoute)
 app.use('/api/comment', CommentRoute)
 app.use('/api/question', QuestionRoute)
 app.use('/api/answer', AnswerRoute)
+app.use('/api/chat', ChatRoute)
 app.use('/api', MulterRoute)
 
 app.use((err, req, res, next) => {
