@@ -248,3 +248,30 @@ export const getUserData = async (req, res) => {
         res.status(500).json(error)
     }
 }
+
+// Users to pin suggestions
+export const    getUsersToPin = async (req, res) => {
+    const {id} = req.params;
+    try {
+        let sameUser;
+        const currentUser = await ProfileModel.findById(id);
+        if(currentUser.status==='Pupil'){
+            sameUser = await ProfileModel.find({$or: [{status: currentUser.status}]}).populate('userId', 'firstname lastname')
+        }
+
+        let idArr = [];
+        sameUser.forEach(item=>{
+            idArr.push(item._id)
+        })
+
+        let userSuggestion;
+        if(idArr.length!==0){
+            userSuggestion = await ProfileModel.find({_id: {$in: idArr}})
+            .select('status school option university filiere profession entreprise')
+            .populate('userId', 'username firstname lastname')
+        }
+        res.status(200).json(userSuggestion);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+};

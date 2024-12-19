@@ -24,7 +24,7 @@ export const sendMessage = async (req, res) => {
 export const getUserChats = async (req, res) => {
     const {currentUser} = req.params;
     try {
-        const userChats = await ChatModel.find({members: {$in: currentUser}})
+        const userChats = await ChatModel.find({members: {$in: currentUser}}).sort('-updatedAt')
         .populate({
             path: 'members',
             select: 'userId profilePicture',
@@ -33,18 +33,7 @@ export const getUserChats = async (req, res) => {
                 select: 'firstname lastname',
             }
         })
-        .populate({
-            path: 'messages',
-            select: 'senderId content createdAt updatedAt',
-            populate: {
-                path: 'senderId',
-                select: 'userId profilePicture',
-                populate: {
-                    path: 'userId',
-                    select: 'firstname lastname',
-                }
-            }
-        })
+        .populate('messages', 'senderId content createdAt updatedAt')
         .populate({
             path: 'latestMessage',
             select: 'senderId content createdAt updatedAt',
