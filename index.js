@@ -12,8 +12,9 @@ import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import MulterRoute from './Routes/Multer.js';
+import { app, server } from './socket.js';
 
-const app = express();
+// const app = express();
 const port = 5000
 dotenv.config()
 const corsOptions = {
@@ -24,6 +25,7 @@ const corsOptions = {
 
 // Middleware
 app.use(cors(corsOptions))
+app.use(express.json())
 app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 app.use(cookieParser())
@@ -60,6 +62,6 @@ app.use((err, req, res, next) => {
     });
 })
 
-app.listen(port, () => {
+server.listen(port, () => {
     console.log(`Server connected at ${port}`)
 })

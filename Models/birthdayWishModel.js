@@ -10,21 +10,10 @@ const birthdayWishSchema = mongoose.Schema({
         type: String,
         required: true,
     },
-    posts: [{
-        author: {
-            type:mongoose.Types.ObjectId, 
-            ref: 'Profiles', 
-            required: true,
-        },
-        video: {
-            type: String,
-            required: true,
-        },
-        created_at: {
-            type: Date,
-            default: Date.now(),
-        },
-    }],
+    posts: {
+        type:mongoose.Types.ObjectId, 
+        ref: 'birthdayPostWishes',
+    },
 },
 {
     timestamps: true,

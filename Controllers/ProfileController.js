@@ -4,6 +4,8 @@ import { createError } from "../error.js";
 import PostModel from "../Models/postModel.js";
 import birthdayWishModel from "../Models/birthdayWishModel.js";
 import QuestionModel from "../Models/questionModel.js";
+import AnswerModel from "../Models/answerModel.js";
+import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
 
 
 // Search data
@@ -161,16 +163,25 @@ export const postBirthdayWish = async (req, res) => {
         })
 
         if(findWish){
-            await findWish.updateOne({$push: {posts: req.body.post}});
-            res. status(200).json(findWish)
+            const addWishPost = new birthdayWishPostModel({birthdayId: findWish._id, author: req.body.post, video: req.body.video})
+            const birthday= await findWish.updateOne({$push: {posts: addWishPost._id}});
+            await addWishPost.save()
+            await birthday.save()
+            res. status(200).json({birthday, addWishPost})
         } else {
             const addWish = new birthdayWishModel({
                 user: req.body.mainUserId,
                 year: req.body.year,
-                posts: [req.body.post],
             })
+            const addWishPost = new birthdayWishPostModel({
+                birthdayId: addWish._id, 
+                author: req.body.post, 
+                video: req.body.video
+            })
+            const birthday= await addWish.updateOne({$push: {posts: addWishPost._id}});
             await addWish.save()
-            res. status(200).json(addWish)
+            await birthday.save()
+            res. status(200).json({birthday, addWishPost})
         }
     } catch (error) {
         res.status(500).json(error)
@@ -184,7 +195,7 @@ export const getBirthdayWishes = async (req, res) => {
                 {user: req.params.userId},
                 {year: req.params.year},
             ],
-        })
+        }).populate('posts')
         res.status(200).json(wishes)
     } catch (error) {
         res.status(500).json(error)
@@ -243,7 +254,21 @@ export const getUserData = async (req, res) => {
             select: '_id name',
         })
 
-        res.status(200).json({posts, questions})
+        const answers = await AnswerModel.find({author: profile._id}).sort({createdAt: -1})
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture -_id',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        .populate({
+            path: 'questionId',
+            select: 'content likes dislikes viewers'
+        })
+
+        res.status(200).json({posts, questions, answers})
     } catch (error) {
         res.status(500).json(error)
     }

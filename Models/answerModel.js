@@ -6,6 +6,11 @@ const answerSchema = mongoose.Schema({
         ref: 'Profiles',
         required: true,
     },
+    questionId: {
+        type:mongoose.Types.ObjectId, 
+        ref: 'Questions',
+        required: true,
+    },
     content: {
         type:String,
         required: true,

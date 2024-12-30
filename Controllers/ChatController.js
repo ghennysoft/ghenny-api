@@ -1,15 +1,16 @@
 import ChatModel from "../Models/chatModel.js";
 import MessageModel from "../Models/messageModel.js";
+import UserModel from "../Models/userModel.js";
 
 export const sendMessage = async (req, res) => {
-    const {message, senderId} = req.body;
+    const {content, senderId} = req.body;
     const {receiverId} = req.params;
     try {
         let chat = await ChatModel.findOne({members: {$all: [senderId, receiverId]}});
         if(!chat){
             chat = await ChatModel.create({members: [senderId, receiverId]});
         }
-        const newMessage = new MessageModel({senderId, content: message, chatId: chat._id});
+        const newMessage = new MessageModel({senderId, content, chatId: chat._id});
         if(newMessage){
             chat.messages.push(newMessage._id);
             chat.latestMessage = newMessage._id;
@@ -58,6 +59,22 @@ export const getSingleChat = async (req, res) => {
         const findChat = await ChatModel.findOne({members: {$all: [firstId, secondId]}});
         const messages = await MessageModel.find({chatId: findChat._id});
         res.status(200).json(messages)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getUsers = async (req, res) => {
+    try {
+        const profiles = await UserModel.find({
+            $or: [
+                {firstname: {$regex: req.query.q, $options: 'i'}},
+                {lastname: {$regex: req.query.q, $options: 'i'}},
+            ],
+        })
+        .select('username firstname lastname')
+        .populate('profileId', 'profilePicture')
+        res.status(200).json(profiles)
     } catch (error) {
         res.status(500).json(error)
     }
