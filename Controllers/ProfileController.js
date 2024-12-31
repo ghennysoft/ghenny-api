@@ -275,14 +275,11 @@ export const getUserData = async (req, res) => {
 }
 
 // Users to pin suggestions
-export const    getUsersToPin = async (req, res) => {
+export const getUsersToPin = async (req, res) => {
     const {id} = req.params;
     try {
-        let sameUser;
         const currentUser = await ProfileModel.findById(id);
-        if(currentUser.status==='Pupil'){
-            sameUser = await ProfileModel.find({$or: [{status: currentUser.status}]}).populate('userId', 'firstname lastname')
-        }
+        const sameUser = await ProfileModel.find({$or: [{status: currentUser.status}]}).populate('userId', 'firstname lastname')
 
         let idArr = [];
         sameUser.forEach(item=>{

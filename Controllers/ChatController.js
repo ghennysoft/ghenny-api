@@ -1,3 +1,4 @@
+import ChatGroupModel from "../Models/chatGroupModel.js";
 import ChatModel from "../Models/chatModel.js";
 import MessageModel from "../Models/messageModel.js";
 import UserModel from "../Models/userModel.js";
@@ -23,7 +24,7 @@ export const sendMessage = async (req, res) => {
 }
 
 export const getUserChats = async (req, res) => {
-    const {currentUser} = req.params;
+    const {userId} = req.params;
     try {
         const userChats = await ChatModel.find({members: {$in: currentUser}}).sort('-updatedAt')
         .populate({
@@ -76,6 +77,77 @@ export const getUsers = async (req, res) => {
         .populate('profileId', 'profilePicture')
         res.status(200).json(profiles)
     } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const createGroup = async (req, res) => {
+    const {name, detail, author} = req.body;
+    try {
+        const newGroup = new ChatGroupModel({
+            name, 
+            detail, 
+            members: [author], 
+            admins: [author], 
+            createdBy: author,
+        });
+        await newGroup.save();
+        res.status(201).json(newGroup)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getGroups = async (req, res) => {
+    const {userId} = req.params;
+    try {
+        const groups = await ChatGroupModel.find({members: {$in: userId}}).sort('-updatedAt')
+        .populate({
+            path: 'members',
+            select: 'userId profilePicture',
+            populate: {
+                path: 'userId',
+                select: 'firstname lastname',
+            }
+        })
+        .populate({
+            path: 'latestMessage',
+            select: 'senderId content createdAt updatedAt',
+            populate: {
+                path: 'senderId',
+                select: 'userId profilePicture',
+                populate: {
+                    path: 'userId',
+                    select: 'firstname lastname',
+                }
+            }
+        })
+        res.status(200).json(groups)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const addMembers = async (req, res) => {
+    const {membersArray, groupId} = req.body;
+    console.log(req.body);
+    
+    try {
+        const group = await ChatGroupModel.findById(groupId)
+        for (let i=0; i<membersArray.length; i++) {
+            const checkExistingMember = await group.members.includes(membersArray[i]);
+            if(!checkExistingMember) {
+                await group.updateOne({$push: {members: membersArray[i]}});
+                console.log('added');
+            } else {
+                console.log('existing');
+            }
+        }
+        await group.save();
+        res.status(201).json(group)
+    } catch (error) {
+        console.log(error);
+        
         res.status(500).json(error)
     }
 }

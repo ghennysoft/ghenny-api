@@ -5,7 +5,7 @@ const chatGroupSchema = mongoose.Schema({
         type:String,
         required: true,
     },
-    details: {
+    detail: {
         type:String,
     },
     picture: {
@@ -19,6 +19,7 @@ const chatGroupSchema = mongoose.Schema({
     members: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
     admins: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
     createdBy: {type:mongoose.Types.ObjectId, ref: 'Profiles'},
+    messages: [{type:mongoose.Types.ObjectId, ref: 'Messages'}],
     latestMessage: {type:mongoose.Types.ObjectId, ref: 'Messages'},
 },
 {
