@@ -1,5 +1,5 @@
 import express from 'express'
-import { completeProfile, deleteUser, followUnfollowUser, getBirthdayWishes, getProfile, getUserData, getUsersToPin, postBirthdayWish, searchData, suggestStudyAt, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
+import { addInPinGroup, completeProfile, createPinGroup, deleteUser, followUnfollowUser, getBirthdayWishes, getProfile, getUserData, getUsersToPin, postBirthdayWish, searchData, suggestStudyAt, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
 import verifyToken from '../verifyToken.js'
 
 const router = express.Router()
@@ -8,6 +8,8 @@ router.get('/search', searchData)
 router.put('/followUnfollow', followUnfollowUser)
 router.get('/suggest', suggestStudyAt)
 router.post('/wish', postBirthdayWish)
+router.post('/pinGroup', createPinGroup)
+router.put('/addPinGroup', addInPinGroup)
 router.get('/topin/:id', getUsersToPin)
 router.get('/:id', getProfile)
 router.put('/:id', updateProfile)

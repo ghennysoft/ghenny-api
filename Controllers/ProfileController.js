@@ -6,6 +6,7 @@ import birthdayWishModel from "../Models/birthdayWishModel.js";
 import QuestionModel from "../Models/questionModel.js";
 import AnswerModel from "../Models/answerModel.js";
 import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
+import PinGroupModel from "../Models/pinGroupModel.js";
 
 
 // Search data
@@ -37,7 +38,16 @@ export const getProfile = async (req, res) => {
     const paramId = req.params.id;  
     try {
         const user = await UserModel.findOne({username: paramId});
-        const profile = await ProfileModel.findOne({userId: user._id}).populate("userId", "-password");
+        const profile = await ProfileModel.findOne({userId: user._id})
+        .populate("userId", "-password")
+        .populate({
+            path: 'followings',
+            // select: 'userId profilePicture status school option university filiere profession entreprise',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
         if(profile){
             res.status(200).json(profile)
         }else{
@@ -131,25 +141,6 @@ export const deleteUser = async (req, res) => {
         }
     } else {
         retur(createError(403, "Access Denied, you can only delete your profile!"))
-    }
-}
-
-export const followUnfollowUser = async (req, res) => {
-    const {currentUserId, foreignUserId} = req.body;    
-    try {
-        const currentProfile = await ProfileModel.findById(currentUserId)
-        const foreignProfile = await ProfileModel.findById(foreignUserId)
-        if(!currentProfile.followings.includes(foreignUserId)) {
-            await currentProfile.updateOne({$push: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$push: {followers:currentUserId}});
-            res.status(200).json('Profile pinned')
-        } else {
-            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
-            res.status(200).json('Profile unpinned!')
-        }
-    } catch (error) {
-        res.status(500).json(error)
     }
 }
 
@@ -275,6 +266,25 @@ export const getUserData = async (req, res) => {
 }
 
 // Users to pin suggestions
+export const followUnfollowUser = async (req, res) => {
+    const {currentUserId, foreignUserId} = req.body;    
+    try {
+        const currentProfile = await ProfileModel.findById(currentUserId)
+        const foreignProfile = await ProfileModel.findById(foreignUserId)
+        if(!currentProfile.followings.includes(foreignUserId)) {
+            await currentProfile.updateOne({$push: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$push: {followers:currentUserId}});
+            res.status(200).json('Profile pinned')
+        } else {
+            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
+            res.status(200).json('Profile unpinned!')
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
 export const getUsersToPin = async (req, res) => {
     const {id} = req.params;
     try {
@@ -296,4 +306,58 @@ export const getUsersToPin = async (req, res) => {
     } catch (error) {
       res.status(500).json(error);
     }
-};
+}
+
+// export const getUsersPinned = async (req, res) => {
+//     const {id} = req.params;
+//     try {
+//         const currentUser = await ProfileModel.findById(id);
+//         const sameUser = await ProfileModel.find({$or: [{status: currentUser.status}]}).populate('userId', 'firstname lastname')
+
+//         let idArr = [];
+//         sameUser.forEach(item=>{
+//             idArr.push(item._id)
+//         })
+
+//         let userSuggestion;
+//         if(idArr.length!==0){
+//             userSuggestion = await ProfileModel.find({_id: {$in: idArr}})
+//             .select('status school option university filiere profession entreprise')
+//             .populate('userId', 'username firstname lastname')
+//         }
+//         res.status(200).json(userSuggestion);
+//     } catch (error) {
+//       res.status(500).json(error);
+//     }
+// }
+
+export const createPinGroup = async (req, res) => {
+    const {author, name, color} = req.body;
+    try {
+        const newPinGroup = new PinGroupModel({author, name, color});
+        await newPinGroup.save();
+        res.status(201).json(newPinGroup)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const addInPinGroup = async (req, res) => {
+    const {pinId, userArray} = req.body;
+    try {
+        const pin = await PinGroupModel.findById(pinId)
+        for (let i=0; i<userArray.length; i++) {
+            const checkExistingMember = await pin.pins.includes(userArray[i]);
+            if(!checkExistingMember) {
+                await pin.updateOne({$push: {pins: userArray[i]}});
+                console.log('added');
+            } else {
+                console.log('existing');
+            }
+        }
+        const addedPins = await pin.save();
+        res.status(200).json(addedPins)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}

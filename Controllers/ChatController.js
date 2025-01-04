@@ -24,7 +24,7 @@ export const sendMessage = async (req, res) => {
 }
 
 export const getUserChats = async (req, res) => {
-    const {userId} = req.params;
+    const {currentUser} = req.params;
     try {
         const userChats = await ChatModel.find({members: {$in: currentUser}}).sort('-updatedAt')
         .populate({
@@ -130,8 +130,6 @@ export const getGroups = async (req, res) => {
 
 export const addMembers = async (req, res) => {
     const {membersArray, groupId} = req.body;
-    console.log(req.body);
-    
     try {
         const group = await ChatGroupModel.findById(groupId)
         for (let i=0; i<membersArray.length; i++) {
@@ -146,8 +144,6 @@ export const addMembers = async (req, res) => {
         await group.save();
         res.status(201).json(group)
     } catch (error) {
-        console.log(error);
-        
         res.status(500).json(error)
     }
 }

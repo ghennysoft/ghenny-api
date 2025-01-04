@@ -13,7 +13,7 @@ export const addComment = async (req, res) => {
 
             const find_post = await PostModel.findById(req.body.postId)
             await find_post.updateOne({$push: {"comments": newComment._id}})
-            res.status(200).json({message: "Commentaire ajouté avec success!"})
+            res.status(200).json(newComment)
         }
     } catch (error) {
         res.status(500).json(error)
