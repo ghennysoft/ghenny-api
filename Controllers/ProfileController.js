@@ -6,7 +6,7 @@ import birthdayWishModel from "../Models/birthdayWishModel.js";
 import QuestionModel from "../Models/questionModel.js";
 import AnswerModel from "../Models/answerModel.js";
 import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
-import PinGroupModel from "../Models/pinGroupModel.js";
+import PinCategoryModel from "../Models/pinCategoryModel.js";
 
 
 // Search data
@@ -42,7 +42,7 @@ export const getProfile = async (req, res) => {
         .populate("userId", "-password")
         .populate({
             path: 'followings',
-            // select: 'userId profilePicture status school option university filiere profession entreprise',
+            select: 'userId profilePicture status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
@@ -52,6 +52,32 @@ export const getProfile = async (req, res) => {
             res.status(200).json(profile)
         }else{
             res.status(404).json("No such profile exist")
+        }
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+export const getFollowings = async (req, res) => {
+    const paramId = req.params.id;  
+    try {
+        const profile = await ProfileModel.findById(paramId)
+        const followings = profile.followings        
+        let followingProfile = {};
+        let followingsData = [];
+        if(followings.length!==0){
+            for(let i=0; i<followings.length; i++){
+                followingProfile = await ProfileModel.findById(followings[i])
+                .select('userId profilePicture status school option university filiere profession entreprise')
+                .populate({
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                })                
+                followingsData.push(followingProfile);
+            }
+            res.status(200).json(followingsData)
+        }else{
+            res.status(200).json(followingsData)
         }
     } catch (error) {
         res.status(500).json(error)
@@ -308,44 +334,32 @@ export const getUsersToPin = async (req, res) => {
     }
 }
 
-// export const getUsersPinned = async (req, res) => {
-//     const {id} = req.params;
-//     try {
-//         const currentUser = await ProfileModel.findById(id);
-//         const sameUser = await ProfileModel.find({$or: [{status: currentUser.status}]}).populate('userId', 'firstname lastname')
-
-//         let idArr = [];
-//         sameUser.forEach(item=>{
-//             idArr.push(item._id)
-//         })
-
-//         let userSuggestion;
-//         if(idArr.length!==0){
-//             userSuggestion = await ProfileModel.find({_id: {$in: idArr}})
-//             .select('status school option university filiere profession entreprise')
-//             .populate('userId', 'username firstname lastname')
-//         }
-//         res.status(200).json(userSuggestion);
-//     } catch (error) {
-//       res.status(500).json(error);
-//     }
-// }
-
-export const createPinGroup = async (req, res) => {
+export const createPinCategory = async (req, res) => {
     const {author, name, color} = req.body;
     try {
-        const newPinGroup = new PinGroupModel({author, name, color});
-        await newPinGroup.save();
-        res.status(201).json(newPinGroup)
+        const newPinCategory = new PinCategoryModel({author, name, color});
+        await newPinCategory.save();
+        res.status(201).json(newPinCategory)
     } catch (error) {
         res.status(500).json(error)
     }
 }
 
-export const addInPinGroup = async (req, res) => {
+export const getPinCategory = async (req, res) => {
+    const {id} = req.params;
+    try {
+        const currentUser = await ProfileModel.findById(id);
+        const pinCategory = await PinCategoryModel.find({author: currentUser._id})
+        res.status(200).json(pinCategory);
+    } catch (error) {
+      res.status(500).json(error);
+    }
+}
+
+export const addInPinCategory = async (req, res) => {
     const {pinId, userArray} = req.body;
     try {
-        const pin = await PinGroupModel.findById(pinId)
+        const pin = await PinCategoryModel.findById(pinId)
         for (let i=0; i<userArray.length; i++) {
             const checkExistingMember = await pin.pins.includes(userArray[i]);
             if(!checkExistingMember) {

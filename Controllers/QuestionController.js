@@ -4,7 +4,7 @@ import ProfileModel from "../Models/profileModel.js";
 
 export const addSubject = async (req, res) => {
     try {
-        if(!req.body.name) {
+        if(!req.body.name && !req.body.color) {
             res.status(400).json('Ajoutez un sujet...')
         } else {
             const newSubject = new SubjectModel(req.body);
@@ -82,7 +82,7 @@ export const getQuestions = async (req, res) => {
         })
         .populate({
             path: 'subjects',
-            select: '_id name',
+            select: '_id name color',
         })
         res.status(200).json(questions)
     } catch (error) {
@@ -116,7 +116,7 @@ export const getUserQuestions = async (req, res) => {
         })
         .populate({
             path: 'subjects',
-            select: '_id name',
+            select: '_id name color',
         })
         res.status(200).json(questions)
     } catch (error) {
@@ -149,7 +149,7 @@ export const getSingleQuestion = async (req, res) => {
         })
         .populate({
             path: 'subjects',
-            select: '_id name',
+            select: '_id name color',
         })
 
         // Add viewer
@@ -190,7 +190,7 @@ export const getSubjectQuestions = async (req, res) => {
         })
         .populate({
             path: 'subjects',
-            select: '_id name',
+            select: '_id name color',
         })
         res.status(200).json(questions)
     } catch (error) {

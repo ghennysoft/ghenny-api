@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const pinGroupSchema = mongoose.Schema({
+const pinCategorySchema = mongoose.Schema({
     author: {type:mongoose.Types.ObjectId, ref: 'Profiles', required: true},
     name: {type:String, required: true},
     color: {type:String, required: true},
@@ -10,5 +10,5 @@ const pinGroupSchema = mongoose.Schema({
     timestamps: true
 });
 
-const PinGroupModel = mongoose.model("PinGroup", pinGroupSchema)
-export default PinGroupModel
+const PinCategoryModel = mongoose.model("PinCategory", pinCategorySchema)
+export default PinCategoryModel
