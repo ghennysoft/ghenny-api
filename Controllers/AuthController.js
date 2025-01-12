@@ -6,8 +6,10 @@ import bcrypt from 'bcrypt'
 
 export const registerUser = async (req, res) => {   
     try {
-        if(!req.body.username, !req.body.firstname, !req.body.lastname, !req.body.phone, !req.body.phone_code, !req.body.phone_code_2, !req.body.password){
+        if(!req.body.username, !req.body.firstname, !req.body.lastname, !req.body.phone, !req.body.phone_code, !req.body.phone_code_2, !req.body.password, !req.body.confirmPassword){
             res.status(400).json("Veillez remplir tous les champs")
+        } else if(req.body.password !== req.body.confirmPassword){
+            res.status(400).json("Le mot de passe de confirmation est different")
         } else {
             // Check if the username already exist
             const user_name = await UserModel.findOne({username: req.body.username})

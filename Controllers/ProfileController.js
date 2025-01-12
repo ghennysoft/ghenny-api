@@ -180,10 +180,9 @@ export const postBirthdayWish = async (req, res) => {
         })
 
         if(findWish){
-            const addWishPost = new birthdayWishPostModel({birthdayId: findWish._id, author: req.body.post, video: req.body.video})
+            const addWishPost = new birthdayWishPostModel({birthdayId: findWish._id, author: req.body.author, video: req.body.video})
             const birthday= await findWish.updateOne({$push: {posts: addWishPost._id}});
             await addWishPost.save()
-            await birthday.save()
             res. status(200).json({birthday, addWishPost})
         } else {
             const addWish = new birthdayWishModel({
@@ -192,7 +191,7 @@ export const postBirthdayWish = async (req, res) => {
             })
             const addWishPost = new birthdayWishPostModel({
                 birthdayId: addWish._id, 
-                author: req.body.post, 
+                author: req.body.author, 
                 video: req.body.video
             })
             const birthday= await addWish.updateOne({$push: {posts: addWishPost._id}});
@@ -207,16 +206,16 @@ export const postBirthdayWish = async (req, res) => {
 
 export const getBirthdayWishes = async (req, res) => {    
     try {
-        const wishes = await birthdayWishModel.findOne({
+        const wish = await birthdayWishModel.findOne({
             $and: [
                 {user: req.params.userId},
                 {year: req.params.year},
             ],
-        }).populate('posts')
-        res.status(200).json(wishes)
+        })
+        const wishes = await birthdayWishPostModel.find({birthdayId: wish._id})
+        res.status(200).json({wish, wishes})
     } catch (error) {
         res.status(500).json(error)
-        console.log(error);
     }
 }
 
