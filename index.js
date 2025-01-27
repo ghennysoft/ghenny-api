@@ -42,6 +42,16 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
     throw error
 });
 
+// Si tu es en production, sers les fichiers statiques de React
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, 'build')));
+  
+    // Redirige toutes les autres requêtes vers l'index de React
+    app.get('*', (req, res) => {
+      res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+    });
+  }
+
 // Usage of route
 app.use('/api/auth', AuthRoute)
 app.use('/api/profile', UserRoute)
