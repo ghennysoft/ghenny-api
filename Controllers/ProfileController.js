@@ -41,7 +41,7 @@ export const getProfile = async (req, res) => {
         const profile = await ProfileModel.findOne({userId: user._id})
         .populate("userId", "-password")
         .populate({
-            path: 'followings',
+            path: 'pins',
             select: 'userId profilePicture status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
@@ -58,26 +58,26 @@ export const getProfile = async (req, res) => {
     }
 }
 
-export const getFollowings = async (req, res) => {
+export const getPins = async (req, res) => {
     const paramId = req.params.id;  
     try {
         const profile = await ProfileModel.findById(paramId)
-        const followings = profile.followings        
-        let followingProfile = {};
-        let followingsData = [];
-        if(followings.length!==0){
-            for(let i=0; i<followings.length; i++){
-                followingProfile = await ProfileModel.findById(followings[i])
+        const pins = profile.pins        
+        let pinProfile = {};
+        let pinsData = [];
+        if(pins.length!==0){
+            for(let i=0; i<pins.length; i++){
+                pinProfile = await ProfileModel.findById(pins[i])
                 .select('userId profilePicture status school option university filiere profession entreprise')
                 .populate({
                     path: 'userId',
                     select: 'username firstname lastname',
                 })                
-                followingsData.push(followingProfile);
+                pinsData.push(pinProfile);
             }
-            res.status(200).json(followingsData)
+            res.status(200).json(pinsData)
         }else{
-            res.status(200).json(followingsData)
+            res.status(200).json(pinsData)
         }
     } catch (error) {
         res.status(500).json(error)
@@ -196,7 +196,7 @@ export const postBirthdayWish = async (req, res) => {
             })
             const birthday= await addWish.updateOne({$push: {posts: addWishPost._id}});
             await addWish.save()
-            await birthday.save()
+            await addWishPost.save()
             res. status(200).json({birthday, addWishPost})
         }
     } catch (error) {
@@ -213,7 +213,15 @@ export const getBirthdayWishes = async (req, res) => {
             ],
         })
         const wishes = await birthdayWishPostModel.find({birthdayId: wish._id})
-        res.status(200).json({wish, wishes})
+        .populate({
+            path: 'author',
+            select: 'userId profilePicture',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        res.status(200).json(wishes)
     } catch (error) {
         res.status(500).json(error)
     }
@@ -291,18 +299,18 @@ export const getUserData = async (req, res) => {
 }
 
 // Users to pin suggestions
-export const followUnfollowUser = async (req, res) => {
+export const PinningUser = async (req, res) => {
     const {currentUserId, foreignUserId} = req.body;    
     try {
         const currentProfile = await ProfileModel.findById(currentUserId)
         const foreignProfile = await ProfileModel.findById(foreignUserId)
-        if(!currentProfile.followings.includes(foreignUserId)) {
-            await currentProfile.updateOne({$push: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$push: {followers:currentUserId}});
+        if(!currentProfile.pins.includes(foreignUserId)) {
+            await currentProfile.updateOne({$push: {pins:foreignUserId}});
+            await foreignProfile.updateOne({$push: {pinned:currentUserId}});
             res.status(200).json('Profile pinned')
         } else {
-            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
+            await currentProfile.updateOne({$pull: {pins:foreignUserId}});
+            await foreignProfile.updateOne({$pull: {pinned:currentUserId}});
             res.status(200).json('Profile unpinned!')
         }
     } catch (error) {

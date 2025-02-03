@@ -124,13 +124,13 @@ export const getTimelinePosts = async (req, res) => {
         let sameUser;
         const currentUser = await ProfileModel.findById(id);
         if(currentUser.status==='Pupil'){
-            sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}, {_id: [...currentUser.followings]}]}).populate('userId', 'firstname lastname')
+            sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
         }
         else if(currentUser.status==='Student'){
-            sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}, {_id: [...currentUser.followings]}]}).populate('userId', 'firstname lastname')
+            sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
         }
         else if(currentUser.status==='Other'){
-            sameUser = await ProfileModel.find({$or: [{status: currentUser.status}, {_id: [...currentUser.followings]}]}).populate('userId', 'firstname lastname').select('userId status');
+            sameUser = await ProfileModel.find({$or: [{status: currentUser.status}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname').select('userId status');
         }
         else{
             sameUser = [];
