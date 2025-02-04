@@ -13,6 +13,7 @@ import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import MulterRoute from './Routes/Multer.js';
 import { app, server } from './socket.js';
+import path from 'path'
 
 // const app = express();
 const port = 5000
@@ -32,7 +33,6 @@ app.use(cookieParser())
 // Multer path
 app.use(express.static('public'))
 
-
 // mongoose.connect(process.env.MONGODB_LOCAL_URL)
 mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .then(() => {
@@ -43,14 +43,19 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 });
 
 // Si tu es en production, sers les fichiers statiques de React
+const __dirname1 = path.resolve();
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'build')));
+    app.use(express.static(path.join(__dirname1, '/build')));
   
     // Redirige toutes les autres requêtes vers l'index de React
     app.get('*', (req, res) => {
-      res.sendFile(path.resolve(__dirname, 'build', 'index.html'));
+      res.sendFile(path.resolve(__dirname1, 'build', 'index.html'));
     });
-  }
+} else {
+    app.get('/', (req, res) => {
+        res.send("API Is Running");
+    }); 
+}
 
 // Usage of route
 app.use('/api/auth', AuthRoute)

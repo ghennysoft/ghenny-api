@@ -6,6 +6,7 @@ package-lock.json
 public
 
 .env
+.env/
 
 # Coveralls
 .nyc_output
