@@ -1,7 +1,11 @@
 import express from "express"
 import multer from "multer"
+import crypto from "crypto"
 
 const router = express.Router()
+
+const randomImageName = (bytes=32) => crypto.randomBytes(bytes).toString('hex')
+const imageName = randomImageName()
 
 const storage = multer.diskStorage({
     destination: (req, res, cb) => {

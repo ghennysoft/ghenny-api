@@ -12,6 +12,7 @@ import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import MulterRoute from './Routes/Multer.js';
+import AWSRoute from './utils/fileStorage.js';
 import { app, server } from './socket.js';
 import path from 'path'
 import helmet from 'helmet'
@@ -23,11 +24,23 @@ const corsOptions = {
     AccessControlAllowOrigin: "*",
     origin: ["http://localhost:3000", "https://ghenny.onrender.com"],
     methods: ["GET", "PUT", "POST", "DELETE"],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    // credentials: true // si vous utilisez des cookies ou des sessions 
 }
 
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions))
+// Ajouter l'en-tête Cross-Origin-Resource-Policy
+app.use((req, res, next) => {
+    // Si le site est sur le même domaine
+    // res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
+    
+    // Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    
+    next();
+});
 app.use(express.json())
 app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
@@ -47,7 +60,7 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 // Si tu es en production, sers les fichiers statiques de React
 // const __dirname1 = path.resolve();
 // if (process.env.NODE_ENV === 'production') {
-//     app.use(express.static(path.join(__dirname1, '/build')));
+//     app.use(express.static(path.join(__dirname1, 'build')));
   
 //     // Redirige toutes les autres requêtes vers l'index de React
 //     app.get('*', (req, res) => {
@@ -59,6 +72,7 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 //     }); 
 // }
 
+
 // Usage of route
 app.use('/api/auth', AuthRoute)
 app.use('/api/profile', UserRoute)
@@ -68,6 +82,7 @@ app.use('/api/question', QuestionRoute)
 app.use('/api/answer', AnswerRoute)
 app.use('/api/chat', ChatRoute)
 app.use('/api', MulterRoute)
+app.use('/api/aws', AWSRoute)
 
 app.use((err, req, res, next) => {
     const status = err.status || 500;

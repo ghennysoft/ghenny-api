@@ -1,9 +1,25 @@
+import { GetObjectCommand } from "@aws-sdk/client-s3";
 import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { getS3URL, s3Client } from "../utils/aws.js";
 
 export const createPost = async (req, res) => {
+    const {author, content, postBg} = req.body;
+    let postMedia = [];
+    if(req.files.length!==0){
+        req.files.forEach(file  => {
+            postMedia.push({key: file.key, url: file.location});
+        });
+    }   
+    
     try {
-        const newPost = new PostModel(req.body);
+        const newPost = new PostModel({
+           author,
+           content,
+           media: postMedia,
+           postBg, 
+        });
         await newPost.save();
         res.status(200).json(newPost)
     } catch (error) {
@@ -18,7 +34,7 @@ export const getAllPosts = async (req, res) => {
             path: 'comments',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture status school option university filiere profession entreprise',
+                select: 'userId profilePicture birthday status school option university filiere profession entreprise',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -27,7 +43,7 @@ export const getAllPosts = async (req, res) => {
         })
         .populate({
             path: 'author',
-            select: 'userId profilePicture status school option university filiere profession entreprise',
+            select: 'userId profilePicture birthday status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
@@ -47,7 +63,7 @@ export const getPost = async (req, res) => {
             path: 'comments',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture status school option university filiere profession entreprise',
+                select: 'userId profilePicture birthday status school option university filiere profession entreprise',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -56,7 +72,7 @@ export const getPost = async (req, res) => {
         })
         .populate({
             path: 'author',
-            select: 'userId profilePicture status school option university filiere profession entreprise',
+            select: 'userId profilePicture birthday status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
@@ -148,7 +164,7 @@ export const getTimelinePosts = async (req, res) => {
                 path: 'comments',
                 populate: {
                     path: 'author',
-                    select: 'userId profilePicture status school option university filiere profession entreprise',
+                    select: 'userId profilePicture birthday status school option university filiere profession entreprise',
                     populate: {
                         path: 'userId',
                         select: 'username firstname lastname',
@@ -157,12 +173,26 @@ export const getTimelinePosts = async (req, res) => {
             })
             .populate({
                 path: 'author',
-                select: 'userId profilePicture status school option university filiere profession entreprise',
+                select: 'userId profilePicture birthday status school option university filiere profession entreprise',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
                 }
             })
+
+            // for(const data of userFeed){
+            //     data.media.forEach(async item => {
+            //         // const params = {
+            //         //     Bucket: process.env.AWS_BUCKET_NAME,
+            //         //     Key: item.key,
+            //         // }
+            //         // const command = new GetObjectCommand(params);
+            //         // const uri = await getSignedUrl(s3Client, command)
+
+            //         const uri = await getS3URL(item)
+            //         item.url = uri;
+            //     })
+            // }
         }
         res.status(200).json({sameUser, userFeed});
     } catch (error) {

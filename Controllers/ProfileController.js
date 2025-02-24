@@ -135,7 +135,7 @@ export const updateProfile = async (req, res) => {
     }
 }
 
-// Update Profile & Complete perofile infos after register
+// Update Profile & Complete profile infos after register
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
     if(paramId) {
@@ -147,7 +147,23 @@ export const updatePicture = async (req, res) => {
         } catch (error) {
             res.status(500).json(error)            
         }
-        
+    } else {
+        retur(createError(403, "Access Denied, you can only update your profile!"))
+    }
+}
+
+// Update Profile & Complete profile infos after register
+export const updateCoverPicture = async (req, res) => {
+    const paramId = req.params.id;
+    if(paramId) {
+        try {
+            const picture = await ProfileModel.findByIdAndUpdate(paramId, {
+                $set: {coverPicture: req.body}
+            });
+            res.status(200).json({"coverPicture": picture})
+        } catch (error) {
+            res.status(500).json(error)            
+        }
     } else {
         retur(createError(403, "Access Denied, you can only update your profile!"))
     }
@@ -237,7 +253,7 @@ export const getUserData = async (req, res) => {
             path: 'comments',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture status school option university filiere profession entreprise',
+                select: 'userId profilePicture birthday status school option university filiere profession entreprise',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -246,7 +262,7 @@ export const getUserData = async (req, res) => {
         })
         .populate({
             path: 'author',
-            select: 'userId profilePicture status school option university filiere profession entreprise',
+            select: 'userId profilePicture birthday status school option university filiere profession entreprise',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
