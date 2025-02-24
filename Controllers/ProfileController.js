@@ -11,22 +11,50 @@ import PinCategoryModel from "../Models/pinCategoryModel.js";
 
 // Search data
 export const searchData = async (req, res) => {
+    const searchTerm = req.query.q || ''
+    
     try {
         // Search user
-        const profiles = await UserModel.find({
-            $or: [
-                {firstname: {$regex: req.query.q, $options: 'i'}},
-                {lastname: {$regex: req.query.q, $options: 'i'}},
-            ],
-        })
-        .select('username firstname lastname')
-        .populate('profileId', 'profilePicture')
+        const searchParts = searchTerm.split(' ').map(part => part.trim()).filter(part => part.length > 0);
+
+        let profiles = [];
+
+        if (searchParts.length === 1) {
+            // Recherche par prénom ou nom seul
+            profiles = await UserModel.find({
+                $or: [
+                    { firstname: { $regex: searchParts[0], $options: 'i' } },
+                    { lastname: { $regex: searchParts[0], $options: 'i' } }
+                ]
+            })
+            .select('username firstname lastname')
+            .populate('profileId', 'profilePicture')
+        } else if (searchParts.length === 2) {
+            // Recherche avec prénom + nom ou nom + prénom
+            const [part1, part2] = searchParts;
+      
+            profiles = await UserModel.find({
+              $or: [
+                {
+                  firstname: { $regex: part1, $options: 'i' },
+                  lastname: { $regex: part2, $options: 'i' }
+                },
+                {
+                  firstname: { $regex: part2, $options: 'i' },
+                  lastname: { $regex: part1, $options: 'i' }
+                }
+              ]
+            })
+            .select('username firstname lastname')
+            .populate('profileId', 'profilePicture')
+        }
+        
 
         // Search post
-        const posts = await PostModel.find({content: {$regex: req.query.q, $options: 'i'}})
+        const posts = await PostModel.find({content: {$regex: searchTerm, $options: 'i'}})
 
         // Search question
-        const questions = await QuestionModel.find({content: {$regex: req.query.q, $options: 'i'}})
+        const questions = await QuestionModel.find({content: {$regex: searchTerm, $options: 'i'}})
 
         res.status(200).json({profiles, posts, questions})
     } catch (error) {
