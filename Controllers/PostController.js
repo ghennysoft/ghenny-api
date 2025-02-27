@@ -5,7 +5,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { getS3URL, s3Client } from "../utils/aws.js";
 
 export const createPost = async (req, res) => {
-    const {author, content, postBg} = req.body;
+    const {author, content, media, postBg} = req.body;
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file  => {
@@ -23,11 +23,12 @@ export const createPost = async (req, res) => {
         await newPost.save();
         res.status(200).json(newPost)
     } catch (error) {
-        res.status(500).json(error)
+        // res.status(500).json(error)
     }
 }
 
-export const getAllPosts = async (req, res) => {
+export const getAllPosts = async (req, res) => {  
+    const currentUser = req.user;  
     try {
         const posts = await PostModel.find().sort({createdAt: -1})
         .populate({
@@ -49,7 +50,7 @@ export const getAllPosts = async (req, res) => {
                 select: 'username firstname lastname',
             }
         })
-        res.status(200).json(posts)
+        res.status(200).json({currentUser, posts})
     } catch (error) {
         res.status(500).json(error)
     }
@@ -134,8 +135,7 @@ export const likeDislikePost = async (req, res) => {
 
 // Get Timeline Posts
 export const getTimelinePosts = async (req, res) => {
-    const {id} = req.params;
-  
+    const id = req.user?._id;    
     try {
         let sameUser;
         const currentUser = await ProfileModel.findById(id);
@@ -157,9 +157,20 @@ export const getTimelinePosts = async (req, res) => {
             idArr.push(item._id)
         })
 
+
+        const page = parseInt(req.query.page) || 1; // page courante
+        const pageSize = 5; // Nombre d'articles par page
+        const skip = (page - 1) * pageSize; // Calculer combien de documents à ignorer
+        
         let userFeed;
+        let totalPosts;
+        let hasNextPage;
         if(idArr.length!==0){
-            userFeed = await PostModel.find({author: {$in: idArr}}).sort({createdAt: -1})
+            const posts = await PostModel.find({author: {$in: idArr}})
+            userFeed = await PostModel.find({author: {$in: idArr}})
+            .sort({createdAt: -1})
+            .skip(skip)
+            .limit(pageSize)
             .populate({
                 path: 'comments',
                 populate: {
@@ -180,6 +191,10 @@ export const getTimelinePosts = async (req, res) => {
                 }
             })
 
+            // Vérifier si nous avons des articles suivants
+            totalPosts = posts.length;  // Nombre de documents
+            hasNextPage = skip + pageSize < totalPosts;
+
             // for(const data of userFeed){
             //     data.media.forEach(async item => {
             //         // const params = {
@@ -194,7 +209,8 @@ export const getTimelinePosts = async (req, res) => {
             //     })
             // }
         }
-        res.status(200).json({sameUser, userFeed});
+        
+        res.status(200).json({userFeed, page, totalPosts, hasNextPage});
     } catch (error) {
       res.status(500).json(error);
     }

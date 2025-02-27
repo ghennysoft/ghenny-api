@@ -17,9 +17,9 @@ import { app, server } from './socket.js';
 import path from 'path'
 import helmet from 'helmet'
 
-// const app = express();
-const port = 5000
 dotenv.config()
+
+const port = 5000
 const corsOptions = {
     AccessControlAllowOrigin: "*",
     origin: ["http://localhost:3000", "https://ghenny.onrender.com"],

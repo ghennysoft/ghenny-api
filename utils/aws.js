@@ -25,10 +25,10 @@ export const uploadS3 = multer({
         bucket: process.env.AWS_BUCKET_NAME,
         // acl: 'public-read', // set as per your need
         metadata: (req, file, cb) => {
-            cb(null, { fieldName: file.fieldname }); 
+            cb(null, { fieldName: file.originalname }); 
         },
         key: (req, file, cb) => {
-            cb(null, 'new/'+imageName+file.originalname);
+            cb(null, 'yes/'+imageName+file.originalname);
         },
     }),
 });

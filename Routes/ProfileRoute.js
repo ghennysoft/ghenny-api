@@ -1,6 +1,5 @@
 import express from 'express'
 import { addInPinCategory, completeProfile, createPinCategory, deleteUser, getBirthdayWishes, getPinCategory, getPins, getProfile, getUserData, getUsersToPin, PinningUser, postBirthdayWish, searchData, suggestStudyAt, updateCoverPicture, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
-import verifyToken from '../verifyToken.js'
 
 const router = express.Router()
 
@@ -17,7 +16,7 @@ router.get('/:id/followings', getPins)
 router.put('/:id', updateProfile)
 router.put('/picture/:id', updatePicture)
 router.put('/cover/:id', updateCoverPicture)
-router.delete('/:id', verifyToken, deleteUser)
+router.delete('/:id', deleteUser)
 router.get('/data/:id', getUserData)
 router.get('/wishes/:userId/:year', getBirthdayWishes)
 router.put('/complete/:profileId/:userId', completeProfile)
