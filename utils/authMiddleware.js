@@ -17,7 +17,8 @@ const authUser = async (req, res, next) => {
         next();
     } catch (err) { 
         res.status(401);
-        throw new Error("Not authorized...")
+        console.log(err)
+        throw new Error("Not authorized, token expired...")
     }
 }
 

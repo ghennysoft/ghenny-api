@@ -31,6 +31,7 @@ const corsOptions = {
 // Middleware
 app.use(helmet());
 app.use(cors(corsOptions))
+
 // Ajouter l'en-tête Cross-Origin-Resource-Policy
 app.use((req, res, next) => {
     // Si le site est sur le même domaine
@@ -64,14 +65,13 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
   
 //     // Redirige toutes les autres requêtes vers l'index de React
 //     app.get('*', (req, res) => {
-//       res.sendFile(path.resolve(__dirname1, 'build', 'index.html'));
+//       res.sendFile(path.resolve(__dirname1, 'build', 'redirect.html'));
 //     });
 // } else {
 //     app.get('/', (req, res) => {
 //         res.send("API Is Running");
 //     }); 
 // }
-
 
 // Usage of route
 app.use('/api/auth', AuthRoute)

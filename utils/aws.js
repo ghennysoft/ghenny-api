@@ -16,29 +16,43 @@ export const s3Client = new S3Client({
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
         secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
     },
-}) 
+})
+
+// Generate signed URL
+export const getS3URL = async (file) => {
+    const params = {
+      Bucket: process.env.AWS_BUCKET_NAME, // replace with your bucket name
+      Key: file,
+    }
+    const command = new GetObjectCommand(params);
+    const awsURL = await getSignedUrl(s3Client, command)
+    return awsURL;
+  }
 
 // Configure Multer for file uploads to S3
-export const uploadS3 = multer({
+export const uploadPostS3 = multer({
     storage: multerS3({
         s3: s3Client,
         bucket: process.env.AWS_BUCKET_NAME,
-        // acl: 'public-read', // set as per your need
         metadata: (req, file, cb) => {
             cb(null, { fieldName: file.originalname }); 
         },
         key: (req, file, cb) => {
-            cb(null, 'yes/'+imageName+file.originalname);
+            cb(null, 'post/'+imageName+file.originalname);
         },
     }),
 });
 
-export const getS3URL = async (file) => {
-  const params = {
-    Bucket: process.env.AWS_BUCKET_NAME, // replace with your bucket name
-    Key: file,
-  }
-  const command = new GetObjectCommand(params);
-  const awsURL = await getSignedUrl(s3Client, command)
-  return awsURL;
-}
+// Configure Multer for file uploads to S3
+export const uploadProfileS3 = multer({
+    storage: multerS3({
+        s3: s3Client,
+        bucket: process.env.AWS_BUCKET_NAME,
+        metadata: (req, file, cb) => {
+            cb(null, { fieldName: file.originalname }); 
+        },
+        key: (req, file, cb) => {
+            cb(null, 'profile/'+imageName+file.originalname);
+        },
+    }),
+});

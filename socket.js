@@ -18,6 +18,7 @@ let activeUsers = [];
 io.on('connection', (socket)=>{
     // Add new user
     socket.on('newUser', (newUserId)=>{
+
         // if user is not added previously
         if(!activeUsers.some((user)=>user.userId===newUserId)){
             activeUsers.push({
@@ -34,7 +35,22 @@ io.on('connection', (socket)=>{
             if(user){
                 io.to(user.socketId).emit("receiveMessage", data.other)
             }
-        })
+        });
+
+        // Join group
+        socket.on('joinGroup', (data)=>{
+            const {groupId, userId} = data;
+            console.log(`User ${userId} joined group ${groupId}`);
+            socket.join(groupId);
+        });
+
+        // Leave group
+        socket.on('joinGroup', (data)=>{
+            const {groupId, userId} = data;
+            console.log(`User ${userId} left group ${groupId}`);
+            socket.leave(groupId);
+        });
+
     })
 
     socket.on('disconnect', ()=>{

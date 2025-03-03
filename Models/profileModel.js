@@ -57,7 +57,10 @@ const ProfileSchema = mongoose.Schema(
             type: Date,
         },
         profilePicture: {
-            publicId: {
+            key: {
+                type: String,
+            },
+            location: {
                 type: String,
             },
             url: {
@@ -65,7 +68,10 @@ const ProfileSchema = mongoose.Schema(
             },
         },
         coverPicture: {
-            publicId: {
+            key: {
+                type: String,
+            },
+            location: {
                 type: String,
             },
             url: {

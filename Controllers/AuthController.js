@@ -66,7 +66,7 @@ export const registerUser = async (req, res) => {
     }
     catch (err) {
         res.status(500).json(err)
-        console.log(err);
+        // console.log(err);
     }
 }
 
@@ -144,7 +144,7 @@ export const generateAccessToken = async (req, res) => {
     }
 }
 const createAccessToken = (payload) => {
-    return jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "1d"})
+    return jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "30d"})
 }
 const createRefreshToken = (payload) => {
     return jwt.sign(payload, process.env.REFRESH_TOKEN, {expiresIn: "30d"})

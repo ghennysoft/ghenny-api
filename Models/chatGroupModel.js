@@ -26,5 +26,5 @@ const chatGroupSchema = mongoose.Schema({
     timestamps: true
 });
 
-const ChatGroupModel = mongoose.model("ChatsGroup", chatGroupSchema)
+const ChatGroupModel = mongoose.model("ChatGroup", chatGroupSchema)
 export default ChatGroupModel

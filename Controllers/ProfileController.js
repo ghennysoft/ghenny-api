@@ -7,7 +7,9 @@ import QuestionModel from "../Models/questionModel.js";
 import AnswerModel from "../Models/answerModel.js";
 import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
 import PinCategoryModel from "../Models/pinCategoryModel.js";
+import dotenv from 'dotenv';
 
+dotenv.config()
 
 // Search data
 export const searchData = async (req, res) => {
@@ -114,17 +116,47 @@ export const getPins = async (req, res) => {
 
 // Complete profile infos after register
 export const completeProfile = async (req, res) => {
+    const {gender, birthday, status, school, option, university, filiere, entreprise, profession} = req.body;
     const {profileId, userId} = req.params;
+    console.log(req.body)
+    console.log(req.file)
+    console.log(req.files)
+    let pictureFile = {};
+    if(req.file) {
+        pictureFile = {
+            key: req.file.key,
+            location: req.file.location,
+            url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
+        }        
+    }
 
     if(profileId) {
-        if(!req.body.gender, !req.body.birthday, !req.body.status){
+        if(!gender, !birthday, !status){
             return res.status(400).json("Veillez remplir tous les champs")
         } else {
             try {
                 const user = await UserModel.findByIdAndUpdate(userId, {$set: {profileId: profileId}})
-                const profile = await ProfileModel.findByIdAndUpdate(profileId, {$set: req.body}).populate("userId", "-password");
+                const profile = await ProfileModel.findByIdAndUpdate(
+                    profileId,
+                    {$set: {
+                        gender,
+                        birthday,
+                        status,
+                        school,
+                        option,
+                        university,
+                        filiere,
+                        entreprise,
+                        profession,
+                        profilePicture: pictureFile,
+                    }}
+                )
+                .populate("userId", "-password");
+
+                console.log({profile, user})
                 res.status(200).json({"profile": profile, "user": user})
             } catch (error) {
+                console.log(error)
                 res.status(500).json(error)
             }
         }
@@ -166,10 +198,18 @@ export const updateProfile = async (req, res) => {
 // Update Profile & Complete profile infos after register
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
+    let pictureFile = {};
+    if(req.file) {
+        pictureFile = {
+            key: req.file.key,
+            location: req.file.location,
+            url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
+        }        
+    }
     if(paramId) {
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {profilePicture: req.body}
+                $set: {profilePicture: pictureFile}
             });
             res.status(200).json({"picture": picture})
         } catch (error) {
@@ -183,10 +223,18 @@ export const updatePicture = async (req, res) => {
 // Update Profile & Complete profile infos after register
 export const updateCoverPicture = async (req, res) => {
     const paramId = req.params.id;
+    let pictureFile = {};
+    if(req.file) {
+        pictureFile = {
+            key: req.file.key,
+            location: req.file.location,
+            url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
+        }        
+    }
     if(paramId) {
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {coverPicture: req.body}
+                $set: {coverPicture: pictureFile}
             });
             res.status(200).json({"coverPicture": picture})
         } catch (error) {

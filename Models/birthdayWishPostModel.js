@@ -8,12 +8,19 @@ const birthdayWishPostSchema = mongoose.Schema({
     },
     author: {
         type:mongoose.Types.ObjectId, 
-        ref: 'Profiles', 
+        ref: 'Profiles',
         required: true,
     },
     video: {
-        type: String,
-        required: true,
+        key: {
+            type: String,
+        },
+        location: {
+            type: String,
+        },
+        url: {
+            type: String,
+        },
     },
 },
 {

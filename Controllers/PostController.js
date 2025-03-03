@@ -1,17 +1,19 @@
-import { GetObjectCommand } from "@aws-sdk/client-s3";
 import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { getS3URL, s3Client } from "../utils/aws.js";
 
 export const createPost = async (req, res) => {
     const {author, content, media, postBg} = req.body;
+
     let postMedia = [];
     if(req.files.length!==0){
-        req.files.forEach(file  => {
-            postMedia.push({key: file.key, url: file.location});
+        req.files.forEach(file => {
+            postMedia.push({
+                key: file.key,
+                location: file.location,
+                url: process.env.AWS_CLOUDFRONT_DOMAIN+file.key,
+            });
         });
-    }   
+    }
     
     try {
         const newPost = new PostModel({
