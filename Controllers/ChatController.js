@@ -23,6 +23,38 @@ export const sendMessage = async (req, res) => {
     }
 }
 
+// Marquer comme vu
+// router.post("/:messageId/seen", authMiddleware, async (req, res) => {
+//     try {
+//       const message = await Message.findById(req.params.messageId);
+  
+//       if (!message.seenBy.includes(req.user.id)) {
+//         message.seenBy.push(req.user.id);
+//         await message.save();
+//       }
+  
+//       res.json({ message: "Message vu" });
+//     } catch (error) {
+//       res.status(500).json({ message: "Erreur serveur" });
+//     }
+//   });
+  
+  // Marquer comme lu
+//   router.post("/:messageId/read", authMiddleware, async (req, res) => {
+//     try {
+//       const message = await Message.findById(req.params.messageId);
+  
+//       if (!message.readBy.includes(req.user.id)) {
+//         message.readBy.push(req.user.id);
+//         await message.save();
+//       }
+  
+//       res.json({ message: "Message lu" });
+//     } catch (error) {
+//       res.status(500).json({ message: "Erreur serveur" });
+//     }
+//   });
+
 export const getUserChats = async (req, res) => {
     const {currentUser} = req.params;
     try {
@@ -81,6 +113,7 @@ export const getUsers = async (req, res) => {
     }
 }
 
+// Group controllers
 export const createGroup = async (req, res) => {
     const {name, detail, author} = req.body;
     try {
@@ -147,3 +180,40 @@ export const addMembers = async (req, res) => {
         res.status(500).json(error)
     }
 }
+
+// router.post("/:groupId/remove", authMiddleware, async (req, res) => {
+//     try {
+//       const { userId } = req.body;
+//       const group = await Group.findById(req.params.groupId);
+  
+//       if (!group.admins.includes(req.user.id)) return res.status(403).json({ message: "Accès refusé" });
+  
+//       group.members = group.members.filter(id => id.toString() !== userId);
+//       group.admins = group.admins.filter(id => id.toString() !== userId);
+//       await group.save();
+  
+//       res.json({ message: "Membre supprimé" });
+//     } catch (error) {
+//       res.status(500).json({ message: "Erreur serveur" });
+//     }
+//   });
+
+// Nommer un administrateur
+// router.post("/:groupId/make-admin", authMiddleware, async (req, res) => {
+//     try {
+//       const { userId } = req.body;
+//       const group = await Group.findById(req.params.groupId);
+  
+//       if (!group.admins.includes(req.user.id)) return res.status(403).json({ message: "Accès refusé" });
+  
+//       if (!group.admins.includes(userId)) {
+//         group.admins.push(userId);
+//         await group.save();
+//         res.json({ message: "Administrateur ajouté" });
+//       } else {
+//         res.status(400).json({ message: "Déjà administrateur" });
+//       }
+//     } catch (error) {
+//       res.status(500).json({ message: "Erreur serveur" });
+//     }
+//   });

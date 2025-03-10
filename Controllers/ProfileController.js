@@ -118,9 +118,6 @@ export const getPins = async (req, res) => {
 export const completeProfile = async (req, res) => {
     const {gender, birthday, status, school, option, university, filiere, entreprise, profession} = req.body;
     const {profileId, userId} = req.params;
-    console.log(req.body)
-    console.log(req.file)
-    console.log(req.files)
     let pictureFile = {};
     if(req.file) {
         pictureFile = {
@@ -156,7 +153,7 @@ export const completeProfile = async (req, res) => {
                 console.log({profile, user})
                 res.status(200).json({"profile": profile, "user": user})
             } catch (error) {
-                console.log(error)
+                // console.log(error)
                 res.status(500).json(error)
             }
         }
@@ -304,17 +301,22 @@ export const getBirthdayWishes = async (req, res) => {
                 {year: req.params.year},
             ],
         })
-        const wishes = await birthdayWishPostModel.find({birthdayId: wish._id})
-        .populate({
-            path: 'author',
-            select: 'userId profilePicture',
-            populate: {
-                path: 'userId',
-                select: 'username firstname lastname',
-            }
-        })
+        
+        let wishes=null;
+        if(wish){
+            wishes = await birthdayWishPostModel.find({birthdayId: wish._id})
+            .populate({
+                path: 'author',
+                select: 'userId profilePicture',
+                populate: {
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                }
+            })
+        }
         res.status(200).json(wishes)
     } catch (error) {
+        console.log(error)
         res.status(500).json(error)
     }
 }

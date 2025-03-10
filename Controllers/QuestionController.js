@@ -57,7 +57,7 @@ export const addQuestion = async (req, res) => {
 }
 
 export const getQuestions = async (req, res) => {
-    const {userId} = req.params
+    const {userId} = req.params;
     try {
         const getUser = await ProfileModel.findById(userId)
         const questions = await QuestionModel.find({$or: [{author: getUser._id}, {subjects: {$in: getUser.subjects}}]}).sort({createdAt: -1})

@@ -45,7 +45,7 @@ io.on('connection', (socket)=>{
         });
 
         // Leave group
-        socket.on('joinGroup', (data)=>{
+        socket.on('leaveGroup', (data)=>{
             const {groupId, userId} = data;
             console.log(`User ${userId} left group ${groupId}`);
             socket.leave(groupId);

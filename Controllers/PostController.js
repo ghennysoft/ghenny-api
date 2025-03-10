@@ -2,7 +2,7 @@ import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
 
 export const createPost = async (req, res) => {
-    const {author, content, media, postBg} = req.body;
+    const {author, content, postBg} = req.body;
 
     let postMedia = [];
     if(req.files.length!==0){

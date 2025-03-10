@@ -5,11 +5,12 @@ const chatGroupSchema = mongoose.Schema({
         type:String,
         required: true,
     },
-    detail: {
-        type:String,
-    },
+    detail: String,
     picture: {
-        publicId: {
+        key: {
+            type: String,
+        },
+        location: {
             type: String,
         },
         url: {
