@@ -1,5 +1,6 @@
 import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
+import NotificationModel from "../Models/notificationModel.js";
 
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
@@ -23,7 +24,22 @@ export const createPost = async (req, res) => {
            postBg, 
         });
         await newPost.save();
-        res.status(200).json(newPost)
+
+        // Récupérer les abonnés de l'utilisateur
+        const user = await ProfileModel.findById(newPost.author).populate('userId pinned');
+        const pinned = user.pinned;
+
+        // Créer une notification pour chaque abonné
+        const notifications = pinned.map(pin => ({
+            senderId: author,
+            receiverId: pin._id,
+            type: 'post',
+            content: "a une nouvelle publication",
+            dataId: newPost._id,
+        }));
+        await NotificationModel.insertMany(notifications);
+        
+        res.status(201).json({newPost, user, notifications})
     } catch (error) {
         // res.status(500).json(error)
     }
@@ -196,20 +212,6 @@ export const getTimelinePosts = async (req, res) => {
             // Vérifier si nous avons des articles suivants
             totalPosts = posts.length;  // Nombre de documents
             hasNextPage = skip + pageSize < totalPosts;
-
-            // for(const data of userFeed){
-            //     data.media.forEach(async item => {
-            //         // const params = {
-            //         //     Bucket: process.env.AWS_BUCKET_NAME,
-            //         //     Key: item.key,
-            //         // }
-            //         // const command = new GetObjectCommand(params);
-            //         // const uri = await getSignedUrl(s3Client, command)
-
-            //         const uri = await getS3URL(item)
-            //         item.url = uri;
-            //     })
-            // }
         }
         
         res.status(200).json({userFeed, page, totalPosts, hasNextPage});

@@ -15,6 +15,20 @@ const io = new Server(server, {
 
 let activeUsers = [];
 
+// Backend
+// const emitNotificationToFollowers = (followers, notification) => {
+//     followers.forEach(follower => {
+//       io.to(follower._id.toString()).emit('notification', notification);
+//     });
+//   };
+  
+//   // Lors de la création d'un post
+//   emitNotificationToFollowers(followers, {
+//     type: 'new_post',
+//     message: `${user.username} a publié un nouveau post.`,
+//   });
+  
+
 io.on('connection', (socket)=>{
     // Add new user
     socket.on('newUser', (newUserId)=>{
