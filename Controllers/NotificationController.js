@@ -23,8 +23,19 @@ export const getUserNotifications = async (req, res) => {
         const unreadNotifications = await NotificationModel.find({receiverId: currentUser, read: false})
         res.status(200).json({notifications, unreads: unreadNotifications.length})
     } catch (error) {
-        console.log(error);
+        res.status(500).json(error)
+    }
+}
+
+export const readNotification = async (req, res) => {  
+    const {id} = req.body;
+    try {
+        const notification = await NotificationModel.findById(id)
+        notification.read = true;
+        notification.save();
         
+        res.status(200).json(notification)
+    } catch (error) {
         res.status(500).json(error)
     }
 }

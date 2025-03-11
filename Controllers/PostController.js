@@ -4,7 +4,7 @@ import NotificationModel from "../Models/notificationModel.js";
 
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
-
+    console.log(req.body)
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -23,7 +23,9 @@ export const createPost = async (req, res) => {
            media: postMedia,
            postBg, 
         });
+        console.log(newPost)
         await newPost.save();
+        console.log(newPost)
 
         // Récupérer les abonnés de l'utilisateur
         const user = await ProfileModel.findById(newPost.author).populate('userId pinned');
