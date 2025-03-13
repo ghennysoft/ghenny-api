@@ -153,71 +153,140 @@ export const likeDislikePost = async (req, res) => {
     }
 }
 
-// Get Timeline Posts
 export const getTimelinePosts = async (req, res) => {
-    const id = req.user?._id;    
+    const id = req.user?._id;
+
     try {
-        let sameUser;
-        const currentUser = await ProfileModel.findById(id);
-        if(currentUser.status==='Pupil'){
-            sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
-        }
-        else if(currentUser.status==='Student'){
-            sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
-        }
-        else if(currentUser.status==='Other'){
-            sameUser = await ProfileModel.find({$or: [{status: currentUser.status}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname').select('userId status');
-        }
-        else{
-            sameUser = [];
+        const currentUser = await ProfileModel.findById(id).lean();
+        if (!currentUser) {
+            return res.status(404).json({ message: "User not found" });
         }
 
-        let idArr = [];
-        sameUser.forEach(item=>{
-            idArr.push(item._id)
-        })
+        let query;
+        if (currentUser.status === 'Pupil') {
+            query = { $or: [{ school: currentUser.school }, { option: currentUser.option }, { _id: { $in: currentUser.pins } }] };
+        } else if (currentUser.status === 'Student') {
+            query = { $or: [{ university: currentUser.university }, { filiere: currentUser.filiere }, { _id: { $in: currentUser.pins } }] };
+        } else if (currentUser.status === 'Other') {
+            query = { $or: [{ status: currentUser.status }, { _id: { $in: currentUser.pins } }] };
+        } else {
+            return res.status(200).json({ userFeed: [], page: 1, totalPosts: 0, hasNextPage: false });
+        }
 
+        const sameUser = await ProfileModel.find(query).select('_id').lean();
+        const idArr = sameUser.map(item => item._id);
 
-        const page = parseInt(req.query.page) || 1; // page courante
-        const pageSize = 5; // Nombre d'articles par page
-        const skip = (page - 1) * pageSize; // Calculer combien de documents à ignorer
-        
-        let userFeed;
-        let totalPosts;
-        let hasNextPage;
-        if(idArr.length!==0){
-            const posts = await PostModel.find({author: {$in: idArr}})
-            userFeed = await PostModel.find({author: {$in: idArr}})
-            .sort({createdAt: -1})
-            .skip(skip)
-            .limit(pageSize)
-            .populate({
-                path: 'comments',
-                populate: {
+        const page = parseInt(req.query.page) || 1;
+        const pageSize = 5;
+        const skip = (page - 1) * pageSize;
+
+        let userFeed = [];
+        let totalPosts = 0;
+        let hasNextPage = false;
+
+        if (idArr.length > 0) {
+            const postsQuery = PostModel.find({ author: { $in: idArr } });
+            totalPosts = await PostModel.countDocuments({ author: { $in: idArr } });
+
+            userFeed = await postsQuery
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(pageSize)
+                .populate({
+                    path: 'comments',
+                    populate: {
+                        path: 'author',
+                        select: 'userId profilePicture birthday status school option university filiere profession entreprise',
+                        populate: {
+                            path: 'userId',
+                            select: 'username firstname lastname',
+                        }
+                    }
+                })
+                .populate({
                     path: 'author',
                     select: 'userId profilePicture birthday status school option university filiere profession entreprise',
                     populate: {
                         path: 'userId',
                         select: 'username firstname lastname',
                     }
-                }
-            })
-            .populate({
-                path: 'author',
-                select: 'userId profilePicture birthday status school option university filiere profession entreprise',
-                populate: {
-                    path: 'userId',
-                    select: 'username firstname lastname',
-                }
-            })
+                })
+                .lean();
 
-            // Vérifier si nous avons des articles suivants
-            totalPosts = posts.length;  // Nombre de documents
             hasNextPage = skip + pageSize < totalPosts;
         }
-        
-        res.status(200).json({userFeed, page, totalPosts, hasNextPage});
+
+        res.status(200).json({ userFeed, page, totalPosts, hasNextPage });
     } catch (error) {
-      res.status(500).json(error);
+        res.status(500).json({ message: error.message });
     }
 };
+
+// Get Timeline Posts
+// export const getTimelinePosts = async (req, res) => {
+//     const id = req.user?._id;    
+//     try {
+//         let sameUser;
+//         const currentUser = await ProfileModel.findById(id);
+//         if(currentUser.status==='Pupil'){
+//             sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
+//         }
+//         else if(currentUser.status==='Student'){
+//             sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
+//         }
+//         else if(currentUser.status==='Other'){
+//             sameUser = await ProfileModel.find({$or: [{status: currentUser.status}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname').select('userId status');
+//         }
+//         else{
+//             sameUser = [];
+//         }
+
+//         let idArr = [];
+//         sameUser.forEach(item=>{
+//             idArr.push(item._id)
+//         })
+
+
+//         const page = parseInt(req.query.page) || 1; // page courante
+//         const pageSize = 5; // Nombre d'articles par page
+//         const skip = (page - 1) * pageSize; // Calculer combien de documents à ignorer
+        
+//         let userFeed;
+//         let totalPosts;
+//         let hasNextPage;
+//         if(idArr.length!==0){
+//             const posts = await PostModel.find({author: {$in: idArr}})
+//             userFeed = await PostModel.find({author: {$in: idArr}})
+//             .sort({createdAt: -1})
+//             .skip(skip)
+//             .limit(pageSize)
+//             .populate({
+//                 path: 'comments',
+//                 populate: {
+//                     path: 'author',
+//                     select: 'userId profilePicture birthday status school option university filiere profession entreprise',
+//                     populate: {
+//                         path: 'userId',
+//                         select: 'username firstname lastname',
+//                     }
+//                 }
+//             })
+//             .populate({
+//                 path: 'author',
+//                 select: 'userId profilePicture birthday status school option university filiere profession entreprise',
+//                 populate: {
+//                     path: 'userId',
+//                     select: 'username firstname lastname',
+//                 }
+//             })
+
+//             // Vérifier si nous avons des articles suivants
+//             totalPosts = posts.length;  // Nombre de documents
+//             hasNextPage = skip + pageSize < totalPosts;
+//         }
+        
+//         res.status(200).json({userFeed, page, totalPosts, hasNextPage});
+//     } catch (error) {
+//       res.status(500).json(error);
+//     }
+// };

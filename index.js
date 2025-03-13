@@ -26,7 +26,7 @@ const corsOptions = {
     origin: ["http://localhost:3000", "https://ghenny.onrender.com"],
     methods: ["GET", "PUT", "POST", "DELETE"],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    // credentials: true // si vous utilisez des cookies ou des sessions 
+    credentials: true // si vous utilisez des cookies ou des sessions 
 }
 
 // Middleware
@@ -59,20 +59,16 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
     throw error
 });
 
-// Si tu es en production, sers les fichiers statiques de React
-// const __dirname1 = path.resolve();
-// if (process.env.NODE_ENV === 'production') {
-//     app.use(express.static(path.join(__dirname1, 'build')));
-  
-//     // Redirige toutes les autres requêtes vers l'index de React
-//     app.get('*', (req, res) => {
-//       res.sendFile(path.resolve(__dirname1, 'build', 'redirect.html'));
-//     });
-// } else {
-//     app.get('/', (req, res) => {
-//         res.send("API Is Running");
-//     }); 
-// }
+if (process.env.NODE_ENV === 'production') {
+    // Redirige toutes les autres requêtes vers l'index de React
+    app.get('*', (req, res) => {
+        res.redirect('https://ghenny.onrender.com' + req.url);
+    });
+} else {
+    app.get('/', (req, res) => {
+        res.send("API Is Running");
+    }); 
+}
 
 // Usage of route
 app.use('/api/auth', AuthRoute)
