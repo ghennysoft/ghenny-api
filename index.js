@@ -23,7 +23,7 @@ dotenv.config()
 const port = 5000
 const corsOptions = {
     AccessControlAllowOrigin: "*",
-    origin: ["http://localhost:3000", "https://ghenny.onrender.com"],
+    origin: ["http://localhost:3000", "https://ghenny.vercel.app", "https://ghenny.onrender.com"],
     methods: ["GET", "PUT", "POST", "DELETE"],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true // si vous utilisez des cookies ou des sessions 
@@ -59,16 +59,19 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
     throw error
 });
 
-if (process.env.NODE_ENV === 'production') {
-    // Redirige toutes les autres requêtes vers l'index de React
-    app.get('*', (req, res) => {
-        res.redirect('https://ghenny.onrender.com' + req.url);
-    });
-} else {
-    app.get('/', (req, res) => {
-        res.send("API Is Running");
-    }); 
-}
+// if (process.env.NODE_ENV === 'production') {
+//     // Redirige toutes les autres requêtes vers l'index de React
+//     app.get('*', (req, res) => {
+//         // res.redirect('https://ghenny.onrender.com' + req.url);
+//         res.redirect('http://localhost:5000' + req.url);
+//         // res.location('http://localhost:5000' + req.url);
+//         console.log(req.url);
+//     });
+// } else {
+//     app.get('/', (req, res) => {
+//         res.send("API Is Running");
+//     }); 
+// }
 
 // Usage of route
 app.use('/api/auth', AuthRoute)

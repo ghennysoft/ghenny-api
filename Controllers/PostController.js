@@ -215,7 +215,7 @@ export const getTimelinePosts = async (req, res) => {
 
             hasNextPage = skip + pageSize < totalPosts;
         }
-
+        console.log({ userFeed, page, totalPosts, hasNextPage });
         res.status(200).json({ userFeed, page, totalPosts, hasNextPage });
     } catch (error) {
         res.status(500).json({ message: error.message });

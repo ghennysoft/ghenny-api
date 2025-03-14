@@ -5,7 +5,7 @@ import authUser from '../utils/authMiddleware.js'
 
 const router = express.Router()
 
-router.get('/all', authUser, getAllPosts)
+router.get('/all', getAllPosts)
 router.post('/create', uploadPostS3.array('media'), createPost)
 router.put('/like', likeDislikePost)
 router.get('/feed', authUser, getTimelinePosts)
