@@ -15,8 +15,8 @@ import NotificationRoute from './Routes/NotificationRoute.js';
 import MulterRoute from './Routes/Multer.js';
 import AWSRoute from './utils/fileStorage.js';
 import { app, server } from './socket.js';
-import path from 'path'
-import helmet from 'helmet'
+import path from 'path';
+import helmet from 'helmet';
 
 dotenv.config()
 
@@ -38,7 +38,7 @@ app.use((req, res, next) => {
     // Si le site est sur le même domaine
     // res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
     
-    // Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
+// Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     
     next();

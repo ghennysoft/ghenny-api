@@ -4,7 +4,7 @@ import NotificationModel from "../Models/notificationModel.js";
 
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
-    console.log(req.body)
+
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -23,9 +23,7 @@ export const createPost = async (req, res) => {
            media: postMedia,
            postBg, 
         });
-        console.log(newPost)
         await newPost.save();
-        console.log(newPost)
 
         // Récupérer les abonnés de l'utilisateur
         const user = await ProfileModel.findById(newPost.author).populate('userId pinned');
@@ -36,12 +34,11 @@ export const createPost = async (req, res) => {
             senderId: author,
             receiverId: pin._id,
             type: 'post',
-            content: "a une nouvelle publication",
-            dataId: newPost._id,
+            postId: newPost._id,
         }));
         await NotificationModel.insertMany(notifications);
         
-        res.status(201).json({newPost, user, notifications})
+        res.status(201).json({newPost, user})
     } catch (error) {
         // res.status(500).json(error)
     }
@@ -143,6 +140,16 @@ export const likeDislikePost = async (req, res) => {
         const post = await PostModel.findById(postId)
         if(!post.likes.includes(currentUserId)) {
             await post.updateOne({$push: {likes:currentUserId}});
+
+            // Envoyer une notification à l'auteur du post
+            const notification = new NotificationModel({
+                senderId: currentUserId,
+                receiverId: post.author,
+                type: 'like',
+                postId: post._id,
+            });
+            await notification.save();
+            
             res.status(200).json(post)
         } else {
             await post.updateOne({$pull: {likes:currentUserId}});
@@ -157,136 +164,219 @@ export const getTimelinePosts = async (req, res) => {
     const id = req.user?._id;
 
     try {
+        // Récupérer l'utilisateur actuel
         const currentUser = await ProfileModel.findById(id).lean();
         if (!currentUser) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        let query;
+        // Définir la requête pour les utilisateurs similaires
+        let matchQuery;
         if (currentUser.status === 'Pupil') {
-            query = { $or: [{ school: currentUser.school }, { option: currentUser.option }, { _id: { $in: currentUser.pins } }] };
+            matchQuery = {
+                $or: [
+                    { school: currentUser.school },
+                    { option: currentUser.option },
+                    { _id: { $in: currentUser.pins } }
+                ]
+            };
         } else if (currentUser.status === 'Student') {
-            query = { $or: [{ university: currentUser.university }, { filiere: currentUser.filiere }, { _id: { $in: currentUser.pins } }] };
+            matchQuery = {
+                $or: [
+                    { university: currentUser.university },
+                    { filiere: currentUser.filiere },
+                    { _id: { $in: currentUser.pins } }
+                ]
+            };
         } else if (currentUser.status === 'Other') {
-            query = { $or: [{ status: currentUser.status }, { _id: { $in: currentUser.pins } }] };
+            matchQuery = {
+                $or: [
+                    { status: currentUser.status },
+                    { _id: { $in: currentUser.pins } }
+                ]
+            };
         } else {
             return res.status(200).json({ userFeed: [], page: 1, totalPosts: 0, hasNextPage: false });
         }
 
-        const sameUser = await ProfileModel.find(query).select('_id').lean();
-        const idArr = sameUser.map(item => item._id);
-
+        // Pagination
         const page = parseInt(req.query.page) || 1;
         const pageSize = 5;
         const skip = (page - 1) * pageSize;
 
-        let userFeed = [];
-        let totalPosts = 0;
-        let hasNextPage = false;
-
-        if (idArr.length > 0) {
-            const postsQuery = PostModel.find({ author: { $in: idArr } });
-            totalPosts = await PostModel.countDocuments({ author: { $in: idArr } });
-
-            userFeed = await postsQuery
-                .sort({ createdAt: -1 })
-                .skip(skip)
-                .limit(pageSize)
-                .populate({
-                    path: 'comments',
-                    populate: {
-                        path: 'author',
-                        select: 'userId profilePicture birthday status school option university filiere profession entreprise',
-                        populate: {
-                            path: 'userId',
-                            select: 'username firstname lastname',
+        // Aggregation pour récupérer les posts des utilisateurs similaires
+        const aggregationPipeline = [
+            // Étape 1 : Trouver les utilisateurs similaires
+            {
+                $match: matchQuery
+            },
+            // Étape 2 : Joindre les posts des utilisateurs similaires
+            {
+                $lookup: {
+                    from: 'posts', // Nom de la collection des posts
+                    localField: '_id',
+                    foreignField: 'author',
+                    as: 'posts'
+                }
+            },
+            // Étape 3 : Déplier les posts
+            {
+                $unwind: '$posts'
+            },
+            // Étape 4 : Trier les posts par date de création
+            {
+                $sort: { 'posts.createdAt': -1 }
+            },
+            // Étape 5 : Pagination
+            {
+                $skip: skip
+            },
+            {
+                $limit: pageSize
+            },
+            // Étape 6 : Joindre les informations de l'auteur et des commentaires
+            {
+                $lookup: {
+                    from: 'profiles', // Nom de la collection des profils
+                    localField: 'posts.author',
+                    foreignField: '_id',
+                    as: 'authorInfo'
+                }
+            },
+            {
+                $unwind: '$authorInfo'
+            },
+            {
+                $lookup: {
+                    from: 'comments', // Nom de la collection des commentaires
+                    localField: 'posts.comments',
+                    foreignField: '_id',
+                    as: 'commentsInfo'
+                }
+            },
+            // Étape 7 : Formater le résultat
+            {
+                $project: {
+                    _id: '$posts._id',
+                    content: '$posts.content',
+                    createdAt: '$posts.createdAt',
+                    author: {
+                        userId: '$authorInfo.userId',
+                        profilePicture: '$authorInfo.profilePicture',
+                        status: '$authorInfo.status',
+                        school: '$authorInfo.school',
+                        option: '$authorInfo.option',
+                        university: '$authorInfo.university',
+                        filiere: '$authorInfo.filiere'
+                    },
+                    comments: {
+                        $map: {
+                            input: '$commentsInfo',
+                            as: 'comment',
+                            in: {
+                                _id: '$$comment._id',
+                                content: '$$comment.content',
+                                author: {
+                                    userId: '$$comment.author.userId',
+                                    profilePicture: '$$comment.author.profilePicture',
+                                    status: '$$comment.author.status',
+                                    school: '$$comment.author.school',
+                                    option: '$$comment.author.option',
+                                    university: '$$comment.author.university',
+                                    filiere: '$$comment.author.filiere'
+                                }
+                            }
                         }
                     }
-                })
-                .populate({
-                    path: 'author',
-                    select: 'userId profilePicture birthday status school option university filiere profession entreprise',
-                    populate: {
-                        path: 'userId',
-                        select: 'username firstname lastname',
-                    }
-                })
-                .lean();
+                }
+            }
+        ];
 
-            hasNextPage = skip + pageSize < totalPosts;
-        }
-        console.log({ userFeed, page, totalPosts, hasNextPage });
-        res.status(200).json({ userFeed, page, totalPosts, hasNextPage });
+        // Exécuter l'aggregation
+        const userFeed = await ProfileModel.aggregate(aggregationPipeline);
+
+        // Compter le nombre total de posts
+        const totalPosts = await ProfileModel.aggregate([
+            { $match: matchQuery },
+            { $lookup: { from: 'posts', localField: '_id', foreignField: 'author', as: 'posts' } },
+            { $unwind: '$posts' },
+            { $count: 'totalPosts' }
+        ]);
+
+        // Vérifier s'il y a une page suivante
+        const hasNextPage = skip + pageSize < (totalPosts[0]?.totalPosts || 0);
+
+        // Retourner le résultat
+        res.status(200).json({ userFeed, page, totalPosts: totalPosts[0]?.totalPosts || 0, hasNextPage });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
 
-// Get Timeline Posts
 // export const getTimelinePosts = async (req, res) => {
-//     const id = req.user?._id;    
+//     const id = req.user?._id;
+
 //     try {
-//         let sameUser;
-//         const currentUser = await ProfileModel.findById(id);
-//         if(currentUser.status==='Pupil'){
-//             sameUser = await ProfileModel.find({$or: [{school: currentUser.school}, {option: currentUser.option}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
-//         }
-//         else if(currentUser.status==='Student'){
-//             sameUser = await ProfileModel.find({$or: [{university: currentUser.university}, {filiere: currentUser.filiere}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname')
-//         }
-//         else if(currentUser.status==='Other'){
-//             sameUser = await ProfileModel.find({$or: [{status: currentUser.status}, {_id: [...currentUser.pins]}]}).populate('userId', 'firstname lastname').select('userId status');
-//         }
-//         else{
-//             sameUser = [];
+//         const currentUser = await ProfileModel.findById(id).lean();
+//         if (!currentUser) {
+//             return res.status(404).json({ message: "User not found" });
 //         }
 
-//         let idArr = [];
-//         sameUser.forEach(item=>{
-//             idArr.push(item._id)
-//         })
+//         let query;
+//         if (currentUser.status === 'Pupil') {
+//             query = { $or: [{ school: currentUser.school }, { option: currentUser.option }, { _id: { $in: currentUser.pins } }] };
+//         } else if (currentUser.status === 'Student') {
+//             query = { $or: [{ university: currentUser.university }, { filiere: currentUser.filiere }, { _id: { $in: currentUser.pins } }] };
+//         } else if (currentUser.status === 'Other') {
+//             query = { $or: [{ status: currentUser.status }, { _id: { $in: currentUser.pins } }] };
+//         } else {
+//             return res.status(200).json({ userFeed: [], page: 1, totalPosts: 0, hasNextPage: false });
+//         }
 
+//         const sameUser = await ProfileModel.find(query).select('_id').lean();
+//         const idArr = sameUser.map(item => item._id);
 
-//         const page = parseInt(req.query.page) || 1; // page courante
-//         const pageSize = 5; // Nombre d'articles par page
-//         const skip = (page - 1) * pageSize; // Calculer combien de documents à ignorer
-        
-//         let userFeed;
-//         let totalPosts;
-//         let hasNextPage;
-//         if(idArr.length!==0){
-//             const posts = await PostModel.find({author: {$in: idArr}})
-//             userFeed = await PostModel.find({author: {$in: idArr}})
-//             .sort({createdAt: -1})
-//             .skip(skip)
-//             .limit(pageSize)
-//             .populate({
-//                 path: 'comments',
-//                 populate: {
+//         const page = parseInt(req.query.page) || 1;
+//         const pageSize = 5;
+//         const skip = (page - 1) * pageSize;
+
+//         let userFeed = [];
+//         let totalPosts = 0;
+//         let hasNextPage = false;
+
+//         if (idArr.length > 0) {
+//             const postsQuery = PostModel.find({ author: { $in: idArr } });
+//             totalPosts = await PostModel.countDocuments({ author: { $in: idArr } });
+
+//             userFeed = await postsQuery
+//                 .sort({ createdAt: -1 })
+//                 .skip(skip)
+//                 .limit(pageSize)
+//                 .populate({
+//                     path: 'comments',
+//                     populate: {
+//                         path: 'author',
+//                         select: 'userId profilePicture birthday status school option university filiere profession entreprise',
+//                         populate: {
+//                             path: 'userId',
+//                             select: 'username firstname lastname',
+//                         }
+//                     }
+//                 })
+//                 .populate({
 //                     path: 'author',
 //                     select: 'userId profilePicture birthday status school option university filiere profession entreprise',
 //                     populate: {
 //                         path: 'userId',
 //                         select: 'username firstname lastname',
 //                     }
-//                 }
-//             })
-//             .populate({
-//                 path: 'author',
-//                 select: 'userId profilePicture birthday status school option university filiere profession entreprise',
-//                 populate: {
-//                     path: 'userId',
-//                     select: 'username firstname lastname',
-//                 }
-//             })
+//                 })
+//                 .lean();
 
-//             // Vérifier si nous avons des articles suivants
-//             totalPosts = posts.length;  // Nombre de documents
 //             hasNextPage = skip + pageSize < totalPosts;
 //         }
-        
-//         res.status(200).json({userFeed, page, totalPosts, hasNextPage});
+//         res.status(200).json({ userFeed, page, totalPosts, hasNextPage });
 //     } catch (error) {
-//       res.status(500).json(error);
+//         res.status(500).json({ message: error.message });
 //     }
 // };

@@ -6,7 +6,7 @@ export const getUserNotifications = async (req, res) => {
         const notifications = await NotificationModel.find({receiverId: currentUser}).sort({createdAt: -1})
         .populate({
             path: 'senderId',
-            select: 'userId profilePicture',
+            select: 'userId profilePicture birthday',
             populate: {
                 path: 'userId',
                 select: 'firstname lastname',
@@ -14,12 +14,21 @@ export const getUserNotifications = async (req, res) => {
         })
         .populate({
             path: 'receiverId',
-            select: 'userId profilePicture',
+            select: 'userId profilePicture birthday',
             populate: {
                 path: 'userId',
                 select: 'firstname lastname',
             }
         })
+        .populate({
+            path: 'postId',
+            select: 'content media comments',
+            populate: {
+                path: 'comments',
+                select: 'author content',
+            }
+        })
+
         const unreadNotifications = await NotificationModel.find({receiverId: currentUser, read: false})
         res.status(200).json({notifications, unreads: unreadNotifications.length})
     } catch (error) {

@@ -3,10 +3,9 @@ import mongoose from "mongoose";
 const notificationSchema = mongoose.Schema({
     senderId: {type:mongoose.Types.ObjectId, ref: 'Profiles', required: true},
     receiverId: {type:mongoose.Types.ObjectId, ref: 'Profiles', required: true},
+    postId: {type:mongoose.Types.ObjectId, ref: 'Posts' }, // Lien vers le post
     type: {type: String, required: true}, // Type de notification (ex: "like", "comment", "friend_request")
-    content: {type: String, required: true}, // Message de la notification
     read: { type: Boolean, default: false },
-    dataId: { type: String }, // Lien vers le post
 },
 {
     timestamps: true

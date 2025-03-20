@@ -1,4 +1,5 @@
 import CommentModel from "../Models/commentModel.js";
+import NotificationModel from "../Models/notificationModel.js";
 import PostModel from "../Models/postModel.js";
 
 export const addComment = async (req, res) => {
@@ -13,9 +14,20 @@ export const addComment = async (req, res) => {
 
             const find_post = await PostModel.findById(req.body.postId)
             await find_post.updateOne({$push: {"comments": newComment._id}})
-            res.status(200).json(newComment)
+
+            // Envoyer une notification à l'auteur du post
+            const notification = new NotificationModel({
+                senderId: newComment.author,
+                receiverId: req.body.author,
+                type: 'comment',
+                postId: req.body.postId,
+            });
+            await notification.save();
+
+            res.status(200).json({newComment, notification})
         }
     } catch (error) {
+        console.log(error);        
         res.status(500).json(error)
     }
 }
