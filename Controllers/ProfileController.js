@@ -66,11 +66,9 @@ export const searchData = async (req, res) => {
 
 export const getProfile = async (req, res) => {
     const paramId = req.params.id;
-    console.log(paramId);
      
     try {
         const user = await UserModel.findOne({username: paramId});
-        console.log(user);
         
         const profile = await ProfileModel.findOne({userId: user._id})
         .populate("userId", "-password")
@@ -82,7 +80,6 @@ export const getProfile = async (req, res) => {
                 select: 'username firstname lastname',
             }
         })
-        console.log(profile);
 
         if(profile){
             res.status(200).json(profile)
@@ -90,7 +87,6 @@ export const getProfile = async (req, res) => {
             res.status(404).json("No such profile exist")
         }
     } catch (error) {
-        console.log(error);
         res.status(500).json(error)
     }
 }

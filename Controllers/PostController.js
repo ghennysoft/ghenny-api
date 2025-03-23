@@ -4,7 +4,7 @@ import NotificationModel from "../Models/notificationModel.js";
 
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
-
+    
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -21,9 +21,9 @@ export const createPost = async (req, res) => {
            author,
            content,
            media: postMedia,
-           postBg, 
+           postBg: JSON.parse(postBg), 
         });
-        await newPost.save();
+        const resp = await newPost.save();
 
         // Récupérer les abonnés de l'utilisateur
         const user = await ProfileModel.findById(newPost.author).populate('userId pinned');
@@ -234,7 +234,7 @@ export const getTimelinePosts = async (req, res) => {
             {
                 $limit: pageSize
             },
-            // Étape 6 : Joindre les informations de l'auteur et des commentaires
+            // Étape 6 : Joindre les informations de l'auteur (Profile)
             {
                 $lookup: {
                     from: 'profiles', // Nom de la collection des profils
@@ -246,6 +246,19 @@ export const getTimelinePosts = async (req, res) => {
             {
                 $unwind: '$authorInfo'
             },
+            // Étape 7 : Joindre les informations de l'utilisateur (User)
+            {
+                $lookup: {
+                    from: 'users', // Nom de la collection des utilisateurs
+                    localField: 'authorInfo.userId',
+                    foreignField: '_id',
+                    as: 'userInfo'
+                }
+            },
+            {
+                $unwind: '$userInfo'
+            },
+            // Étape 8 : Joindre les commentaires
             {
                 $lookup: {
                     from: 'comments', // Nom de la collection des commentaires
@@ -254,20 +267,28 @@ export const getTimelinePosts = async (req, res) => {
                     as: 'commentsInfo'
                 }
             },
-            // Étape 7 : Formater le résultat
+            // Étape 9 : Formater le résultat
             {
                 $project: {
                     _id: '$posts._id',
                     content: '$posts.content',
+                    postBg: '$posts.postBg',
+                    media: '$posts.media',
+                    likes: '$posts.likes',
                     createdAt: '$posts.createdAt',
                     author: {
-                        userId: '$authorInfo.userId',
+                        // userId: '$authorInfo.userId',
                         profilePicture: '$authorInfo.profilePicture',
                         status: '$authorInfo.status',
                         school: '$authorInfo.school',
                         option: '$authorInfo.option',
                         university: '$authorInfo.university',
-                        filiere: '$authorInfo.filiere'
+                        filiere: '$authorInfo.filiere',
+                        userId: {
+                            firstname: '$userInfo.firstname',
+                            lastname: '$userInfo.lastname',
+                            username: '$userInfo.username'
+                        }
                     },
                     comments: {
                         $map: {
@@ -283,7 +304,12 @@ export const getTimelinePosts = async (req, res) => {
                                     school: '$$comment.author.school',
                                     option: '$$comment.author.option',
                                     university: '$$comment.author.university',
-                                    filiere: '$$comment.author.filiere'
+                                    filiere: '$$comment.author.filiere',
+                                    user: {
+                                        firstname: '$$comment.author.userInfo.firstname',
+                                        lastname: '$$comment.author.userInfo.lastname',
+                                        username: '$$comment.author.userInfo.username'
+                                    }
                                 }
                             }
                         }

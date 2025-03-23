@@ -15,7 +15,7 @@ import NotificationRoute from './Routes/NotificationRoute.js';
 import MulterRoute from './Routes/Multer.js';
 import AWSRoute from './utils/fileStorage.js';
 import { app, server } from './socket.js';
-import path from 'path';
+// import path from 'path';
 import helmet from 'helmet';
 
 dotenv.config()
@@ -38,7 +38,7 @@ app.use((req, res, next) => {
     // Si le site est sur le même domaine
     // res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
     
-// Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
+    // Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     
     next();
@@ -58,20 +58,6 @@ mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .catch((error) => {
     throw error
 });
-
-// if (process.env.NODE_ENV === 'production') {
-//     // Redirige toutes les autres requêtes vers l'index de React
-//     app.get('*', (req, res) => {
-//         // res.redirect('https://ghenny.onrender.com' + req.url);
-//         res.redirect('http://localhost:5000' + req.url);
-//         // res.location('http://localhost:5000' + req.url);
-//         console.log(req.url);
-//     });
-// } else {
-//     app.get('/', (req, res) => {
-//         res.send("API Is Running");
-//     }); 
-// }
 
 // Usage of route
 app.use('/api/auth', AuthRoute)
