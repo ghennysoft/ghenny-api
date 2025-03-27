@@ -72,6 +72,7 @@ export const registerUser = async (req, res) => {
 
 export const loginUser = async (req, res) => {  
     const {data, password} = req.body
+    
     try {
         if(!data, !password){
           res.status(400).json({message: 'Remplissez tous les champs'})

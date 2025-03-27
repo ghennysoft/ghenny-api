@@ -91,4 +91,12 @@ const ProfileSchema = mongoose.Schema(
 )
 
 const ProfileModel = mongoose.model("Profiles", ProfileSchema)
+
+ProfileModel.collection.createIndex({school: 1});
+ProfileModel.collection.createIndex({option: 1});
+ProfileModel.collection.createIndex({university: 1});
+ProfileModel.collection.createIndex({filiere: 1});
+ProfileModel.collection.createIndex({school: 1, option: 1});
+ProfileModel.collection.createIndex({pins: 1});
+
 export default ProfileModel

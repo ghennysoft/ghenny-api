@@ -135,20 +135,22 @@ export const deletePost = async (req, res) => {
 }
 
 export const likeDislikePost = async (req, res) => {
-    const {currentUserId, postId} = req.body;
+    const {currentUserId, postId} = req.body;    
     try {
         const post = await PostModel.findById(postId)
         if(!post.likes.includes(currentUserId)) {
             await post.updateOne({$push: {likes:currentUserId}});
-
+            console.log("data: ", currentUserId, post.author);
             // Envoyer une notification à l'auteur du post
-            const notification = new NotificationModel({
+            if(currentUserId === post.author) return null;
+            const notif = new NotificationModel({
                 senderId: currentUserId,
                 receiverId: post.author,
                 type: 'like',
                 postId: post._id,
             });
             await notification.save();
+            console.log(notif);            
             
             res.status(200).json(post)
         } else {
@@ -277,7 +279,6 @@ export const getTimelinePosts = async (req, res) => {
                     likes: '$posts.likes',
                     createdAt: '$posts.createdAt',
                     author: {
-                        // userId: '$authorInfo.userId',
                         profilePicture: '$authorInfo.profilePicture',
                         status: '$authorInfo.status',
                         school: '$authorInfo.school',
