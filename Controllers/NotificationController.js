@@ -22,11 +22,11 @@ export const getUserNotifications = async (req, res) => {
         })
         .populate({
             path: 'postId',
-            select: 'content media comments',
-            populate: {
-                path: 'comments',
-                select: 'author content',
-            }
+            select: 'content media',
+        })
+        .populate({
+            path: 'commentId',
+            select: 'content',
         })
 
         const unreadNotifications = await NotificationModel.find({receiverId: currentUser, read: false})

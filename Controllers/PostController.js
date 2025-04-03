@@ -140,17 +140,17 @@ export const likeDislikePost = async (req, res) => {
         const post = await PostModel.findById(postId)
         if(!post.likes.includes(currentUserId)) {
             await post.updateOne({$push: {likes:currentUserId}});
-            console.log("data: ", currentUserId, post.author);
+            
             // Envoyer une notification à l'auteur du post
-            if(currentUserId === post.author) return null;
-            const notif = new NotificationModel({
-                senderId: currentUserId,
-                receiverId: post.author,
-                type: 'like',
-                postId: post._id,
-            });
-            await notification.save();
-            console.log(notif);            
+            if(currentUserId !== post.author.toString()) {
+                const notification = new NotificationModel({
+                    senderId: currentUserId,
+                    receiverId: post.author,
+                    type: 'like',
+                    postId: post._id,
+                });
+                await notification.save();           
+            };
             
             res.status(200).json(post)
         } else {
@@ -260,13 +260,49 @@ export const getTimelinePosts = async (req, res) => {
             {
                 $unwind: '$userInfo'
             },
-            // Étape 8 : Joindre les commentaires
             {
                 $lookup: {
-                    from: 'comments', // Nom de la collection des commentaires
+                    from: 'comments',
                     localField: 'posts.comments',
                     foreignField: '_id',
-                    as: 'commentsInfo'
+                    as: 'commentsInfo',
+                    pipeline: [
+                        {
+                            $lookup: {
+                                from: 'profiles',
+                                localField: 'author',
+                                foreignField: '_id',
+                                as: 'authorProfile'
+                            }
+                        },
+                        { $unwind: '$authorProfile' },
+                        {
+                            $lookup: {
+                                from: 'users',
+                                localField: 'authorProfile.userId',
+                                foreignField: '_id',
+                                as: 'authorUser'
+                            }
+                        },
+                        { $unwind: '$authorUser' },
+                        {
+                            $project: {
+                                _id: 1,
+                                content: 1,
+                                reply: 1,
+                                likes: 1,
+                                createdAt: 1,
+                                author: {
+                                    profilePicture: '$authorProfile.profilePicture',
+                                    userId: {
+                                        firstname: '$authorUser.firstname',
+                                        lastname: '$authorUser.lastname',
+                                        username: '$authorUser.username'
+                                    }
+                                }
+                            }
+                        }
+                    ]
                 }
             },
             // Étape 9 : Formater le résultat
@@ -291,32 +327,67 @@ export const getTimelinePosts = async (req, res) => {
                             username: '$userInfo.username'
                         }
                     },
-                    comments: {
-                        $map: {
-                            input: '$commentsInfo',
-                            as: 'comment',
-                            in: {
-                                _id: '$$comment._id',
-                                content: '$$comment.content',
-                                author: {
-                                    userId: '$$comment.author.userId',
-                                    profilePicture: '$$comment.author.profilePicture',
-                                    status: '$$comment.author.status',
-                                    school: '$$comment.author.school',
-                                    option: '$$comment.author.option',
-                                    university: '$$comment.author.university',
-                                    filiere: '$$comment.author.filiere',
-                                    user: {
-                                        firstname: '$$comment.author.userInfo.firstname',
-                                        lastname: '$$comment.author.userInfo.lastname',
-                                        username: '$$comment.author.userInfo.username'
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    comments: '$commentsInfo'
                 }
             }
+            // // Étape 8 : Joindre les commentaires
+            // {
+            //     $lookup: {
+            //         from: 'comments', // Nom de la collection des commentaires
+            //         localField: 'posts.comments',
+            //         foreignField: '_id',
+            //         as: 'commentsInfo'
+            //     }
+            // },
+            // // Étape 9 : Formater le résultat
+            // {
+            //     $project: {
+            //         _id: '$posts._id',
+            //         content: '$posts.content',
+            //         postBg: '$posts.postBg',
+            //         media: '$posts.media',
+            //         likes: '$posts.likes',
+            //         createdAt: '$posts.createdAt',
+            //         author: {
+            //             profilePicture: '$authorInfo.profilePicture',
+            //             status: '$authorInfo.status',
+            //             school: '$authorInfo.school',
+            //             option: '$authorInfo.option',
+            //             university: '$authorInfo.university',
+            //             filiere: '$authorInfo.filiere',
+            //             userId: {
+            //                 firstname: '$userInfo.firstname',
+            //                 lastname: '$userInfo.lastname',
+            //                 username: '$userInfo.username'
+            //             }
+            //         },
+            //         comments: {
+            //             $map: {
+            //                 input: '$commentsInfo',
+            //                 as: 'comment',
+            //                 in: {
+            //                     _id: '$$comment._id',
+            //                     content: '$$comment.content',
+            //                     authorId: '$$comment.author',
+            //                     author: {
+            //                         userId: '$$comment.author.userId',
+            //                         profilePicture: '$$comment.author.profilePicture',
+            //                         status: '$$comment.author.status',
+            //                         school: '$$comment.author.school',
+            //                         option: '$$comment.author.option',
+            //                         university: '$$comment.author.university',
+            //                         filiere: '$$comment.author.filiere',
+            //                         user: {
+            //                             firstname: '$$comment.author.userInfo.firstname',
+            //                             lastname: '$$comment.author.userInfo.lastname',
+            //                             username: '$$comment.author.userInfo.username'
+            //                         }
+            //                     }
+            //                 }
+            //             }
+            //         }
+            //     }
+            // }
         ];
 
         // Exécuter l'aggregation
@@ -339,71 +410,3 @@ export const getTimelinePosts = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
-// export const getTimelinePosts = async (req, res) => {
-//     const id = req.user?._id;
-
-//     try {
-//         const currentUser = await ProfileModel.findById(id).lean();
-//         if (!currentUser) {
-//             return res.status(404).json({ message: "User not found" });
-//         }
-
-//         let query;
-//         if (currentUser.status === 'Pupil') {
-//             query = { $or: [{ school: currentUser.school }, { option: currentUser.option }, { _id: { $in: currentUser.pins } }] };
-//         } else if (currentUser.status === 'Student') {
-//             query = { $or: [{ university: currentUser.university }, { filiere: currentUser.filiere }, { _id: { $in: currentUser.pins } }] };
-//         } else if (currentUser.status === 'Other') {
-//             query = { $or: [{ status: currentUser.status }, { _id: { $in: currentUser.pins } }] };
-//         } else {
-//             return res.status(200).json({ userFeed: [], page: 1, totalPosts: 0, hasNextPage: false });
-//         }
-
-//         const sameUser = await ProfileModel.find(query).select('_id').lean();
-//         const idArr = sameUser.map(item => item._id);
-
-//         const page = parseInt(req.query.page) || 1;
-//         const pageSize = 5;
-//         const skip = (page - 1) * pageSize;
-
-//         let userFeed = [];
-//         let totalPosts = 0;
-//         let hasNextPage = false;
-
-//         if (idArr.length > 0) {
-//             const postsQuery = PostModel.find({ author: { $in: idArr } });
-//             totalPosts = await PostModel.countDocuments({ author: { $in: idArr } });
-
-//             userFeed = await postsQuery
-//                 .sort({ createdAt: -1 })
-//                 .skip(skip)
-//                 .limit(pageSize)
-//                 .populate({
-//                     path: 'comments',
-//                     populate: {
-//                         path: 'author',
-//                         select: 'userId profilePicture birthday status school option university filiere profession entreprise',
-//                         populate: {
-//                             path: 'userId',
-//                             select: 'username firstname lastname',
-//                         }
-//                     }
-//                 })
-//                 .populate({
-//                     path: 'author',
-//                     select: 'userId profilePicture birthday status school option university filiere profession entreprise',
-//                     populate: {
-//                         path: 'userId',
-//                         select: 'username firstname lastname',
-//                     }
-//                 })
-//                 .lean();
-
-//             hasNextPage = skip + pageSize < totalPosts;
-//         }
-//         res.status(200).json({ userFeed, page, totalPosts, hasNextPage });
-//     } catch (error) {
-//         res.status(500).json({ message: error.message });
-//     }
-// };
