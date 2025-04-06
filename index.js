@@ -48,9 +48,9 @@ app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 app.use(cookieParser())
 // Multer path
-app.use(express.static('public'))
+app.use(express.static('public')) 
 
-// mongoose.connect(process.env.MONGODB_LOCAL_URL
+// mongoose.connect(process.env.MONGODB_LOCAL_URL)
 mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
 .then(() => {
     console.log('DB Connected');

@@ -4,6 +4,8 @@ package-lock.json
 *.log
 *.gz
 public
+npm-debug.log
+.DS_Store
 
 .env
 .env/

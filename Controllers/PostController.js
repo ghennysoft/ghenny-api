@@ -321,6 +321,7 @@ export const getTimelinePosts = async (req, res) => {
                         option: '$authorInfo.option',
                         university: '$authorInfo.university',
                         filiere: '$authorInfo.filiere',
+                        profession: '$authorInfo.profession',
                         userId: {
                             firstname: '$userInfo.firstname',
                             lastname: '$userInfo.lastname',

@@ -64,7 +64,7 @@ export const getUserChats = async (req, res) => {
             select: 'userId profilePicture',
             populate: {
                 path: 'userId',
-                select: 'firstname lastname',
+                select: 'firstname lastname username',
             }
         })
         .populate('messages', 'senderId content createdAt updatedAt')
@@ -76,7 +76,7 @@ export const getUserChats = async (req, res) => {
                 select: 'userId profilePicture',
                 populate: {
                     path: 'userId',
-                    select: 'firstname lastname',
+                    select: 'firstname lastname username',
                 }
             }
         })
