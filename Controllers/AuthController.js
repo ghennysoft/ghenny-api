@@ -55,7 +55,7 @@ export const registerUser = async (req, res) => {
                 sameSite: "strict", // CSRF attacks cross-site request forgery attacks
                 secure: process.env.NODE_ENV !== "development",
                 path: "/api/auth/refresh_token", 
-                maxAge: 12*30*24*60*60*1000,    //30days
+                maxAge: 12*30*24*60*60*1000,    // 1 year
             })
 
             res.status(200).json({
@@ -102,7 +102,7 @@ export const loginUser = async (req, res) => {
                         sameSite: "strict", // CSRF attacks cross-site request forgery attacks
                         secure: process.env.NODE_ENV !== "development",
                         path: "/api/auth/refresh_token", 
-                        maxAge: 12*24*30*60*60*1000,    //30days
+                        maxAge: 12*30*24*60*60*1000,    // 1 year
                     })
 
                     res.status(200).json({

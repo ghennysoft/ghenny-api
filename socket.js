@@ -51,6 +51,24 @@ io.on('connection', (socket)=>{
             }
         });
 
+        // Is Typing message
+        socket.on('isTypingMessage', (data)=>{
+            const {profile} = data;
+            const user = activeUsers.find((user)=>user.userId===profile)
+            if(user){
+                io.to(user.socketId).emit("isTypingMessage")
+            }
+        });
+
+        // Stop Typing message
+        socket.on('stopTypingMessage', (data)=>{
+            const {profile} = data;
+            const user = activeUsers.find((user)=>user.userId===profile)  
+            if(user){
+                io.to(user.socketId).emit("stopTypingMessage")
+            }
+        });
+
         // Join group
         socket.on('joinGroup', (data)=>{
             const {groupId, userId} = data;
