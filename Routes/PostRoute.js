@@ -5,12 +5,12 @@ import authUser from '../utils/authMiddleware.js'
 
 const router = express.Router()
 
-router.get('/all', getAllPosts)
-router.post('/create', uploadPostS3.array('media'), createPost)
-router.put('/like', likeDislikePost)
+router.get('/all', authUser, getAllPosts)
+router.post('/create', authUser, uploadPostS3.array('media'), createPost)
+router.put('/like', authUser, likeDislikePost)
 router.get('/feed', authUser, getTimelinePosts)
-router.get('/:id', getPost)
-router.put('/:id', updatePost)
-router.delete('/:id', deletePost)
+router.get('/:id', authUser, getPost)
+router.put('/:id', authUser, updatePost)
+router.delete('/:id', authUser, deletePost)
 
 export default router

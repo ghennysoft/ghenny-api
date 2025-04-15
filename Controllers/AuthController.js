@@ -55,7 +55,7 @@ export const registerUser = async (req, res) => {
                 sameSite: "strict", // CSRF attacks cross-site request forgery attacks
                 secure: process.env.NODE_ENV !== "development",
                 path: "/api/auth/refresh_token", 
-                maxAge: 12*30*24*60*60*1000,    // 1 year
+                maxAge: 30*24*60*60*1000,    // 1 mois
             })
 
             res.status(200).json({
@@ -102,7 +102,7 @@ export const loginUser = async (req, res) => {
                         sameSite: "strict", // CSRF attacks cross-site request forgery attacks
                         secure: process.env.NODE_ENV !== "development",
                         path: "/api/auth/refresh_token", 
-                        maxAge: 12*30*24*60*60*1000,    // 1 year
+                        maxAge: 30*24*60*60*1000,    // 1 mois
                     })
 
                     res.status(200).json({
@@ -128,12 +128,12 @@ export const logoutUser = async (req, res) => {
     }
 }
 
-export const generateAccessToken = async (req, res) => {
+export const generateRefreshToken = async (req, res) => {
     try {
         const rf_token = req.cookies.refresh_token;
         if(!rf_token) return res.status(400).json("Vous n'êtes pas connecté")
         jwt.verify(rf_token, process.env.REFRESH_TOKEN, async (err, result) => {
-            if(err) return res.status(400).json("Vous n'êtes pas connecté")
+            if(err) return res.status(403).json("Token invalide")
             const profile = await ProfileModel.findById(result.id).populate('userId', '-password')
             
             if(!profile) return res.status(400).json("User doesn't exist")
@@ -144,6 +144,7 @@ export const generateAccessToken = async (req, res) => {
         res.status(500).json(err.message)
     }
 }
+
 const createAccessToken = (payload) => {
     return jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "30d"})
 }

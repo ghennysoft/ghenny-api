@@ -23,8 +23,7 @@ export const createPost = async (req, res) => {
            media: postMedia,
            postBg: JSON.parse(postBg), 
         });
-        const resp = await newPost.save();
-
+        await newPost.save();
         // Récupérer les abonnés de l'utilisateur
         const user = await ProfileModel.findById(newPost.author).populate('userId pinned');
         const pinned = user.pinned;

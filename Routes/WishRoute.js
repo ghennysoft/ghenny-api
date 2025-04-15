@@ -1,10 +1,10 @@
 import express from 'express'
 import WishModel from "../Models/wishModel.js";
-// import { createPost } from '../Controllers/PostController.js'
+import authUser from '../utils/authMiddleware.js'
 
 const router = express.Router()
 
-router.post('/create', async (req, res) => {
+router.post('/create', authUser, async (req, res) => {
     try {
         if(!req.body.content) {
             res.status(400).json('Ajoutez du contenu...')

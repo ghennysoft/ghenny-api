@@ -12,8 +12,6 @@ import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
-import MulterRoute from './Routes/Multer.js';
-import AWSRoute from './utils/fileStorage.js';
 import { app, server } from './socket.js';
 // import path from 'path';
 import helmet from 'helmet';
@@ -68,8 +66,6 @@ app.use('/api/question', QuestionRoute)
 app.use('/api/answer', AnswerRoute)
 app.use('/api/chat', ChatRoute)
 app.use('/api/notification', NotificationRoute)
-app.use('/api', MulterRoute)
-app.use('/api/aws', AWSRoute)
 
 app.use((err, req, res, next) => {
     const status = err.status || 500;
