@@ -76,6 +76,6 @@ const UserSchema = mongoose.Schema(
 
 const UserModel = mongoose.model("Users", UserSchema)
 
-UserModel.collection.createIndex({firstname: 1, lastname: 1});
+// UserModel.collection.createIndex({firstname: 1, lastname: 1});
 
 export default UserModel

@@ -1,95 +1,100 @@
-import {Server} from 'socket.io';
+import { Server } from 'socket.io';
 import http from 'http';
 import express from 'express';
 
 const app = express();
-
 const server = http.createServer(app);
+
+// Utilisation d'une Map pour de meilleures performances
+const activeUsers = new Map();
+const userGroups = new Map();
+
 const io = new Server(server, {
     cors: {
-        AccessControlAllowOrigin: "*",
-        origin: ["http://localhost:3000", "https://ghenny.onrender.com"],
-        methods: ["GET", "PUT", "POST", "DELETE"],
+        origin: ["http://localhost:3000", "https://ghenny.vercel.app", "https://ghenny.onrender.com"],
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true
+    },
+    pingInterval: 25000,
+    pingTimeout: 60000
+});
+
+// Middleware d'authentification
+io.use((socket, next) => {
+    const userId = socket.handshake.auth.userId;
+    if (userId) {
+        return next();
     }
-})
+    return next(new Error('Unauthorized'));
+});
 
-let activeUsers = [];
+io.on('connection', (socket) => {
+    console.log(`New connection: ${socket.id}`);
 
-// Backend
-// const emitNotificationToFollowers = (followers, notification) => {
-//     followers.forEach(follower => {
-//       io.to(follower._id.toString()).emit('notification', notification);
-//     });
-//   };
-  
-//   // Lors de la création d'un post
-//   emitNotificationToFollowers(followers, {
-//     type: 'new_post',
-//     message: `${user.username} a publié un nouveau post.`,
-//   });
-  
+    // Gestion des utilisateurs
+    socket.on('newUser', (userId) => {
+        activeUsers.set(userId, socket.id);
+        console.log(`User ${userId} connected`);
+        io.emit('getUsers', Array.from(activeUsers.keys()));
+    });
 
-io.on('connection', (socket)=>{
-    // Add new user
-    socket.on('newUser', (newUserId)=>{
-
-        // if user is not added previously
-        if(!activeUsers.some((user)=>user.userId===newUserId)){
-            activeUsers.push({
-                userId: newUserId,
-                socketId: socket.id 
-            })
+    // Gestion des messages
+    socket.on('sendMessage', (data) => {
+        try {
+            const { receiverId, content } = data;
+            const receiverSocketId = activeUsers.get(receiverId);
+            
+            if (receiverSocketId) {
+                io.to(receiverSocketId).emit('receiveMessage', {
+                    senderId: socket.userId,
+                    content,
+                    timestamp: new Date()
+                });
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
         }
-        io.emit('getUsers', activeUsers)
+    });
 
-        // Send message
-        socket.on('sendMessage', (data)=>{
-            const {receiverId} = data;
-            const user = activeUsers.find((user)=>user.userId===receiverId)
-            if(user){
-                io.to(user.socketId).emit("receiveMessage", data.other)
+    // Gestion du typing indicator
+    socket.on('typing', ({ receiverId, isTyping }) => {
+        const receiverSocketId = activeUsers.get(receiverId);
+        if (receiverSocketId) {
+            io.to(receiverSocketId).emit('typing', { 
+                userId: socket.userId, 
+                isTyping 
+            });
+        }
+    });
+
+    // Gestion des groupes
+    socket.on('joinGroup', (groupId) => {
+        socket.join(groupId);
+        if (!userGroups.has(socket.userId)) {
+            userGroups.set(socket.userId, new Set());
+        }
+        userGroups.get(socket.userId).add(groupId);
+    });
+
+    // Nettoyage à la déconnexion
+    socket.on('disconnect', () => {
+        for (let [userId, sockId] of activeUsers.entries()) {
+            if (sockId === socket.id) {
+                activeUsers.delete(userId);
+                io.emit('getUsers', Array.from(activeUsers.keys()));
+                console.log(`User ${userId} disconnected`);
+                break;
             }
-        });
+        }
+        
+        // Nettoyer les groupes
+        if (userGroups.has(socket.userId)) {
+            userGroups.get(socket.userId).forEach(groupId => {
+                socket.leave(groupId);
+            });
+            userGroups.delete(socket.userId);
+        }
+    });
+});
 
-        // Is Typing message
-        socket.on('isTypingMessage', (data)=>{
-            const {profile} = data;
-            const user = activeUsers.find((user)=>user.userId===profile)
-            if(user){
-                io.to(user.socketId).emit("isTypingMessage")
-            }
-        });
-
-        // Stop Typing message
-        socket.on('stopTypingMessage', (data)=>{
-            const {profile} = data;
-            const user = activeUsers.find((user)=>user.userId===profile)  
-            if(user){
-                io.to(user.socketId).emit("stopTypingMessage")
-            }
-        });
-
-        // Join group
-        socket.on('joinGroup', (data)=>{
-            const {groupId, userId} = data;
-            console.log(`User ${userId} joined group ${groupId}`);
-            socket.join(groupId);
-        });
-
-        // Leave group
-        socket.on('leaveGroup', (data)=>{
-            const {groupId, userId} = data;
-            console.log(`User ${userId} left group ${groupId}`);
-            socket.leave(groupId);
-        });
-
-    })
-
-    socket.on('disconnect', ()=>{
-        activeUsers=activeUsers.filter((user)=>user.socketId!==socket.id);
-        io.emit('getUsers', activeUsers)
-    })
-})
-
-
-export {app, io, server}
+export { app, io, server };

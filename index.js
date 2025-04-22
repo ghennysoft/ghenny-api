@@ -12,7 +12,7 @@ import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
-import { app, server } from './socket.js';
+import { app, server } from './socket_.js';
 // import path from 'path';
 import helmet from 'helmet';
 
@@ -48,8 +48,12 @@ app.use(cookieParser())
 // Multer path
 app.use(express.static('public')) 
 
-// mongoose.connect(process.env.MONGODB_LOCAL_URL)
-mongoose.connect(process.env.MONGODB_PRODUCTION_URL)
+// mongoose.connect(process.env.MONGODB_LOCAL_URL, {
+//     serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
+// })
+mongoose.connect(process.env.MONGODB_PRODUCTION_URL, {
+  serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
+})
 .then(() => {
     console.log('DB Connected');
 })
