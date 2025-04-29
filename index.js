@@ -13,7 +13,6 @@ import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
 import { app, server } from './socket.js';
-// import path from 'path';
 import helmet from 'helmet';
 
 dotenv.config()
@@ -33,9 +32,6 @@ app.use(cors(corsOptions))
 
 // Ajouter l'en-tête Cross-Origin-Resource-Policy
 app.use((req, res, next) => {
-    // Si le site est sur le même domaine
-    // res.setHeader('Cross-Origin-Resource-Policy', 'same-site');
-    
     // Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
     res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
     

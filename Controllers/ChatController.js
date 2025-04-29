@@ -4,21 +4,42 @@ import MessageModel from "../Models/messageModel.js";
 import UserModel from "../Models/userModel.js";
 
 export const sendMessage = async (req, res) => {
-    const {content, senderId} = req.body;
+    const {content, senderId} = JSON.parse(req.body.other);
     const {receiverId} = req.params;
+
+    let messageMedia = [];
+    if(req.files.length!==0){
+        req.files.forEach(file => {
+            messageMedia.push({
+                key: file.key,
+                location: file.location,
+                url: process.env.AWS_CLOUDFRONT_DOMAIN+file.key,
+            });
+        });
+    }
+    
     try {
         let chat = await ChatModel.findOne({members: {$all: [senderId, receiverId]}});
         if(!chat){
             chat = await ChatModel.create({members: [senderId, receiverId]});
         }
-        const newMessage = new MessageModel({senderId, content, chatId: chat._id});
+
+        const newMessage = new MessageModel({
+            chatId: chat._id, 
+            senderId, 
+            content, 
+            media: messageMedia,
+        });
+
         if(newMessage){
             chat.messages.push(newMessage._id);
             chat.latestMessage = newMessage._id;
         }
         await Promise.all([chat.save(), newMessage.save()]);
+
         res.status(201).json({chat, newMessage})
     } catch (error) {
+        // console.log(error);
         res.status(500).json(error)
     }
 }
@@ -67,10 +88,10 @@ export const getUserChats = async (req, res) => {
                 select: 'firstname lastname username',
             }
         })
-        .populate('messages', 'senderId content createdAt updatedAt')
+        .populate('messages', 'senderId content media createdAt updatedAt')
         .populate({
             path: 'latestMessage',
-            select: 'senderId content createdAt updatedAt',
+            select: 'senderId content media createdAt updatedAt',
             populate: {
                 path: 'senderId',
                 select: 'userId profilePicture',

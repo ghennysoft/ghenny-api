@@ -21,7 +21,7 @@ export const createPost = async (req, res) => {
            author,
            content,
            media: postMedia,
-           postBg: JSON.parse(postBg), 
+           postBg: JSON.parse(postBg),
         });
         await newPost.save();
         // Récupérer les abonnés de l'utilisateur
