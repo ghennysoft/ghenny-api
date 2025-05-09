@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
 import bcrypt from 'bcrypt'
+import twilio from "twilio";
 
 
 export const registerUser = async (req, res) => {   
@@ -161,3 +162,35 @@ export const completeProfileSuggestions = async (req, res) => {
         res.status(500).json(error)
     }
 }
+
+
+
+const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
+let tempOTPs = {};
+
+export const sendOTP = async (req, res) => {
+    const {phone} = req.body;
+    const otp = Math.floor(100000 + Math.random() * 900000);
+    tempOTPs[phone] = otp;
+    try {
+        await client.messages.create({
+            body: `Votre code OPT est: ${otp}`,
+            from: process.env.TWILIO_PHONE,
+            to: phone,
+        });
+        res.status(200).json({success: true});
+    } catch (error) {
+        res.status(500).json(error);
+    }
+}
+
+export const verifyOTP = async (req, res) => {
+    const {phone, otp} = req.body;
+    if(tempOTPs[phone] && tempOTPs[phone] === otp) {
+        delete tempOTPs[phone];
+        res.status(200).json({success: true})
+    } else {
+        res.status(400).json({error: "OTP Invalide"});
+    }
+}
+

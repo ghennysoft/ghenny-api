@@ -14,13 +14,15 @@ import ChatRoute from './Routes/ChatRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
 import { app, server } from './socket.js';
 import helmet from 'helmet';
+import http from 'http';
+// import socketIO from 'socket.io';
 
 dotenv.config()
 
 const port = process.env.PORT || 5000;
 const corsOptions = {
     AccessControlAllowOrigin: "*",
-    origin: ["http://localhost:3000", "https://ghenny.vercel.app", "https://ghenny.onrender.com"],
+    origin: ["http://localhost:3000", "https://ghenny.vercel.app"],
     methods: ["GET", "PUT", "POST", "DELETE"],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true // si vous utilisez des cookies ou des sessions 

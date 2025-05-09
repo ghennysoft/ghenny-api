@@ -11,6 +11,6 @@ router.get('/group/:userId', authUser, getGroups)
 router.post('/members', authUser, addMembers)
 router.get('/chats/:currentUser', authUser, getUserChats)
 router.get('/chat/:firstId/:secondId', authUser, getSingleChat)
-router.post('/send/:receiverId', authUser, uploadPostS3.array('media'), sendMessage)
+router.post('/send/:receiverId', authUser, uploadPostS3.array('media', 10), sendMessage)
 
 export default router

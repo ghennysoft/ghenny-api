@@ -85,6 +85,7 @@ const ProfileSchema = mongoose.Schema(
         },
         pins: [{type:mongoose.Types.ObjectId}],
         pinned: [{type:mongoose.Types.ObjectId}],
+        blockedProfiles: [{type:mongoose.Types.ObjectId}],
         subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
     },
     {timestamps: true},

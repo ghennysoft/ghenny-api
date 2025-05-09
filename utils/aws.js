@@ -5,10 +5,7 @@ import multer from "multer";
 import multerS3 from 'multer-s3';
 import dotenv from 'dotenv';
 
-dotenv.config();
-
-const randomImageName = (bytes=32) => crypto.randomBytes(bytes).toString('hex')
-const imageName = randomImageName();
+dotenv.config(); 
 
 export const s3Client = new S3Client({
     region: process.env.AWS_BUCKET_REGION,
@@ -34,12 +31,22 @@ export const uploadPostS3 = multer({
     storage: multerS3({
         s3: s3Client,
         bucket: process.env.AWS_BUCKET_NAME,
+        // acl: "public-read"
         metadata: (req, file, cb) => {
             cb(null, { fieldName: file.originalname }); 
         },
         key: (req, file, cb) => {
-            cb(null, 'post/'+imageName+file.originalname);
+            const imageName = crypto.randomBytes(32).toString('hex');
+            cb(null, 'post/'+imageName+'-'+file.originalname);
+            console.log('name: ',imageName);
         },
+        limits: {
+            fileSize: 10*1024*1024, // 10 MB max par fichier
+        },
+        fileFilter: function (req, file, cb) {
+            const allowed = ["image/jpeg", "image/png", "video/mp4", "application/pdf", "audio/mpeg"];
+            cb(null, allowed.includes(file.mimeType));
+        }
     }),
 });
 
@@ -52,7 +59,8 @@ export const uploadProfileS3 = multer({
             cb(null, { fieldName: file.originalname }); 
         },
         key: (req, file, cb) => {
-            cb(null, 'profile/'+imageName+file.originalname);
+            const imageName = crypto.randomBytes(32).toString('hex');
+            cb(null, 'profile/'+imageName+'-'+file.originalname);
         },
     }),
 });

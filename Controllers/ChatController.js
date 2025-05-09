@@ -7,6 +7,9 @@ export const sendMessage = async (req, res) => {
     const {content, senderId} = JSON.parse(req.body.other);
     const {receiverId} = req.params;
 
+    console.log("FICHIERS REÇUS :", req.files);
+    console.log("BODY AUTRE :", JSON.parse(req.body.other));
+    
     let messageMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -30,6 +33,7 @@ export const sendMessage = async (req, res) => {
             content, 
             media: messageMedia,
         });
+        console.log(newMessage);
 
         if(newMessage){
             chat.messages.push(newMessage._id);
@@ -39,7 +43,7 @@ export const sendMessage = async (req, res) => {
 
         res.status(201).json({chat, newMessage})
     } catch (error) {
-        // console.log(error);
+        console.log(error);
         res.status(500).json(error)
     }
 }

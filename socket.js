@@ -8,7 +8,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         AccessControlAllowOrigin: "*",
-        origin: ["http://localhost:3000", "https://ghenny.onrender.com"],
+        origin: ["http://localhost:3000", "https://ghenny.vercel.app"],
         methods: ["GET", "PUT", "POST", "DELETE"],
         allowedHeaders: ['Content-Type', 'Authorization'],
         credentials: true // si vous utilisez des cookies ou des sessions 

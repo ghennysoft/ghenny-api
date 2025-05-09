@@ -9,8 +9,9 @@ const messageSchema = mongoose.Schema({
         type: Array,
         default: [],
     },
-    // seenBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    // readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    seenBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    readBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    isDeleted: { type: Boolean, default: false },
 },
 {
     timestamps: true
