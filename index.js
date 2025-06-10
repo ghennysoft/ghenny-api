@@ -21,11 +21,10 @@ dotenv.config()
 
 const port = process.env.PORT || 5000;
 const corsOptions = {
-    AccessControlAllowOrigin: "*",
     origin: ["http://localhost:3000", "https://ghenny.vercel.app"],
     methods: ["GET", "PUT", "POST", "DELETE"],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true // si vous utilisez des cookies ou des sessions 
+    credentials: true // seulement si vous utilisez des cookies/sessions
 }
 
 // Middleware
@@ -46,12 +45,22 @@ app.use(cookieParser())
 // Multer path
 app.use(express.static('public')) 
 
-// mongoose.connect(process.env.MONGODB_LOCAL_URL, {
-//     serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
-// })
-mongoose.connect(process.env.MONGODB_PRODUCTION_URL, {
-  serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
-})
+let MONGO_URL;
+
+if(process.env.NODE_ENV == 'production') {
+    MONGO_URL = mongoose.connect(process.env.MONGODB_PRODUCTION_URL, {
+        serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
+    });
+    console.log('On production');
+} else {
+    MONGO_URL = mongoose.connect(process.env.MONGODB_LOCAL_URL, {
+        serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
+    });
+    console.log('On developpment');
+}
+
+
+MONGO_URL
 .then(() => {
     console.log('DB Connected');
 })

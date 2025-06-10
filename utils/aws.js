@@ -26,6 +26,18 @@ export const getS3URL = async (file) => {
     return awsURL;
   }
 
+const fileFilter = (req, file, cb) => {
+  const filetypes = /jpeg|jpg|png|gif|mp4|mov|avi|pdf|mp3|wav/;
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb('Error: File upload only supports the following filetypes - ' + filetypes);
+  }
+};
+
 // Configure Multer for file uploads to S3
 export const uploadPostS3 = multer({
     storage: multerS3({
@@ -40,13 +52,10 @@ export const uploadPostS3 = multer({
             cb(null, 'post/'+imageName+'-'+file.originalname);
             console.log('name: ',imageName);
         },
+        fileFilter: fileFilter,
         limits: {
-            fileSize: 10*1024*1024, // 10 MB max par fichier
+            fileSize: 10*1024*1024, // 10 MB max par fichier (image et pdf)
         },
-        fileFilter: function (req, file, cb) {
-            const allowed = ["image/jpeg", "image/png", "video/mp4", "application/pdf", "audio/mpeg"];
-            cb(null, allowed.includes(file.mimeType));
-        }
     }),
 });
 
@@ -64,3 +73,30 @@ export const uploadProfileS3 = multer({
         },
     }),
 });
+
+
+const videoUpload = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.AWS_BUCKET_NAME,
+    acl: 'public-read',
+    metadata: function (req, file, cb) {
+      cb(null, { fieldName: file.fieldname });
+    },
+    key: function (req, file, cb) {
+      cb(null, `${Date.now().toString()}-${file.originalname}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'video/mp4' || file.mimetype === 'video/quicktime') {
+      cb(null, true);
+    } else {
+      cb(null, false);
+    }
+  },
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB for videos
+  },
+});
+
+// module.exports = { upload, videoUpload };
