@@ -120,6 +120,70 @@ export const loginUser = async (req, res) => {
     }
 }
 
+export const searchUser = async (req, res) => {
+    const searchTerm = req.query.q || ''
+    
+    try {
+        // Search user
+        const searchParts = searchTerm.split(' ').map(part => part.trim()).filter(part => part.length > 0);
+
+        let profiles = [];
+
+        if (searchParts.length === 1) {
+            // Recherche par prénom ou nom seul
+            profiles = await UserModel.find({
+                $or: [
+                    { firstname: { $regex: searchParts[0], $options: 'i' } },
+                    { lastname: { $regex: searchParts[0], $options: 'i' } }
+                ]
+            })
+            .select('username firstname lastname')
+            .populate('profileId', 'profilePicture')
+        } else if (searchParts.length === 2) {
+            // Recherche avec prénom + nom ou nom + prénom
+            const [part1, part2] = searchParts;
+      
+            profiles = await UserModel.find({
+              $or: [
+                {
+                  firstname: { $regex: part1, $options: 'i' },
+                  lastname: { $regex: part2, $options: 'i' }
+                },
+                {
+                  firstname: { $regex: part2, $options: 'i' },
+                  lastname: { $regex: part1, $options: 'i' }
+                }
+              ]
+            })
+            .select('username firstname lastname')
+            .populate('profileId', 'profilePicture')
+        }
+
+        res.status(200).json(profiles)
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+}
+
+export const getUser = async (req, res) => {
+    const paramId = req.params.id;
+    console.log(paramId)
+    try {
+        const user = await UserModel.findOne({username: paramId})
+        .select('username email firstname lastname phone');
+
+        if(user){
+            res.status(200).json(user)
+        }else{
+            res.status(404).json("No such user exist")
+        }
+    } catch (error) {
+        console.log(error)
+        res.status(500).json(error)
+    }
+}
+
 export const logoutUser = async (req, res) => {
     try {
         res.clearCookie('refresh_token', {maxAge: 0, path: "/api/auth/refresh_token"})
@@ -194,3 +258,82 @@ export const verifyOTP = async (req, res) => {
     }
 }
 
+// From user-services
+const sendResetCode = async (req, res) => {
+  try {
+    const { userId, method } = req.body;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur est non trouvé' });
+    }
+
+    // Générer un code à 6 chiffres
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Stocker le code dans Redis avec une expiration
+    await redisClient.setEx(
+      `resetCode:${userId}`,
+      resetCode,
+      'EX',
+      900 // 15 minutes en secondes
+    );
+
+    // Envoyer le code par email ou SMS selon la méthode choisie
+    if (method === 'email') {
+      await sendResetPasswordEmail(user.email, resetCode);
+    } else if (method === 'sms') {
+      await sendResetPasswordSMS(user.phoneNumber, resetCode);
+    }
+
+    res.json({ message: 'Code de réinitialisation envoyé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi du code:', error);
+    res.status(500).json({ message: 'Erreur lors de l\'envoi du code de réinitialisation' });
+  }
+};
+
+const verifyResetCode = async (req, res) => {
+  try {
+    const { userId, code } = req.body;
+    
+    // // Vérifier le code dans Redis
+    // const storedCode = await redisClient.get(`resetCode:${userId}`);
+    
+    // if (!storedCode || storedCode !== code) {
+    //   return res.status(400).json({ message: 'Code invalide ou expiré' });
+    // }
+
+    // Générer un token temporaire pour la réinitialisation
+    const resetToken = jwt.sign(
+      { userId, purpose: 'reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    // Supprimer le code de Redis
+    // await redisClient.del(`resetCode:${userId}`);
+
+    res.json({ resetToken });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const { userId, password } = req.body;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur est non trouvé' });
+    }
+
+    user.password = password;
+    await user.save();
+
+    res.json({ message: 'Mot de passe réinitialisé avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

@@ -66,7 +66,7 @@ export const searchData = async (req, res) => {
 
 export const getProfile = async (req, res) => {
     const paramId = req.params.id;
-     
+     console.log(paramId)
     try {
         const user = await UserModel.findOne({username: paramId});
         
