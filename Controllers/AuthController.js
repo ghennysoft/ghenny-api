@@ -47,16 +47,26 @@ export const registerUser = async (req, res) => {
             await newProfile.save();
 
             const user_profile = await ProfileModel.findOne({userId: newUser._id}).populate("userId", "-password")
-            
-            const access_token = createAccessToken({id: newProfile._id});
-            const refresh_token = createRefreshToken({id: newProfile._id});
+            const profileToken = await ProfileModel.findOne({ userId: newUser._id })
+                    .select('birthday gender status option school userId')
+                    .populate('userId', 'username firstname lastname phone_code')
 
-            res.cookie("refresh_token", refresh_token, {
+            const access_token = createAccessToken({user: profileToken});
+            const refresh_token = createRefreshToken({user: profileToken});
+
+            // res.cookie("authToken", access_token, {
+            //     httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+            //     sameSite: "strict", // CSRF attacks cross-site request forgery attacks
+            //     secure: process.env.NODE_ENV !== "development",
+            //     path: "/api/auth/refresh_token", 
+            //     maxAge: 30*24*60*60*1000,    // 1 mois
+            // })
+
+            res.cookie("authToken", access_token, {
                 httpOnly: true, // prevent XSS attacks cross-site scripting attacks
-                sameSite: "strict", // CSRF attacks cross-site request forgery attacks
-                secure: process.env.NODE_ENV !== "development",
-                path: "/api/auth/refresh_token", 
-                maxAge: 30*24*60*60*1000,    // 1 mois
+                sameSite: "None", // Autorise les cross-origin requests
+                secure: false, // À désactiver en développement local
+                domain: 'localhost' // Domaine commun
             })
 
             res.status(200).json({
@@ -67,7 +77,7 @@ export const registerUser = async (req, res) => {
     }
     catch (err) {
         res.status(500).json(err)
-        // console.log(err);
+        console.log(err);
     }
 }
 
@@ -95,17 +105,27 @@ export const loginUser = async (req, res) => {
                     res.status(400).json({message:'Numéro ou mot de passe incorrect'})
                 } else {
                     const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
+                    const profileToken = await ProfileModel.findOne({ userId: user._id })
+                    .select('birthday gender status option school userId')
+                    .populate('userId', 'username firstname lastname phone_code')
                     
-                    const access_token = createAccessToken({id: profile._id});
-                    const refresh_token = createRefreshToken({id: profile._id});
-                    res.cookie("refresh_token", refresh_token, {
-                        httpOnly: true, // prevent XSS attacks cross-site scripting attacks
-                        sameSite: "strict", // CSRF attacks cross-site request forgery attacks
-                        secure: process.env.NODE_ENV !== "development",
-                        path: "/api/auth/refresh_token", 
-                        maxAge: 30*24*60*60*1000,    // 1 mois
-                    })
+                    const access_token = createAccessToken({user: profileToken});
+                    const refresh_token = createRefreshToken({user: profileToken});
+                    // res.cookie("refresh_token", refresh_token, {
+                    //     httpOnly: true, // prevent XSS attacks cross-site scripting attacks
+                    //     sameSite: "strict", // CSRF attacks cross-site request forgery attacks
+                    //     secure: process.env.NODE_ENV !== "development",
+                    //     path: "/api/auth/refresh_token", 
+                    //     maxAge: 30*24*60*60*1000,    // 1 mois
+                    // })
 
+                    res.cookie('authToken', access_token, {
+                        httpOnly: true,
+                        sameSite: 'None', // Autorise les cross-origin requests
+                        secure: false, // À désactiver en développement local
+                        domain: 'localhost' // Domaine commun
+                    })
+                    
                     res.status(200).json({
                         'profile': profile,
                         'token': access_token,
@@ -213,6 +233,7 @@ export const generateRefreshToken = async (req, res) => {
 const createAccessToken = (payload) => {
     return jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "30d"})
 }
+
 const createRefreshToken = (payload) => {
     return jwt.sign(payload, process.env.REFRESH_TOKEN, {expiresIn: "30d"})
 }

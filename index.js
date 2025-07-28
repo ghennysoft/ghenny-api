@@ -12,36 +12,36 @@ import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
+import PageRoute from './Routes/PageRoute.js';
 import { app, server } from './socket.js';
 import helmet from 'helmet';
-import http from 'http';
 // import socketIO from 'socket.io';
 
-dotenv.config()
-
+dotenv.config();
 const port = process.env.PORT || 5000;
+
 const corsOptions = {
-    origin: ["http://localhost:3000", "https://ghenny.vercel.app"],
+    origin: [
+        "http://localhost:3000", 
+        "https://ghenny.vercel.app"
+    ],
     methods: ["GET", "PUT", "POST", "DELETE"],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true // seulement si vous utilisez des cookies/sessions
-}
+    credentials: true,
+    optionsSuccessStatus: 200,
+};
 
 // Middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
+}));
 app.use(cors(corsOptions))
 
-// Ajouter l'en-tête Cross-Origin-Resource-Policy
-app.use((req, res, next) => {
-    // Si le site est sur un autre domaine, vous pouvez utiliser 'cross-origin' 
-    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
-    
-    next();
-});
+app.use(cookieParser())
 app.use(express.json())
 app.use(bodyParser.json({limit: '30mb', extended: true}))
 app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
-app.use(cookieParser())
 // Multer path
 app.use(express.static('public')) 
 
@@ -77,6 +77,7 @@ app.use('/api/question', QuestionRoute)
 app.use('/api/answer', AnswerRoute)
 app.use('/api/chat', ChatRoute)
 app.use('/api/notification', NotificationRoute)
+app.use('/api/page', PageRoute)
 
 app.use((err, req, res, next) => {
     const status = err.status || 500;

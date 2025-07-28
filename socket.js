@@ -1,21 +1,18 @@
-import {Server} from 'socket.io';
+import { Server } from 'socket.io';
 import http from 'http';
 import express from 'express';
 
 const app = express();
-
 const server = http.createServer(app);
+
 const io = new Server(server, {
     cors: {
-        AccessControlAllowOrigin: "*",
         origin: ["http://localhost:3000", "https://ghenny.vercel.app"],
         methods: ["GET", "PUT", "POST", "DELETE"],
         allowedHeaders: ['Content-Type', 'Authorization'],
-        credentials: true // si vous utilisez des cookies ou des sessions 
+        credentials: true
     }
-})
-
-let activeUsers = [];
+});
 
 // Backend
 // const emitNotificationToFollowers = (followers, notification) => {
@@ -42,50 +39,49 @@ io.on('connection', (socket)=>{
                 socketId: socket.id 
             })
         }
-        io.emit('getUsers', activeUsers)
-
-        // Send message
-        socket.on('sendMessage', (data)=>{
-            const {receiverId} = data;
-            const user = activeUsers.find((user)=>user.userId===receiverId)
-            if(user){
-                io.to(user.socketId).emit("receiveMessage", data.other)
-            }
-        });
-
-        // Is Typing message
-        socket.on('isTypingMessage', (data)=>{
-            const {profile} = data;
-            const user = activeUsers.find((user)=>user.userId===profile)
-            if(user){
-                io.to(user.socketId).emit("isTypingMessage")
-            }
-        });
-
-        // Stop Typing message
-        socket.on('stopTypingMessage', (data)=>{
-            const {profile} = data;
-            const user = activeUsers.find((user)=>user.userId===profile)  
-            if(user){
-                io.to(user.socketId).emit("stopTypingMessage")
-            }
-        });
-
-        // Join group
-        socket.on('joinGroup', (data)=>{
-            const {groupId, userId} = data;
-            console.log(`User ${userId} joined group ${groupId}`);
-            socket.join(groupId);
-        });
-
-        // Leave group
-        socket.on('leaveGroup', (data)=>{
-            const {groupId, userId} = data;
-            console.log(`User ${userId} left group ${groupId}`);
-            socket.leave(groupId);
-        });
-
+        io.emit('getUsers', activeUsers)        
     })
+
+    // Send message
+    socket.on('sendMessage', (data)=>{
+        const {receiverId} = data;
+        const user = activeUsers.find((user)=>user.userId===receiverId)
+        if(user){
+            io.to(user.socketId).emit("receiveMessage", data.other)
+        }
+    });
+
+    // Is Typing message
+    socket.on('isTypingMessage', (data)=>{
+        const {profile} = data;
+        const user = activeUsers.find((user)=>user.userId===profile)
+        if(user){
+            io.to(user.socketId).emit("isTypingMessage")
+        }
+    });
+
+    // Stop Typing message
+    socket.on('stopTypingMessage', (data)=>{
+        const {profile} = data;
+        const user = activeUsers.find((user)=>user.userId===profile)  
+        if(user){
+            io.to(user.socketId).emit("stopTypingMessage")
+        }
+    });
+
+    // Join group
+    socket.on('joinGroup', (data)=>{
+        const {groupId, userId} = data;
+        console.log(`User ${userId} joined group ${groupId}`);
+        socket.join(groupId);
+    });
+
+    // Leave group
+    socket.on('leaveGroup', (data)=>{
+        const {groupId, userId} = data;
+        console.log(`User ${userId} left group ${groupId}`);
+        socket.leave(groupId);
+    });
 
     socket.on('disconnect', ()=>{
         activeUsers=activeUsers.filter((user)=>user.socketId!==socket.id);

@@ -1,30 +1,65 @@
-const express = require('express');
-const router = express.Router();
-const Page = require('../models/Page');
-const auth = require('../middleware/auth');
+import Page from '../models/pageModel.js'
 
 // Créer une nouvelle page
-router.post('/', auth, async (req, res) => {
-  const { name, description, type } = req.body;
-
+export const createPage = async (req, res) => {
+  const {name, type, description, contacts} = req.body;
   try {
     const page = new Page({
       name,
-      description,
       type,
-      createdBy: req.user.id,
-      admins: [req.user.id], // L'utilisateur qui crée la page est automatiquement admin
+      description,
+      contacts,
+      createdBy: req.user?._id,
+      admins: [req.user?._id], // L'utilisateur qui crée la page est automatiquement admin
     });
 
     await page.save();
     res.status(201).json(page);
   } catch (err) {
+    console.log(err);    
     res.status(500).json({ error: err.message });
   }
-});
+};
 
-// Ajouter un administrateur à une page
-router.post('/:id/admins', auth, async (req, res) => {
+// Afficher les pages
+export const getPages = async (req, res) => {
+    try {
+        const pages = await Page.find().sort({createdAt: -1})
+        // .populate({
+        //     path: 'createdBy',
+        //     // select: 'userId profilePicture',
+        //     // populate: {
+        //     //     path: 'userId',
+        //     //     select: 'username firstname lastname',
+        //     // }
+        // })
+        res.status(200).json(pages)
+    } catch (error) {
+       console.log(error)
+        res.status(500).json(error)
+    }
+};
+
+export const getSinglePage = async (req, res) => {
+    const id = req.params.id;
+    try {
+        const page = await Page.findById(id)
+        // .populate({
+        //     path: 'author',
+        //     select: 'userId profilePicture birthday',
+        //     populate: {
+        //         path: 'userId',
+        //         select: 'username firstname lastname',
+        //     }
+        // })
+        res.status(200).json(page)
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+// Ajouter un administrateur à une page 
+export const addPageAdmin = async (req, res) => {
   const { userId } = req.body;
 
   try {
@@ -45,11 +80,11 @@ router.post('/:id/admins', auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
 
 // S'abonner à une page
-router.post('/:id/follow', auth, async (req, res) => {
-  const { isStudent } = req.body; // Uniquement pour les pages éducation
+export const followPage = async (req, res) => {
+  // const { isStudent } = req.body; // Uniquement pour les pages éducation
 
   try {
     const page = await Page.findById(req.params.id);
@@ -59,24 +94,28 @@ router.post('/:id/follow', auth, async (req, res) => {
     }
 
     // Vérifier si l'utilisateur est déjà abonné
-    const isAlreadyFollowing = page.followers.some(
-      (follower) => follower.user.toString() === req.user.id
-    );
+    const isAlreadyFollowing = page.followers.includes(req.user.id);
 
     if (isAlreadyFollowing) {
-      return res.status(400).json({ msg: 'Already following this page' });
-    }
-
-    page.followers.push({ user: req.user.id, isStudent });
-    await page.save();
-    res.json(page);
+      // page.followers.push({ user: req.user.id, isStudent });
+      page.followers.pull(req.user.id);
+      await page.save();
+      console.log('Unfollowed');
+    } else {
+      // page.followers.push({ user: req.user.id, isStudent });
+      page.followers.push(req.user.id);
+      await page.save();
+      console.log('Followed');
+    }    
+    res.status(200).json(page);
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
-});
+};
 
 // Noter une page
-router.post('/:id/rate', auth, async (req, res) => {
+export const notePage = async (req, res) => {
   const { rating } = req.body;
 
   try {
@@ -102,10 +141,10 @@ router.post('/:id/rate', auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
+};
 
 // Ajouter un commentaire à une page
-router.post('/:id/comments', auth, async (req, res) => {
+export const commentPage = async (req, res) => {
   const { text } = req.body;
 
   try {
@@ -121,6 +160,4 @@ router.post('/:id/comments', auth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
-});
-
-module.exports = router;
+};

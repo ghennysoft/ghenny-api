@@ -5,38 +5,47 @@ const pageSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  type: {
+    type: String,
+    enum: ['personnal', 'business', 'education'],
+    required: true,
+  },
   description: {
     type: String,
     required: true,
   },
-  type: {
+  profilePicture: {
     type: String,
-    enum: ['personnel', 'business', 'education'],
-    required: true,
+  },
+  coverPicture: {
+    type: String,
+  },
+  contacts: {
+    address: String,
+    phoneNumber: String,
+    website: String,
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Profiles',
     required: true,
   },
   admins: [{
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'Profiles',
   }],
   followers: [{
-    user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
-    },
-    isStudent: { // Uniquement pour les pages éducation
-      type: Boolean,
-      default: false,
-    },
+      ref: 'Profiles'
+    // isStudent: { // Uniquement pour les pages éducation
+    //   type: Boolean,
+    //   default: false,
+    // },
   }],
   ratings: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Profiles',
     },
     rating: {
       type: Number,
@@ -47,21 +56,17 @@ const pageSchema = new mongoose.Schema({
   comments: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
+      ref: 'Profiles',
     },
     text: {
       type: String,
       required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now,
-    },
   }],
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+},
+{
+    timestamps: true
 });
 
-module.exports = mongoose.model('Page', pageSchema);
+const PageModel = mongoose.model("Page", pageSchema)
+export default PageModel

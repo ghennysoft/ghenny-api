@@ -1,5 +1,4 @@
 import jwt from "jsonwebtoken";
-import ProfileModel from "../Models/profileModel.js";
 import dotenv from 'dotenv';
 
 dotenv.config()
@@ -11,8 +10,7 @@ const authUser = async (req, res, next) => {
         if (!token) return res.status(401).json({ message: "Auth Error" });
         const decoded = jwt.verify(token, process.env.ACCESS_TOKEN);
         
-        const user = await ProfileModel.findById(decoded.id);
-        req.user = user;
+        req.user = decoded?.user;
 
         next();
     } catch (err) { 
