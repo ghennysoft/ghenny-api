@@ -1,4 +1,5 @@
 import Page from '../models/pageModel.js'
+import axios from "axios"
 
 // Créer une nouvelle page
 export const createPage = async (req, res) => {
@@ -41,21 +42,39 @@ export const getPages = async (req, res) => {
 };
 
 export const getSinglePage = async (req, res) => {
-    const id = req.params.id;
-    try {
-        const page = await Page.findById(id)
-        // .populate({
-        //     path: 'author',
-        //     select: 'userId profilePicture birthday',
-        //     populate: {
-        //         path: 'userId',
-        //         select: 'username firstname lastname',
-        //     }
-        // })
-        res.status(200).json(page)
-    } catch (error) {
-        res.status(500).json(error)
-    }
+  const token = req.headers.authorization;
+  const id = req.params.id;
+  let school;
+  let year;
+  try {
+    const response = await axios.get(process.env.SCHOOL_API_URL+"schools/page/"+id, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    })
+    console.log('resp: ',response.data);
+    const response2 = await axios.get(process.env.SCHOOL_API_URL+"academic-years/active/"+response.data._id, {
+      headers: {
+        "Authorization": `Bearer ${token}`
+      }
+    })
+    console.log('resp2: ',response2.data);
+    school = response.data;
+    year = response2.data;
+  } catch (error) {
+    console.log('err: ',error?.response?.data);
+    school = null;
+    year = null;
+  }
+  console.log('id: ', id);
+  console.log('school: ', school);
+
+  try {
+    const page = await Page.findById(id)
+    res.status(200).json({page, school, year})
+  } catch (error) {
+    // res.status(500).json(error)
+  }
 }
 
 // Ajouter un administrateur à une page 

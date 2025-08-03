@@ -23,6 +23,9 @@ const port = process.env.PORT || 5000;
 const corsOptions = {
     origin: [
         "http://localhost:3000", 
+        "http://localhost:3001",
+        "http://localhost:5000", 
+        "http://localhost:5001",  
         "https://ghenny.vercel.app"
     ],
     methods: ["GET", "PUT", "POST", "DELETE"],
