@@ -63,9 +63,22 @@ const pageSchema = new mongoose.Schema({
       required: true,
     },
   }],
+
+  // For academic pages
+  school: {
+    schoolId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'School',
+      unique: true,
+    },
+    activeYearId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'AcademicYear',
+    },
+  }
 },
 {
-    timestamps: true
+  timestamps: true
 });
 
 const PageModel = mongoose.model("Page", pageSchema)

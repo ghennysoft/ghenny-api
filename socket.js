@@ -26,7 +26,8 @@ const io = new Server(server, {
 //     type: 'new_post',
 //     message: `${user.username} a publié un nouveau post.`,
 //   });
-  
+
+let activeUsers = [];
 
 io.on('connection', (socket)=>{
     // Add new user

@@ -3,9 +3,10 @@ import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
 import bcrypt from 'bcrypt'
 import twilio from "twilio";
+import {createAccessToken, createRefreshToken} from "../utils/jwtTokens.js"
 
 
-export const registerUser = async (req, res) => {   
+export const registerUser = async (req, res) => {
     try {
         if(!req.body.username, !req.body.firstname, !req.body.lastname, !req.body.phone, !req.body.phone_code, !req.body.phone_code_2, !req.body.password, !req.body.confirmPassword){
             res.status(400).json("Veillez remplir tous les champs")
@@ -45,33 +46,21 @@ export const registerUser = async (req, res) => {
 
             await newUser.save();
             await newProfile.save();
-
-            const user_profile = await ProfileModel.findOne({userId: newUser._id}).populate("userId", "-password")
+            
             const profileToken = await ProfileModel.findOne({ userId: newUser._id })
-                    .select('birthday gender status option school userId')
-                    .populate('userId', 'username firstname lastname phone_code')
-
+            .select('birthday gender status option school userId')
+            .populate('userId', 'username firstname lastname phone_code')
+            
             const access_token = createAccessToken({user: profileToken});
-            const refresh_token = createRefreshToken({user: profileToken});
+            const refresh_token = createRefreshToken();
+            
+            newUser.refreshTokens.push(refresh_token);
+            await newUser.save();
 
-            // res.cookie("authToken", access_token, {
-            //     httpOnly: true, // prevent XSS attacks cross-site scripting attacks
-            //     sameSite: "strict", // CSRF attacks cross-site request forgery attacks
-            //     secure: process.env.NODE_ENV !== "development",
-            //     path: "/api/auth/refresh_token", 
-            //     maxAge: 30*24*60*60*1000,    // 1 mois
-            // })
-
-            res.cookie("authToken", access_token, {
-                httpOnly: true, // prevent XSS attacks cross-site scripting attacks
-                sameSite: "None", // Autorise les cross-origin requests
-                secure: false, // À désactiver en développement local
-                domain: 'localhost' // Domaine commun
-            })
-
-            res.status(200).json({
-                'profile': user_profile,
+            res.status(201).json({
+                'profile': profileToken,
                 'token': access_token,
+                'refreshToken': refresh_token,
             })
         } 
     }
@@ -104,31 +93,21 @@ export const loginUser = async (req, res) => {
                 if (!auth) {
                     res.status(400).json({message:'Numéro ou mot de passe incorrect'})
                 } else {
-                    const profile = await ProfileModel.findOne({ userId: user._id }).populate('userId', '-password')
+
                     const profileToken = await ProfileModel.findOne({ userId: user._id })
                     .select('birthday gender status option school userId')
                     .populate('userId', 'username firstname lastname phone_code')
                     
                     const access_token = createAccessToken({user: profileToken});
-                    const refresh_token = createRefreshToken({user: profileToken});
-                    // res.cookie("refresh_token", refresh_token, {
-                    //     httpOnly: true, // prevent XSS attacks cross-site scripting attacks
-                    //     sameSite: "strict", // CSRF attacks cross-site request forgery attacks
-                    //     secure: process.env.NODE_ENV !== "development",
-                    //     path: "/api/auth/refresh_token", 
-                    //     maxAge: 30*24*60*60*1000,    // 1 mois
-                    // })
+                    const refresh_token = createRefreshToken();
 
-                    res.cookie('authToken', access_token, {
-                        httpOnly: true,
-                        sameSite: 'None', // Autorise les cross-origin requests
-                        secure: false, // À désactiver en développement local
-                        domain: 'localhost' // Domaine commun
-                    })
+                    user.refreshTokens.push(refresh_token);
+                    await user.save();
                     
                     res.status(200).json({
-                        'profile': profile,
+                        'profile': profileToken,
                         'token': access_token,
+                        'refreshToken': refresh_token,
                     })
                 }
             }
@@ -137,6 +116,28 @@ export const loginUser = async (req, res) => {
     } catch (err) {
         res.status(500).json(err)
         console.error(err);
+    }
+}
+
+export const generateRefreshToken = async (req, res) => {
+
+    try {
+        const { refreshToken } = req.body;
+        const user = await UserModel.findOne({ refreshTokens: refreshToken });
+        
+        if (!user) return res.status(401).json({ message: 'Invalid refresh token' });
+
+        const profileToken = await ProfileModel.findOne({ userId: user._id })
+            .select('birthday gender status option school userId')
+            .populate('userId', 'username firstname lastname phone_code')
+            
+        const new_access_token = createAccessToken({user: profileToken});
+
+        res.json({ 
+            'token': new_access_token,
+        });
+    } catch (error) {
+        res.status(400).json({ message: error.message });
     }
 }
 
@@ -188,7 +189,6 @@ export const searchUser = async (req, res) => {
 
 export const getUser = async (req, res) => {
     const paramId = req.params.id;
-    console.log(paramId)
     try {
         const user = await UserModel.findOne({username: paramId})
         .select('username email firstname lastname phone');
@@ -211,31 +211,6 @@ export const logoutUser = async (req, res) => {
     } catch (err) {
         
     }
-}
-
-export const generateRefreshToken = async (req, res) => {
-    try {
-        const rf_token = req.cookies.refresh_token;
-        if(!rf_token) return res.status(400).json("Vous n'êtes pas connecté")
-        jwt.verify(rf_token, process.env.REFRESH_TOKEN, async (err, result) => {
-            if(err) return res.status(403).json("Token invalide")
-            const profile = await ProfileModel.findById(result.id).populate('userId', '-password')
-            
-            if(!profile) return res.status(400).json("User doesn't exist")
-            const access_token = createAccessToken({id: result.id})
-            res.json(access_token, profile)
-        })
-    } catch (err) {
-        res.status(500).json(err.message)
-    }
-}
-
-const createAccessToken = (payload) => {
-    return jwt.sign(payload, process.env.ACCESS_TOKEN, {expiresIn: "30d"})
-}
-
-const createRefreshToken = (payload) => {
-    return jwt.sign(payload, process.env.REFRESH_TOKEN, {expiresIn: "30d"})
 }
 
 export const completeProfileSuggestions = async (req, res) => {

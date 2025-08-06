@@ -185,13 +185,24 @@ export const updateProfile = async (req, res) => {
     const paramId = req.params.id;
     if(paramId) {
         try {
-            const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body}).populate("userId", "-password");
-            res.status(200).json(profile)
+            const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body})
+
+            const profileToken = await ProfileModel.findById(profile._id)
+                .select('birthday gender status option school userId')
+                .populate('userId', 'username firstname lastname phone_code')
+                
+            const new_access_token = createAccessToken({user: profileToken});
+
+            res.status(200).json({
+                'profile': profileToken,
+                'token': new_access_token,
+            })
         } catch (error) {
-            res.status(500).json(error)
+            console.log(error);
+            res.status(500).json(error);
         }
     } else {
-        retur(createError(403, "Access Denied, you can only update your profile!"))
+        return (createError(403, "Access Denied, you can only update your profile!"));
     }
 }
 

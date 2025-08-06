@@ -27,6 +27,15 @@ const UserSchema = mongoose.Schema(
         email: {
             type: String,
             trim: true,
+            lowercase: true,
+            match: [/.+@.+\..+/, 'Veuillez utiliser une adresse email valide']
+            // validate: {
+            //   validator: function (email) {
+            //     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            //     return re.test(email);
+            //   },
+            //   message: 'Email is invalid'
+            // }
         },
         phone: {
             type: String,
@@ -42,7 +51,9 @@ const UserSchema = mongoose.Schema(
         },
         password: {
             type: String,
-            required: true
+            required: true,
+            // minlength: 6,
+            // private: true
         },
 
 
@@ -56,6 +67,14 @@ const UserSchema = mongoose.Schema(
             type: Boolean,
             default: false
         },
+        refreshTokens: [String],
+        resetPasswordToken: String,
+        resetPasswordExpires: Date,
+        isEmailVerified: {
+            type: Boolean,
+            default: false
+        },
+        
         
         // Location Infos
         city: {

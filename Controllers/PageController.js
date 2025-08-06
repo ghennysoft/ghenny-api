@@ -42,40 +42,40 @@ export const getPages = async (req, res) => {
 };
 
 export const getSinglePage = async (req, res) => {
-  const token = req.headers.authorization;
   const id = req.params.id;
-  let school;
-  let year;
-  try {
-    const response = await axios.get(process.env.SCHOOL_API_URL+"schools/page/"+id, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    })
-    console.log('resp: ',response.data);
-    const response2 = await axios.get(process.env.SCHOOL_API_URL+"academic-years/active/"+response.data._id, {
-      headers: {
-        "Authorization": `Bearer ${token}`
-      }
-    })
-    console.log('resp2: ',response2.data);
-    school = response.data;
-    year = response2.data;
-  } catch (error) {
-    console.log('err: ',error?.response?.data);
-    school = null;
-    year = null;
-  }
-  console.log('id: ', id);
-  console.log('school: ', school);
 
   try {
     const page = await Page.findById(id)
-    res.status(200).json({page, school, year})
+    res.status(200).json(page)
   } catch (error) {
     // res.status(500).json(error)
   }
 }
+
+// Editer l'école et l'année en cours 
+export const editSchoolAndCurrentYear = async (req, res) => {
+  const { pageId, schoolId, yearId } = req.body;
+  
+  try {
+    const page = await Page.findById(pageId);
+    if (!page) {
+      return res.status(404).json({ msg: 'Page not found' });
+    }
+
+    // Vérifier si l'utilisateur est un admin de la page
+    if (schoolId) {
+      page.school.schoolId = schoolId;
+    }
+    if (yearId) {
+      page.school.activeYearId = yearId;
+    }
+
+    await page.save();
+    res.json(page.school);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 // Ajouter un administrateur à une page 
 export const addPageAdmin = async (req, res) => {

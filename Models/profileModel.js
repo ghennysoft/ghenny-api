@@ -87,6 +87,10 @@ const ProfileSchema = mongoose.Schema(
         pinned: [{type:mongoose.Types.ObjectId}],
         blockedProfiles: [{type:mongoose.Types.ObjectId}],
         subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
+        isProfileCompleted: {
+            type: Boolean,
+            default: false
+        },
     },
     {timestamps: true},
 )

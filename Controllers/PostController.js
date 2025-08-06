@@ -163,7 +163,7 @@ export const likeDislikePost = async (req, res) => {
 
 export const getTimelinePosts = async (req, res) => {
     const id = req?.user?._id;
-
+    
     try {
         // Récupérer l'utilisateur actuel
         const currentUser = await ProfileModel.findById(id).lean();

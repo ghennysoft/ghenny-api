@@ -9,7 +9,7 @@ router.post('/login', loginUser)
 router.post('/logout', authUser, logoutUser)
 router.get('/search', searchUser)
 router.get('/:id', getUser)
-router.post('/refresh_token', generateRefreshToken)
+router.post('/refresh', generateRefreshToken)
 router.get('/complete/suggestion', authUser, completeProfileSuggestions)
 
 export default router
