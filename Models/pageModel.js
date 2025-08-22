@@ -71,9 +71,13 @@ const pageSchema = new mongoose.Schema({
       ref: 'School',
       unique: true,
     },
-    activeYearId: {
+    currentYearId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'AcademicYear',
+    },
+    status: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
     },
   }
 },

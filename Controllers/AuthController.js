@@ -120,9 +120,10 @@ export const loginUser = async (req, res) => {
 }
 
 export const generateRefreshToken = async (req, res) => {
-
     try {
         const { refreshToken } = req.body;
+        if (!refreshToken) return res.status(401).json({ message: 'Invalid refresh token' });
+        
         const user = await UserModel.findOne({ refreshTokens: refreshToken });
         
         if (!user) return res.status(401).json({ message: 'Invalid refresh token' });
@@ -135,6 +136,7 @@ export const generateRefreshToken = async (req, res) => {
 
         res.json({ 
             'token': new_access_token,
+            'message': 'Nouveau token',
         });
     } catch (error) {
         res.status(400).json({ message: error.message });

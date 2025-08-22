@@ -21,10 +21,10 @@ const ProfileSchema = mongoose.Schema(
         option: {
             type: String,
         },
-        school_start_year: {
+        schoolStartYear: {
             type: Number,
         },
-        school_end_year: {
+        schoolEndYear: {
             type: Number,
         },
 
@@ -34,10 +34,10 @@ const ProfileSchema = mongoose.Schema(
         filiere: {
             type: String,
         },
-        university_start_year: {
+        universityStartYear: {
             type: Number,
         },
-        university_end_year: {
+        universityEndYear: {
             type: Number,
         },
 

@@ -7,9 +7,53 @@ import QuestionModel from "../Models/questionModel.js";
 import AnswerModel from "../Models/answerModel.js";
 import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
 import PinCategoryModel from "../Models/pinCategoryModel.js";
+import axios from "axios";
 import dotenv from 'dotenv';
 
 dotenv.config()
+
+// Search data
+export const gschoolConnection = async (req, res) => {
+    const token = req.headers.authorization;
+    try {
+        const [studentResponse, teacherResponse, roleResponse] = await Promise.all([
+            axios.get(`${process.env.SCHOOL_API_URL}students/find/${req.user._id}`, {
+                headers: { Authorization: token }
+            }).catch(() => null), // Gérer les erreurs sans bloquer
+            axios.get(`${process.env.SCHOOL_API_URL}teachers/find/${req.user._id}`, {
+                headers: { Authorization: token }
+            }).catch(() => null),
+            axios.get(`${process.env.SCHOOL_API_URL}schools/find/${req.user._id}`, {
+                headers: { Authorization: token }
+            }).catch(() => null)
+        ]);
+        // Extraire les données des réponses
+        const student = studentResponse?.data || null;
+        const teacher = teacherResponse?.data || null;
+        const role = roleResponse?.data || null;
+
+        // Vérifier les rôles
+        const hasValidRole = student || teacher || role?.admin || role?.director;
+        if (hasValidRole) {
+            console.log({ RESULTAT: 'YES, ONE GSCHOOL CONNECTION' });
+            // Renvoyer uniquement les données nécessaires
+            // res.status(200).json({
+            //     student,
+            //     teacher,
+            //     admin: role?.admin || false,
+            //     director: role?.director || false
+            // });
+            res.status(200).json({ isConnection: true });
+        } else {
+            // Renvoyer uniquement les données nécessaires
+            res.status(200).json({ isConnection: false });
+            console.log({ RESULTAT: 'NO GSCHOOL CONNECTION' });
+        }
+    } catch (error) {
+        console.log({ERROR: error.message});
+        res.status(500).json({error: error.message});
+    }
+}
 
 // Search data
 export const searchData = async (req, res) => {

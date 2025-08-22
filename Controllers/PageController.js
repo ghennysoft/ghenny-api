@@ -1,5 +1,4 @@
 import Page from '../models/pageModel.js'
-import axios from "axios"
 
 // Créer une nouvelle page
 export const createPage = async (req, res) => {
@@ -26,14 +25,6 @@ export const createPage = async (req, res) => {
 export const getPages = async (req, res) => {
     try {
         const pages = await Page.find().sort({createdAt: -1})
-        // .populate({
-        //     path: 'createdBy',
-        //     // select: 'userId profilePicture',
-        //     // populate: {
-        //     //     path: 'userId',
-        //     //     select: 'username firstname lastname',
-        //     // }
-        // })
         res.status(200).json(pages)
     } catch (error) {
        console.log(error)
@@ -48,13 +39,13 @@ export const getSinglePage = async (req, res) => {
     const page = await Page.findById(id)
     res.status(200).json(page)
   } catch (error) {
-    // res.status(500).json(error)
+    res.status(500).json({ message: error })
   }
 }
 
 // Editer l'école et l'année en cours 
 export const editSchoolAndCurrentYear = async (req, res) => {
-  const { pageId, schoolId, yearId } = req.body;
+  const { pageId, schoolId, yearId, status } = req.body;
   
   try {
     const page = await Page.findById(pageId);
@@ -67,11 +58,12 @@ export const editSchoolAndCurrentYear = async (req, res) => {
       page.school.schoolId = schoolId;
     }
     if (yearId) {
-      page.school.activeYearId = yearId;
+      page.school.currentYearId = yearId;
     }
+    page.school.status = status;
 
     await page.save();
-    res.json(page.school);
+    res.status(200).json(page.school);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

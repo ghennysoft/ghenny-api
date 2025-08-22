@@ -1,10 +1,11 @@
 import express from 'express'
-import { addInPinCategory, completeProfile, createPinCategory, deleteUser, getBirthdayWishes, getPinCategory, getPins, getProfile, getUserData, getUsersToPin, PinningUser, postBirthdayWish, searchData, suggestStudyAt, updateCoverPicture, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
+import { gschoolConnection, addInPinCategory, completeProfile, createPinCategory, deleteUser, getBirthdayWishes, getPinCategory, getPins, getProfile, getUserData, getUsersToPin, PinningUser, postBirthdayWish, searchData, suggestStudyAt, updateCoverPicture, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
 import { uploadProfileS3 } from '../utils/aws.js'
 import authUser from '../utils/authMiddleware.js'
 
 const router = express.Router()
 
+router.get('/school/role', authUser, gschoolConnection)
 router.get('/search', authUser, searchData)
 router.put('/followUnfollow', authUser, PinningUser)
 router.get('/suggest', authUser, suggestStudyAt)
