@@ -10,6 +10,9 @@ const pageSchema = new mongoose.Schema({
     enum: ['personnal', 'business', 'education'],
     required: true,
   },
+  email: {
+    type: String,
+  },
   description: {
     type: String,
     required: true,
@@ -20,11 +23,9 @@ const pageSchema = new mongoose.Schema({
   coverPicture: {
     type: String,
   },
-  contacts: {
-    address: String,
-    phoneNumber: String,
-    website: String,
-  },
+  address: String,
+  phoneNumber: String,
+  website: String,
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profiles',
@@ -35,8 +36,8 @@ const pageSchema = new mongoose.Schema({
     ref: 'Profiles',
   }],
   followers: [{
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Profiles'
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Profiles'
     // isStudent: { // Uniquement pour les pages éducation
     //   type: Boolean,
     //   default: false,

@@ -16,8 +16,8 @@ dotenv.config()
 export const gschoolConnection = async (req, res) => {
     const token = req.headers.authorization;
     try {
-        const [studentResponse, teacherResponse, roleResponse] = await Promise.all([
-            axios.get(`${process.env.SCHOOL_API_URL}students/find/${req.user._id}`, {
+        const [pupilResponse, teacherResponse, roleResponse] = await Promise.all([
+            axios.get(`${process.env.SCHOOL_API_URL}pupils/find/${req.user._id}`, {
                 headers: { Authorization: token }
             }).catch(() => null), // Gérer les erreurs sans bloquer
             axios.get(`${process.env.SCHOOL_API_URL}teachers/find/${req.user._id}`, {
@@ -28,22 +28,22 @@ export const gschoolConnection = async (req, res) => {
             }).catch(() => null)
         ]);
         // Extraire les données des réponses
-        const student = studentResponse?.data || null;
+        const pupil = pupilResponse?.data || null;
         const teacher = teacherResponse?.data || null;
         const role = roleResponse?.data || null;
 
         // Vérifier les rôles
-        const hasValidRole = student || teacher || role?.admin || role?.director;
+        const hasValidRole = pupil || teacher || role?.admin || role?.director;
         if (hasValidRole) {
             console.log({ RESULTAT: 'YES, ONE GSCHOOL CONNECTION' });
             // Renvoyer uniquement les données nécessaires
-            // res.status(200).json({
-            //     student,
-            //     teacher,
-            //     admin: role?.admin || false,
-            //     director: role?.director || false
-            // });
-            res.status(200).json({ isConnection: true });
+            res.status(200).json({
+                isConnection: true,
+                pupil: pupil?.pupil,
+                teacher,
+                admin: role?.admin || false,
+                director: role?.director || false,
+            });
         } else {
             // Renvoyer uniquement les données nécessaires
             res.status(200).json({ isConnection: false });
@@ -105,6 +105,23 @@ export const searchData = async (req, res) => {
         res.status(200).json({profiles, posts, questions})
     } catch (error) {
         res.status(500).json(error)
+    }
+}
+
+export const getProfileById = async (req, res) => {
+    const paramId = req.params.id;
+    console.log(req.params.id);
+    try {
+        const profile = await UserModel.findById(paramId)
+        .select("firstname lastname")
+        console.log({profile});
+
+        if(!profile){
+            return res.status(404).json("No such profile exist");
+        }
+        return res.status(200).json(profile); 
+    } catch (error) {
+        res.status(500).json({error: error.message})
     }
 }
 
@@ -176,11 +193,11 @@ export const completeProfile = async (req, res) => {
 
     if(profileId) {
         if(!gender, !birthday, !status){
-            return res.status(400).json("Veillez remplir tous les champs")
+            return res.status(400).json({message: "Veillez remplir tous les champs"})
         } else {
             try {
-                const user = await UserModel.findByIdAndUpdate(userId, {$set: {profileId: profileId}})
-                const profile = await ProfileModel.findByIdAndUpdate(
+                await UserModel.findByIdAndUpdate(userId, {$set: {profileId: profileId}})
+                const updateProfile = await ProfileModel.findByIdAndUpdate(
                     profileId,
                     {$set: {
                         gender,
@@ -195,10 +212,12 @@ export const completeProfile = async (req, res) => {
                         profilePicture: pictureFile,
                     }}
                 )
-                .populate("userId", "-password");
 
-                console.log({profile, user})
-                res.status(200).json({"profile": profile, "user": user})
+                const profile = await ProfileModel.findById(profileId)
+                .select('birthday gender status option school userId')
+                .populate('userId', 'username firstname lastname phone_code')
+
+                res.status(200).json(profile)
             } catch (error) {
                 // console.log(error)
                 res.status(500).json(error)

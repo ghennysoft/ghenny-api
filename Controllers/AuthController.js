@@ -47,18 +47,18 @@ export const registerUser = async (req, res) => {
             await newUser.save();
             await newProfile.save();
             
-            const profileToken = await ProfileModel.findOne({ userId: newUser._id })
+            const profile = await ProfileModel.findOne({ userId: newUser._id })
             .select('birthday gender status option school userId')
             .populate('userId', 'username firstname lastname phone_code')
             
-            const access_token = createAccessToken({user: profileToken});
+            const access_token = createAccessToken({user: profile});
             const refresh_token = createRefreshToken();
             
             newUser.refreshTokens.push(refresh_token);
             await newUser.save();
 
             res.status(201).json({
-                'profile': profileToken,
+                'profile': profile,
                 'token': access_token,
                 'refreshToken': refresh_token,
             })
@@ -94,18 +94,18 @@ export const loginUser = async (req, res) => {
                     res.status(400).json({message:'Numéro ou mot de passe incorrect'})
                 } else {
 
-                    const profileToken = await ProfileModel.findOne({ userId: user._id })
+                    const profile = await ProfileModel.findOne({ userId: user._id })
                     .select('birthday gender status option school userId')
                     .populate('userId', 'username firstname lastname phone_code')
                     
-                    const access_token = createAccessToken({user: profileToken});
+                    const access_token = createAccessToken({user: profile});
                     const refresh_token = createRefreshToken();
 
                     user.refreshTokens.push(refresh_token);
                     await user.save();
                     
                     res.status(200).json({
-                        'profile': profileToken,
+                        'profile': profile,
                         'token': access_token,
                         'refreshToken': refresh_token,
                     })
