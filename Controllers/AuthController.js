@@ -145,13 +145,10 @@ export const generateRefreshToken = async (req, res) => {
 
 export const searchUser = async (req, res) => {
     const searchTerm = req.query.q || ''
-    
     try {
         // Search user
         const searchParts = searchTerm.split(' ').map(part => part.trim()).filter(part => part.length > 0);
-
         let profiles = [];
-
         if (searchParts.length === 1) {
             // Recherche par prénom ou nom seul
             profiles = await UserModel.find({
