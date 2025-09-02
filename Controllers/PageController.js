@@ -1,4 +1,4 @@
-import Page from '../models/pageModel.js'
+import Page from '../Models/pageModel.js'
 
 // Créer une nouvelle page
 export const createPage = async (req, res) => {
