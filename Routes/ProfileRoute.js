@@ -1,5 +1,5 @@
 import express from 'express'
-import { gschoolConnection, addInPinCategory, completeProfile, createPinCategory, deleteUser, getBirthdayWishes, getPinCategory, getPins, getProfile, getProfileById, getUserData, getUsersToPin, PinningUser, postBirthdayWish, searchData, suggestStudyAt, updateCoverPicture, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
+import { gschoolConnection, addInPinCategory, completeProfile, createPinCategory, deleteUser, getBirthdayWishes, getPinCategory, getFollowData, getProfile, getProfileById, getUserData, getUsersToFollow, followUnfollowUser, postBirthdayWish, searchData, suggestStudyAt, updateCoverPicture, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
 import { uploadProfileS3 } from '../utils/aws.js'
 import authUser from '../utils/authMiddleware.js'
 
@@ -7,16 +7,16 @@ const router = express.Router()
 
 router.get('/school/role', authUser, gschoolConnection)
 router.get('/search', authUser, searchData)
-router.put('/followUnfollow', authUser, PinningUser)
+router.put('/followUnfollow', authUser, followUnfollowUser)
 router.get('/suggest', authUser, suggestStudyAt)
 router.post('/wish', authUser, postBirthdayWish)
 router.post('/pinCategory', authUser, createPinCategory)
 router.put('/addPinCategory', authUser, addInPinCategory)
 router.get('/pinCategory/:id', authUser, getPinCategory)
-router.get('/topin/:id', authUser, getUsersToPin)
+router.get('/toFollow/:id', authUser, getUsersToFollow)
 router.get('/:id', authUser, getProfile)
 router.get('/find/:id', authUser, getProfileById)
-router.get('/:id/followings', authUser, getPins)
+router.get('/:id/follow', authUser, getFollowData)
 router.put('/:id', authUser, updateProfile)
 router.put('/picture/:id', authUser, uploadProfileS3.single('profilePicture'), updatePicture)
 router.put('/cover/:id', authUser, uploadProfileS3.single('coverPicture'), updateCoverPicture)

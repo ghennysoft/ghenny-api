@@ -127,20 +127,28 @@ export const getProfileById = async (req, res) => {
 
 export const getProfile = async (req, res) => {
     const paramId = req.params.id;
-     console.log(paramId)
     try {
         const user = await UserModel.findOne({username: paramId});
         
         const profile = await ProfileModel.findOne({userId: user._id})
-        .populate("userId", "-password")
-        .populate({
-            path: 'pins',
-            select: 'userId profilePicture status school option university filiere profession entreprise',
-            populate: {
-                path: 'userId',
-                select: 'username firstname lastname',
-            }
-        })
+        .select('userId profilePicture coverPicture status school option university filiere profession entreprise bio birthday createdAt followings followers gender subjects')
+        .populate("userId", "city country firstname lastname phone_code username")
+        // .populate({
+        //     path: "followings",
+        //     select: 'userId profilePicture status school option university filiere profession entreprise',
+        //     populate: {
+        //         path: 'userId',
+        //         select: 'username firstname lastname',
+        //     }
+        // })
+        // .populate({
+        //     path: "followers",
+        //     select: 'userId profilePicture status school option university filiere profession entreprise',
+        //     populate: {
+        //         path: 'userId',
+        //         select: 'username firstname lastname',
+        //     }
+        // })
 
         if(profile){
             res.status(200).json(profile)
@@ -152,27 +160,42 @@ export const getProfile = async (req, res) => {
     }
 }
 
-export const getPins = async (req, res) => {
+export const getFollowData = async (req, res) => { 
     const paramId = req.params.id;  
     try {
         const profile = await ProfileModel.findById(paramId)
-        const pins = profile.pins        
-        let pinProfile = {};
-        let pinsData = [];
-        if(pins.length!==0){
-            for(let i=0; i<pins.length; i++){
-                pinProfile = await ProfileModel.findById(pins[i])
+        
+        const followingUsers = profile.followings
+        let followingsProfile = {};
+        let followings = [];
+        if(followingUsers.length!==0){
+            for(let i=0; i<followingUsers.length; i++){
+                followingsProfile = await ProfileModel.findById(followingUsers[i])
                 .select('userId profilePicture status school option university filiere profession entreprise')
                 .populate({
                     path: 'userId',
                     select: 'username firstname lastname',
-                })                
-                pinsData.push(pinProfile);
+                })
+                followings.push(followingsProfile);
             }
-            res.status(200).json(pinsData)
-        }else{
-            res.status(200).json(pinsData)
         }
+
+        const followerUsers = profile.followers
+        let followersProfile = {};
+        let followers = [];
+        if(followerUsers.length!==0){
+            for(let i=0; i<followerUsers.length; i++){
+                followersProfile = await ProfileModel.findById(followerUsers[i])
+                .select('userId profilePicture status school option university filiere profession entreprise')
+                .populate({
+                    path: 'userId',
+                    select: 'username firstname lastname',
+                })
+                followers.push(followersProfile);
+            }
+        }
+
+        res.status(200).json({followings, followers});        
     } catch (error) {
         res.status(500).json(error)
     }
@@ -470,26 +493,26 @@ export const getUserData = async (req, res) => {
 }
 
 // Users to pin suggestions
-export const PinningUser = async (req, res) => {
+export const followUnfollowUser = async (req, res) => {
     const {currentUserId, foreignUserId} = req.body;    
     try {
         const currentProfile = await ProfileModel.findById(currentUserId)
         const foreignProfile = await ProfileModel.findById(foreignUserId)
-        if(!currentProfile.pins.includes(foreignUserId)) {
-            await currentProfile.updateOne({$push: {pins:foreignUserId}});
-            await foreignProfile.updateOne({$push: {pinned:currentUserId}});
-            res.status(200).json('Profile pinned')
+        if(!currentProfile.followings.includes(foreignUserId)) {
+            await currentProfile.updateOne({$push: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$push: {followers:currentUserId}});
+            res.status(200).json('Profile followed')
         } else {
-            await currentProfile.updateOne({$pull: {pins:foreignUserId}});
-            await foreignProfile.updateOne({$pull: {pinned:currentUserId}});
-            res.status(200).json('Profile unpinned!')
+            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
+            res.status(200).json('Profile unfollowed!')
         }
     } catch (error) {
         res.status(500).json(error)
     }
 }
 
-export const getUsersToPin = async (req, res) => {
+export const getUsersToFollow = async (req, res) => {
     const {id} = req.params;
     try {
         const currentUser = await ProfileModel.findById(id);

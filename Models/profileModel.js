@@ -56,35 +56,15 @@ const ProfileSchema = mongoose.Schema(
         birthday: {
             type: Date,
         },
-        profilePicture: {
-            key: {
-                type: String,
-            },
-            location: {
-                type: String,
-            },
-            url: {
-                type: String,
-            },
-        },
-        coverPicture: {
-            key: {
-                type: String,
-            },
-            location: {
-                type: String,
-            },
-            url: {
-                type: String,
-            },
-        },
+        profilePicture: String,
+        coverPicture: String,
         bio: {
             type: String,
             maxlength: 200,
             default:'',
         },
-        pins: [{type:mongoose.Types.ObjectId}],
-        pinned: [{type:mongoose.Types.ObjectId}],
+        followings: [{type:mongoose.Types.ObjectId}],
+        followers: [{type:mongoose.Types.ObjectId}],
         blockedProfiles: [{type:mongoose.Types.ObjectId}],
         subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
         isProfileCompleted: {
