@@ -513,27 +513,33 @@ export const followUnfollowUser = async (req, res) => {
 }
 
 export const getUsersToFollow = async (req, res) => {
-    const {id} = req.params;
+    const { id } = req.params;
     try {
+        // Récupérer l'utilisateur actuel avec ses followings
         const currentUser = await ProfileModel.findById(id);
-        const sameUser = await ProfileModel.find({$or: [{status: currentUser.status}]}).populate('userId', 'firstname lastname')
-
-        let idArr = [];
-        sameUser.forEach(item=>{
-            idArr.push(item._id)
-        })
-
-        let userSuggestion;
-        if(idArr.length!==0){
-            userSuggestion = await ProfileModel.find({_id: {$in: idArr}})
-            .select('status school option university filiere profession entreprise')
-            .populate('userId', 'username firstname lastname')
+        
+        if (!currentUser) {
+            return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
-        res.status(200).json(userSuggestion);
+
+        // Trouver les profils avec le même statut, excluant l'utilisateur actuel et ceux qu'il suit déjà
+        const usersToFollow = await ProfileModel.find({
+            status: currentUser.status, // Même statut
+            _id: { $ne: currentUser._id }, // Exclure l'utilisateur actuel
+            _id: { $nin: currentUser.followings || [] } // Exclure les profils déjà suivis
+        })
+        .select('status school option university filiere profession entreprise')
+        .populate('userId', 'username firstname lastname profilePicture');
+
+        res.status(200).json(usersToFollow);
     } catch (error) {
-      res.status(500).json(error);
+        console.error("Erreur dans getUsersToFollow:", error);
+        res.status(500).json({ 
+            message: "Erreur serveur lors de la récupération des utilisateurs à suivre",
+            error: error.message 
+        });
     }
-}
+};
 
 export const createPinCategory = async (req, res) => {
     const {author, name, color} = req.body;

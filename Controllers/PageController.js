@@ -2,13 +2,16 @@ import Page from '../Models/pageModel.js'
 
 // Créer une nouvelle page
 export const createPage = async (req, res) => {
-  const {name, type, description, contacts} = req.body;
+  const {name, type, description, address, website, email, phoneNumber} = req.body;
   try {
     const page = new Page({
       name,
       type,
       description,
-      contacts,
+      address,
+      website,
+      email,
+      phoneNumber,
       createdBy: req.user?._id,
       admins: [req.user?._id], // L'utilisateur qui crée la page est automatiquement admin
     });
@@ -43,28 +46,34 @@ export const getSinglePage = async (req, res) => {
   }
 }
 
-// Editer l'école et l'année en cours 
-export const editSchoolAndCurrentYear = async (req, res) => {
-  const { pageId, schoolId, yearId, status } = req.body;
+// S'abonner à une page
+export const followPage = async (req, res) => {
+  console.log(req.user);
   
   try {
-    const page = await Page.findById(pageId);
+    const page = await Page.findById(req.params.id);
+
     if (!page) {
       return res.status(404).json({ msg: 'Page not found' });
     }
 
-    // Vérifier si l'utilisateur est un admin de la page
-    if (schoolId) {
-      page.school.schoolId = schoolId;
-    }
-    if (yearId) {
-      page.school.currentYearId = yearId;
-    }
-    page.school.status = status;
+    // Vérifier si l'utilisateur est déjà abonné
+    const isAlreadyFollowing = page.followers.includes(req.user._id);
 
-    await page.save();
-    res.status(200).json(page.school);
+    if (isAlreadyFollowing) {
+      // page.followers.push({ user: req.user._id, isStudent });
+      page.followers.pull(req.user._id);
+      await page.save();
+      console.log('Unfollowed');
+    } else {
+      // page.followers.push({ user: req.user._id, isStudent });
+      page.followers.push(req.user._id);
+      await page.save();
+      console.log('Followed');
+    }    
+    res.status(200).json(page);
   } catch (err) {
+    console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -93,34 +102,30 @@ export const addPageAdmin = async (req, res) => {
   }
 };
 
-// S'abonner à une page
-export const followPage = async (req, res) => {
-  // const { isStudent } = req.body; // Uniquement pour les pages éducation
 
+
+// Editer l'école et l'année en cours 
+export const editSchoolAndCurrentYear = async (req, res) => {
+  const { pageId, schoolId, yearId, status } = req.body;
+  
   try {
-    const page = await Page.findById(req.params.id);
-
+    const page = await Page.findById(pageId);
     if (!page) {
       return res.status(404).json({ msg: 'Page not found' });
     }
 
-    // Vérifier si l'utilisateur est déjà abonné
-    const isAlreadyFollowing = page.followers.includes(req.user.id);
+    // Vérifier si l'utilisateur est un admin de la page
+    if (schoolId) {
+      page.school.schoolId = schoolId;
+    }
+    if (yearId) {
+      page.school.currentYearId = yearId;
+    }
+    page.school.status = status;
 
-    if (isAlreadyFollowing) {
-      // page.followers.push({ user: req.user.id, isStudent });
-      page.followers.pull(req.user.id);
-      await page.save();
-      console.log('Unfollowed');
-    } else {
-      // page.followers.push({ user: req.user.id, isStudent });
-      page.followers.push(req.user.id);
-      await page.save();
-      console.log('Followed');
-    }    
-    res.status(200).json(page);
+    await page.save();
+    res.status(200).json(page.school);
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
