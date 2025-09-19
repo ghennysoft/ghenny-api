@@ -7,6 +7,7 @@ import QuestionModel from "../Models/questionModel.js";
 import AnswerModel from "../Models/answerModel.js";
 import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
 import PinCategoryModel from "../Models/pinCategoryModel.js";
+import {createAccessToken, createRefreshToken} from "../utils/jwtTokens.js"
 import axios from "axios";
 import dotenv from 'dotenv';
 
@@ -272,16 +273,19 @@ export const updateProfile = async (req, res) => {
     if(paramId) {
         try {
             const profile = await ProfileModel.findByIdAndUpdate(paramId, {$set: req.body})
+            const user = await UserModel.updateOne({profileId: paramId}, {$set: req.body})
 
             const profileToken = await ProfileModel.findById(profile._id)
                 .select('birthday gender status option school userId')
                 .populate('userId', 'username firstname lastname phone_code')
                 
             const new_access_token = createAccessToken({user: profileToken});
+            const new_refresh_token = createRefreshToken();
 
             res.status(200).json({
                 'profile': profileToken,
                 'token': new_access_token,
+                'refreshToken': new_refresh_token,
             })
         } catch (error) {
             console.log(error);

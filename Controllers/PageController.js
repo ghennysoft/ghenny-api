@@ -48,8 +48,6 @@ export const getSinglePage = async (req, res) => {
 
 // S'abonner à une page
 export const followPage = async (req, res) => {
-  console.log(req.user);
-  
   try {
     const page = await Page.findById(req.params.id);
 
@@ -61,19 +59,14 @@ export const followPage = async (req, res) => {
     const isAlreadyFollowing = page.followers.includes(req.user._id);
 
     if (isAlreadyFollowing) {
-      // page.followers.push({ user: req.user._id, isStudent });
       page.followers.pull(req.user._id);
       await page.save();
-      console.log('Unfollowed');
     } else {
-      // page.followers.push({ user: req.user._id, isStudent });
       page.followers.push(req.user._id);
       await page.save();
-      console.log('Followed');
     }    
     res.status(200).json(page);
   } catch (err) {
-    console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
