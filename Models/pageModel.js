@@ -38,10 +38,6 @@ const pageSchema = new mongoose.Schema({
   followers: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profiles'
-    // isStudent: { // Uniquement pour les pages éducation
-    //   type: Boolean,
-    //   default: false,
-    // },
   }],
   ratings: [{
     user: {

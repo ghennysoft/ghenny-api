@@ -178,7 +178,7 @@ export const getTimelinePosts = async (req, res) => {
                 $or: [
                     { school: currentUser.school },
                     { option: currentUser.option },
-                    { _id: { $in: currentUser.pins } }
+                    { _id: { $in: currentUser.followings } }
                 ]
             };
         } else if (currentUser.status === 'Student') {
@@ -186,14 +186,14 @@ export const getTimelinePosts = async (req, res) => {
                 $or: [
                     { university: currentUser.university },
                     { filiere: currentUser.filiere },
-                    { _id: { $in: currentUser.pins } }
+                    { _id: { $in: currentUser.followings } }
                 ]
             };
         } else if (currentUser.status === 'Other') {
             matchQuery = {
                 $or: [
                     { status: currentUser.status },
-                    { _id: { $in: currentUser.pins } }
+                    { _id: { $in: currentUser.followings } }
                 ]
             };
         } else {
@@ -407,6 +407,7 @@ export const getTimelinePosts = async (req, res) => {
         // Retourner le résultat
         res.status(200).json({ userFeed, page, totalPosts: totalPosts[0]?.totalPosts || 0, hasNextPage });
     } catch (error) {
+        console.log(error)
         res.status(500).json({ message: error.message });
     }
 };

@@ -206,14 +206,16 @@ export const getFollowData = async (req, res) => {
 export const completeProfile = async (req, res) => {
     const {gender, birthday, status, school, option, university, filiere, entreprise, profession} = req.body;
     const {profileId, userId} = req.params;
-    let pictureFile = {};
-    if(req.file) {
-        pictureFile = {
-            key: req.file.key,
-            location: req.file.location,
-            url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
-        }        
-    }
+    console.log(req.file);
+    console.log(req.body);
+    
+    // if(req.file) {
+    //     pictureFile = {
+    //         key: req.file.key,
+    //         location: req.file.location,
+    //         url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
+    //     }        
+    // }
 
     if(profileId) {
         if(!gender, !birthday, !status){
@@ -223,18 +225,7 @@ export const completeProfile = async (req, res) => {
                 await UserModel.findByIdAndUpdate(userId, {$set: {profileId: profileId}})
                 const updateProfile = await ProfileModel.findByIdAndUpdate(
                     profileId,
-                    {$set: {
-                        gender,
-                        birthday,
-                        status,
-                        school,
-                        option,
-                        university,
-                        filiere,
-                        entreprise,
-                        profession,
-                        profilePicture: pictureFile,
-                    }}
+                    {$set: req.body}
                 )
 
                 const profile = await ProfileModel.findById(profileId)
@@ -243,12 +234,12 @@ export const completeProfile = async (req, res) => {
 
                 res.status(200).json(profile)
             } catch (error) {
-                // console.log(error)
+                console.log(error)
                 res.status(500).json(error)
             }
         }
     } else {
-        retur(createError(403, "Access Denied, you can only update your profile!"))
+        return(createError(403, "Access Denied, you can only update your profile!"))
     }
 }
 
@@ -299,25 +290,26 @@ export const updateProfile = async (req, res) => {
 // Update Profile & Complete profile infos after register
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
-    let pictureFile = {};
-    if(req.file) {
-        pictureFile = {
-            key: req.file.key,
-            location: req.file.location,
-            url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
-        }        
-    }
+    // let pictureFile = {};
+    // if(req.file) {
+    //     pictureFile = {
+    //         key: req.file.key,
+    //         location: req.file.location,
+    //         url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
+    //     }        
+    // }
     if(paramId) {
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {profilePicture: pictureFile}
+                $set: {profilePicture: req.file}
             });
             res.status(200).json({"picture": picture})
         } catch (error) {
+            console.log(error)
             res.status(500).json(error)            
         }
     } else {
-        retur(createError(403, "Access Denied, you can only update your profile!"))
+        return(createError(403, "Access Denied, you can only update your profile!"))
     }
 }
 
@@ -518,10 +510,9 @@ export const followUnfollowUser = async (req, res) => {
 
 export const getUsersToFollow = async (req, res) => {
     const { id } = req.params;
-    try {
+     try {
         // Récupérer l'utilisateur actuel avec ses followings
         const currentUser = await ProfileModel.findById(id);
-        
         if (!currentUser) {
             return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
