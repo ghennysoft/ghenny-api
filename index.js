@@ -4,6 +4,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import helmet from 'helmet';
 import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/ProfileRoute.js';
 import PostRoute from './Routes/PostRoute.js';
@@ -11,10 +12,11 @@ import QuestionRoute from './Routes/QuestionRoute.js';
 import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
 import ChatRoute from './Routes/ChatRoute.js';
+import ConversationRoute from './Routes/ConversationRoutes.js';
+import MessageRoute from './Routes/MessageRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
 import PageRoute from './Routes/PageRoute.js';
 import { app, server } from './socket.js';
-import helmet from 'helmet';
 // import socketIO from 'socket.io';
 
 dotenv.config();
@@ -79,6 +81,8 @@ app.use('/api/comment', CommentRoute)
 app.use('/api/question', QuestionRoute)
 app.use('/api/answer', AnswerRoute)
 app.use('/api/chat', ChatRoute)
+app.use('/api/conversation', ConversationRoute)
+app.use('/api/message', MessageRoute)
 app.use('/api/notification', NotificationRoute)
 app.use('/api/page', PageRoute)
 
