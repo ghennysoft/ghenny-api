@@ -1,10 +1,13 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import cors from 'cors';
+import mongoose from 'mongoose';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
+import cors from 'cors';
+
+import { app, server } from './socket.js';
+
 import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/ProfileRoute.js';
 import PostRoute from './Routes/PostRoute.js';
@@ -16,8 +19,6 @@ import ConversationRoute from './Routes/ConversationRoutes.js';
 import MessageRoute from './Routes/MessageRoute.js';
 import NotificationRoute from './Routes/NotificationRoute.js';
 import PageRoute from './Routes/PageRoute.js';
-import { app, server } from './socket.js';
-// import socketIO from 'socket.io';
 
 dotenv.config();
 const port = process.env.PORT || 5000;
@@ -42,13 +43,12 @@ app.use(helmet({
   crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" }
 }));
 app.use(cors(corsOptions))
-
 app.use(cookieParser())
-app.use(express.json())
-app.use(bodyParser.json({limit: '30mb', extended: true}))
-app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
-// Multer path
-app.use(express.static('public')) 
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ limit: '30mb', extended: true }));
+app.use(express.static('public'));
+// app.use(bodyParser.json({limit: '30mb', extended: true}))
+// app.use(bodyParser.urlencoded({limit: '30mb', extended: true}))
 
 let MONGO_URL;
 
@@ -63,7 +63,6 @@ if(process.env.NODE_ENV == 'production') {
     });
     console.log('On developpment');
 }
-
 
 MONGO_URL
 .then(() => {
