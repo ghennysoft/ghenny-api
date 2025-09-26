@@ -7,12 +7,13 @@ export const getConversations = async (req, res) => {
     const conversations = await Conversation.find({
       participants: {$in: req?.user?._id}
     })
+    .populate('lastMessage')
     .populate({
       path: 'participants', 
       select: 'userId profilePicture online lastSeen',
       populate: {
         path: 'userId',
-        select: 'firstname lastname username',
+        select: 'firstname lastname username online lastSeen',
       }
     })
     .sort({ updatedAt: -1 })

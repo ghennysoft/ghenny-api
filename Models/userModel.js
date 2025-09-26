@@ -28,14 +28,6 @@ const UserSchema = mongoose.Schema(
             type: String,
             trim: true,
             lowercase: true,
-            match: [/.+@.+\..+/, 'Veuillez utiliser une adresse email valide']
-            // validate: {
-            //   validator: function (email) {
-            //     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            //     return re.test(email);
-            //   },
-            //   message: 'Email is invalid'
-            // }
         },
         phone: {
             type: String,
@@ -62,6 +54,17 @@ const UserSchema = mongoose.Schema(
             type: String,
             enum: ['admin', 'user'],
             default: 'user',
+        },
+        online: {
+            type: Boolean,
+            default: false
+        },
+        lastSeen: {
+            type: Date,
+            default: Date.now
+        },
+        socketId: {
+            type: String,
         },
         isAdmin: {
             type: Boolean,
