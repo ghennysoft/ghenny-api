@@ -24,14 +24,15 @@ export const createPost = async (req, res) => {
            postBg: JSON.parse(postBg),
         });
         await newPost.save();
+
         // Récupérer les abonnés de l'utilisateur
-        const user = await ProfileModel.findById(newPost.author).populate('userId pinned');
-        const pinned = user.pinned;
+        const user = await ProfileModel.findById(newPost.author).populate('userId followers');
+        const followers = user.followers;
 
         // Créer une notification pour chaque abonné
-        const notifications = pinned.map(pin => ({
+        const notifications = followers.map(follower => ({
             senderId: author,
-            receiverId: pin._id,
+            receiverId: follower._id,
             type: 'post',
             postId: newPost._id,
         }));

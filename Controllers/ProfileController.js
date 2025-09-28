@@ -10,6 +10,7 @@ import PinCategoryModel from "../Models/pinCategoryModel.js";
 import {createAccessToken, createRefreshToken} from "../utils/jwtTokens.js"
 import axios from "axios";
 import dotenv from 'dotenv';
+import NotificationModel from "../Models/notificationModel.js";
 
 dotenv.config()
 
@@ -36,7 +37,7 @@ export const gschoolConnection = async (req, res) => {
         // Vérifier les rôles
         const hasValidRole = pupil || teacher || role?.admin || role?.director;
         if (hasValidRole) {
-            console.log({ RESULTAT: 'YES, ONE GSCHOOL CONNECTION' });
+            // console.log({ RESULTAT: 'YES, ONE GSCHOOL CONNECTION' });
             // Renvoyer uniquement les données nécessaires
             res.status(200).json({
                 isConnection: true,
@@ -48,7 +49,7 @@ export const gschoolConnection = async (req, res) => {
         } else {
             // Renvoyer uniquement les données nécessaires
             res.status(200).json({ isConnection: false });
-            console.log({ RESULTAT: 'NO GSCHOOL CONNECTION' });
+            // console.log({ RESULTAT: 'NO GSCHOOL CONNECTION' });
         }
     } catch (error) {
         console.log({ERROR: error.message});
@@ -197,6 +198,35 @@ export const getFollowData = async (req, res) => {
         }
 
         res.status(200).json({followings, followers});        
+    } catch (error) {
+        res.status(500).json(error)
+    }
+}
+
+// Follow/Unfollow user
+export const followUnfollowUser = async (req, res) => {
+    const {currentUserId, foreignUserId} = req.body;    
+    try {
+        const currentProfile = await ProfileModel.findById(currentUserId)
+        const foreignProfile = await ProfileModel.findById(foreignUserId)
+        if(!currentProfile.followings.includes(foreignUserId)) {
+            await currentProfile.updateOne({$push: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$push: {followers:currentUserId}});
+
+            // Envoyer une notification à l'auteur du post
+            const notification = new NotificationModel({
+                senderId: currentUserId,
+                receiverId: foreignUserId,
+                type: 'follow',
+            });
+            await notification.save();
+
+            res.status(200).json('Profile followed')
+        } else {
+            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
+            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
+            res.status(200).json('Profile unfollowed!')
+        }
     } catch (error) {
         res.status(500).json(error)
     }
@@ -483,26 +513,6 @@ export const getUserData = async (req, res) => {
         })
 
         res.status(200).json({posts, questions, answers})
-    } catch (error) {
-        res.status(500).json(error)
-    }
-}
-
-// Users to pin suggestions
-export const followUnfollowUser = async (req, res) => {
-    const {currentUserId, foreignUserId} = req.body;    
-    try {
-        const currentProfile = await ProfileModel.findById(currentUserId)
-        const foreignProfile = await ProfileModel.findById(foreignUserId)
-        if(!currentProfile.followings.includes(foreignUserId)) {
-            await currentProfile.updateOne({$push: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$push: {followers:currentUserId}});
-            res.status(200).json('Profile followed')
-        } else {
-            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
-            res.status(200).json('Profile unfollowed!')
-        }
     } catch (error) {
         res.status(500).json(error)
     }

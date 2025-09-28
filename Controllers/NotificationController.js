@@ -9,7 +9,7 @@ export const getUserNotifications = async (req, res) => {
             select: 'userId profilePicture birthday',
             populate: {
                 path: 'userId',
-                select: 'firstname lastname',
+                select: 'firstname lastname username',
             }
         })
         .populate({
@@ -17,7 +17,7 @@ export const getUserNotifications = async (req, res) => {
             select: 'userId profilePicture birthday',
             populate: {
                 path: 'userId',
-                select: 'firstname lastname',
+                select: 'firstname lastname username',
             }
         })
         .populate({
