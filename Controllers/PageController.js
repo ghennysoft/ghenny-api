@@ -1,4 +1,5 @@
 import Page from '../Models/pageModel.js'
+import PostModel from '../Models/postModel.js';
 
 // Créer une nouvelle page
 export const createPage = async (req, res) => {
@@ -56,18 +57,62 @@ export const followPage = async (req, res) => {
     }
 
     // Vérifier si l'utilisateur est déjà abonné
-    const isAlreadyFollowing = page.followers.includes(req.user._id);
+    const isAlreadyFollowing = page.followers.includes({user: req.user._id});
 
     if (isAlreadyFollowing) {
-      page.followers.pull(req.user._id);
+      page.followers.pull({user: req.user._id});
       await page.save();
     } else {
-      page.followers.push(req.user._id);
+      page.followers.push({user: req.user._id});
       await page.save();
     }    
     res.status(200).json(page);
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+// Créer un post sur une page
+export const createPagePost = async (req, res) => {
+  try {
+    const { content, media } = req.body;
+    const page = await Page.findById(req.params.id);
+
+    if (!page) {
+      return res.status(404).json({
+        success: false,
+        message: 'Page non trouvée'
+      });
+    }
+
+    // Vérifier que l'utilisateur est admin
+    if (page.admin.toString() !== req.user._id) {
+      return res.status(403).json({
+        success: false,
+        message: 'Seul l\'admin peut poster sur cette page'
+      });
+    }
+
+    const post = new PostModel({
+      content,
+      media: media || [],
+      author: req.user._id,
+      postType: 'page',
+      target: req.params.id,
+      visibility: 'page_followers'
+    });
+
+    await post.save();
+
+    res.status(201).json({
+      success: true,
+      data: post
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
   }
 };
 

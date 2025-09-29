@@ -4,11 +4,17 @@ const pageSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
+    trim: true,
+    maxlength: 100
   },
   type: {
     type: String,
     enum: ['personnal', 'business', 'education'],
     required: true,
+  },
+  category: {
+    type: String,
+    required: true
   },
   email: {
     type: String,
@@ -16,12 +22,15 @@ const pageSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
+    maxlength: 1000
   },
   profilePicture: {
     type: String,
+    default: ''
   },
   coverPicture: {
     type: String,
+   default: ''
   },
   address: String,
   phoneNumber: String,
@@ -34,11 +43,52 @@ const pageSchema = new mongoose.Schema({
   admins: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Profiles',
+    required: true
   }],
   followers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Profiles'
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Profiles'
+    },
+    followedAt: {
+      type: Date,
+      default: Date.now
+    }
   }],
+  privacy: {
+    type: String,
+    enum: ['public', 'private'],
+    default: 'public'
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'verified', 'rejected'],
+    default: 'pending'
+  },
+  stats: {
+    followerCount: {
+      type: Number,
+      default: 0
+    },
+    postCount: {
+      type: Number,
+      default: 0
+    }
+  },
+  settings: {
+    allowFollowers: {
+      type: Boolean,
+      default: true
+    },
+    allowMessages: {
+      type: Boolean,
+      default: false
+    },
+    postApprovalRequired: {
+      type: Boolean,
+      default: false
+    },
+  },
   ratings: [{
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -81,6 +131,10 @@ const pageSchema = new mongoose.Schema({
 {
   timestamps: true
 });
+
+pageSchema.index({ name: 'text', description: 'text', category: 'text' });
+pageSchema.index({ admin: 1 });
+pageSchema.index({ 'followers.user': 1 });
 
 const PageModel = mongoose.model("Page", pageSchema)
 export default PageModel

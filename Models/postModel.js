@@ -7,10 +7,13 @@ const postSchema = mongoose.Schema({
         required: true,
     },
     content: String,
-    media: {
-        type: Array,
-        default: [],
-    },
+    media: [{
+        url: String,
+        type: {
+            type: String,
+            enum: ['image', 'video', 'document']
+        }
+    }],
     postBg: {
         img: {
             type: String
@@ -19,7 +22,58 @@ const postSchema = mongoose.Schema({
             type: String
         },
     },
-    likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
+    postType: {
+        type: String,
+        enum: ['user', 'page', 'group'],
+        default: 'user'
+    },
+    target: {
+        // Référence à la Page ou Groupe
+        type: mongoose.Schema.Types.ObjectId,
+        required: function() {
+        return this.postType !== 'user';
+        }
+    },
+    visibility: {
+        type: String,
+        enum: ['public', 'friends', 'group_members', 'page_followers'],
+        default: 'public'
+    },
+    likes: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Profiles'
+        },
+        likedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    shares: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        sharedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    status: {
+        type: String,
+        enum: ['published', 'pending', 'rejected'],
+        default: 'published'
+    },
+    deleted: [{
+        state: {
+            type: Boolean,
+            default: false
+        },
+        deletedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     comments: [{type:mongoose.Types.ObjectId, ref: 'Comments'}],
 },
 {

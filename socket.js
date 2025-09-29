@@ -14,7 +14,9 @@ const io = new Server(server, {
       "http://localhost:3001",
       "http://localhost:5000", 
       "http://localhost:5001",  
-      "https://ghenny.vercel.app"
+      "https://ghenny.vercel.app",
+      "https://ghenny.com",
+      "https://www.ghenny.com",
     ],
     methods: ["GET", "PUT", "POST", "DELETE"],
     credentials: true
