@@ -1,6 +1,6 @@
 import Message from '../Models/Message.js';
 import Conversation from '../Models/Conversation.js';
-import { deleteFromS3 } from '../utils/s3.js';
+// import { deleteFromS3 } from '../utils/s3.js';
 
 // Envoyer un message
 export const sendMessage = async (req, res) => {
@@ -100,35 +100,35 @@ export const editMessage = async (req, res) => {
 
 // Supprimer un message
 export const deleteMessage = async (req, res) => {
-  try {
-    const { messageId } = req.params;
+  // try {
+  //   const { messageId } = req.params;
 
-    const message = await Message.findById(messageId);
+  //   const message = await Message.findById(messageId);
 
-    if (!message) {
-      return res.status(404).json({ error: 'Message not found' });
-    }
+  //   if (!message) {
+  //     return res.status(404).json({ error: 'Message not found' });
+  //   }
 
-    // Vérifier si l'utilisateur est l'auteur du message
-    if (message.sender.toString() !== req.user._id) {
-      return res.status(403).json({ error: 'Not authorized to delete this message' });
-    }
+  //   // Vérifier si l'utilisateur est l'auteur du message
+  //   if (message.sender.toString() !== req.user._id) {
+  //     return res.status(403).json({ error: 'Not authorized to delete this message' });
+  //   }
 
-    // Supprimer les fichiers associés de S3
-    if (message.attachments && message.attachments.length > 0) {
-      await Promise.all(message.attachments.map(key => deleteFromS3(key)));
-    }
+  //   // Supprimer les fichiers associés de S3
+  //   if (message.attachments && message.attachments.length > 0) {
+  //     await Promise.all(message.attachments.map(key => deleteFromS3(key)));
+  //   }
 
-    await Message.findByIdAndDelete(messageId);
+  //   await Message.findByIdAndDelete(messageId);
 
-    // Émettre l'événement socket.io
-    const io = req.app.get('io');
-    io.to(message.conversation.toString()).emit('messageDeleted', messageId);
+  //   // Émettre l'événement socket.io
+  //   const io = req.app.get('io');
+  //   io.to(message.conversation.toString()).emit('messageDeleted', messageId);
 
-    res.status(200).json({ message: 'Message deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+  //   res.status(200).json({ message: 'Message deleted successfully' });
+  // } catch (error) {
+  //   res.status(500).json({ error: error.message });
+  // }
 };
 
 // Marquer un message comme lu

@@ -1,12 +1,12 @@
 import express from 'express'
 import { createPost, deletePost, getAllPosts, getPost, getTimelinePosts, likeDislikePost, updatePost } from '../Controllers/PostController.js'
-import { uploadPostS3 } from '../utils/aws.js'
 import authUser from '../utils/authMiddleware.js'
+import { uploadPost } from '../utils/upload.js'
 
 const router = express.Router()
 
 router.get('/all', authUser, getAllPosts)
-router.post('/create', authUser, uploadPostS3.array('media'), createPost)
+router.post('/create', authUser, uploadPost.array('media'), createPost)
 router.put('/like', authUser, likeDislikePost)
 router.get('/feed', authUser, getTimelinePosts)
 router.get('/:id', authUser, getPost)

@@ -1,11 +1,11 @@
 import express from 'express'
 import { createPage, getPages, getSinglePage, editSchoolAndCurrentYear, addPageAdmin, followPage, notePage, commentPage, createPagePost} from '../Controllers/PageController.js'
-import { uploadPostS3 } from '../utils/aws.js'
+import { uploadPost } from '../utils/upload.js'
 import authUser from '../utils/authMiddleware.js'
 
 const router = express.Router()
 
-// router.post('/create', authUser, uploadPostS3.array('media'), createPage)
+// router.post('/create', authUser, uploadPost.array('media'), createPage)
 router.post('/create', authUser, createPage)
 router.get('/getAll', authUser, getPages)
 router.get('/:id', authUser, getSinglePage)

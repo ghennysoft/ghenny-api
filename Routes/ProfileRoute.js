@@ -1,6 +1,5 @@
 import express from 'express'
 import { gschoolConnection, addInPinCategory, completeProfile, createPinCategory, deleteUser, getBirthdayWishes, getPinCategory, getFollowData, getProfile, getProfileById, getUserData, getUsersToFollow, followUnfollowUser, postBirthdayWish, searchData, suggestStudyAt, updateCoverPicture, updatePicture, updateProfile } from '../Controllers/ProfileController.js'
-import { uploadProfileS3 } from '../utils/aws.js'
 import authUser from '../utils/authMiddleware.js'
 
 const router = express.Router()
@@ -18,11 +17,11 @@ router.get('/:id', authUser, getProfile)
 router.get('/find/:id', authUser, getProfileById)
 router.get('/:id/follow', authUser, getFollowData)
 router.put('/:id', authUser, updateProfile)
-router.put('/picture/:id', authUser, uploadProfileS3.single('profilePicture'), updatePicture)
-router.put('/cover/:id', authUser, uploadProfileS3.single('coverPicture'), updateCoverPicture)
+router.put('/picture/:id', authUser, updatePicture)
+router.put('/cover/:id', authUser, updateCoverPicture)
 router.delete('/:id', authUser, deleteUser)
 router.get('/data/:id', authUser, getUserData)
 router.get('/wishes/:userId/:year', authUser, getBirthdayWishes)
-router.put('/complete/:profileId/:userId', authUser, uploadProfileS3.single('profilePicture'), completeProfile)
+router.put('/complete/:profileId/:userId', authUser, completeProfile)
 
 export default router

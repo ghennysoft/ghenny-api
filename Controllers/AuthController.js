@@ -3,6 +3,7 @@ import UserModel from "../Models/userModel.js";
 import ProfileModel from "../Models/profileModel.js";
 import bcrypt from 'bcrypt'
 import twilio from "twilio";
+import otpGenerator from 'otp-generator'
 import {createAccessToken, createRefreshToken} from "../utils/jwtTokens.js"
 
 
@@ -224,34 +225,88 @@ export const completeProfileSuggestions = async (req, res) => {
 
 
 
-const client = twilio(process.env.TWILIO_SID, process.env.TWILIO_TOKEN);
-let tempOTPs = {};
 
-export const sendOTP = async (req, res) => {
-    const {phone} = req.body;
-    const otp = Math.floor(100000 + Math.random() * 900000);
-    tempOTPs[phone] = otp;
+
+const accountSid = process.env.TWILIO_ACCOUNT_SID
+const authToken = process.env.TWILIO_AUTH_TOKEN
+
+const twilioClient = new twilio(accountSid, authToken);
+
+export const sendOtp = async(req, res)=>{
+    const {phoneNumber} = req.body;
     try {
-        await client.messages.create({
-            body: `Votre code OPT est: ${otp}`,
-            from: process.env.TWILIO_PHONE,
-            to: phone,
+        const user = await UserModel.findOne({ phone_code: phoneNumber });
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
+        const otp = otpGenerator.generate(6, {
+           upperCaseAlphabets: false, 
+           lowerCaseAlphabets: false, 
+           specialChars: false, 
+        })
+        user.otp = otp;
+        user.otpExpiration = Date.now() + 300000; // 5 minutes
+        await user.save();
+
+        await twilioClient.messages.create({
+            body: `Votre code est: ${otp}`,
+            to: phoneNumber,
+            from: process.env.TWILIO_PHONE_NUMBER
         });
-        res.status(200).json({success: true});
+
+        res.status(200).json({ message: 'OTP envoyé avec succès' });
     } catch (error) {
-        res.status(500).json(error);
+        console.log(error);
+        res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'OTP', error });
     }
 }
 
 export const verifyOTP = async (req, res) => {
-    const {phone, otp} = req.body;
-    if(tempOTPs[phone] && tempOTPs[phone] === otp) {
-        delete tempOTPs[phone];
-        res.status(200).json({success: true})
-    } else {
-        res.status(400).json({error: "OTP Invalide"});
+  const { phoneNumber, otp } = req.body;
+
+  try {
+    const user = await UserModel.findOne({ phoneNumber });
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
-}
+
+    if (user.otp !== otp || user.otpExpiration < Date.now()) {
+      return res.status(400).json({ message: 'OTP invalide ou expiré' });
+    }
+
+    // Réinitialiser l'OTP après vérification
+    user.otp = null;
+    user.otpExpiration = null;
+    await user.save();
+
+    res.status(200).json({ message: 'OTP vérifié avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la vérification de l\'OTP', error });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  const { phoneNumber, newPassword } = req.body;
+
+  try {
+    const user = await UserModel.findOne({ phoneNumber });
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
+    }
+
+    // Hash du nouveau mot de passe
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+    await user.save();
+
+    res.status(200).json({ message: 'Mot de passe réinitialisé avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la réinitialisation du mot de passe', error });
+  }
+};
+
+
 
 // From user-services
 const sendResetCode = async (req, res) => {
@@ -315,7 +370,7 @@ const verifyResetCode = async (req, res) => {
   }
 };
 
-const resetPassword = async (req, res) => {
+const resetPassword_ = async (req, res) => {
   try {
     const { userId, password } = req.body;
     const user = await User.findById(userId);

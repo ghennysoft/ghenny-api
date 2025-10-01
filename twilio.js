@@ -1,7 +1,6 @@
-import OtpModel from '../models/otp.js'
 import otpGenerator from 'otp-generator'
 import twilio from 'twilio'
-import otpVerification from './utils/otpValidate.js'
+import UserModel from './Models/userModel.js'
 
 const accountSid = process.env.TWILIO_ACCOUNT_SID
 const authToken = process.env.TWILIO_AUTH_TOKEN
@@ -11,50 +10,55 @@ const twilioClient = new twilio(accountSid, authToken);
 const sendOtp = async(req, res)=>{
     const {phoneNumber} = req.body;
     try {
+        const user = await UserModel.findOne({ phone_code: phoneNumber });
+        if (!user) {
+            return res.status(404).json({ message: 'Utilisateur non trouvé' });
+        }
+
         const otp = otpGenerator.generate(6, {
            upperCaseAlphabets: false, 
            lowerCaseAlphabets: false, 
            specialChars: false, 
         })
-
-        const cDate = new Date();
-
-        await OtpModel.findOneAndUpdate(
-            {phoneNumber},
-            {otp, otpExpiration: new Date(cDate.getTime())},
-            {upsert: true, new: true, setDefaultsOnInsert: true}
-        );
+        user.otp = otp;
+        user.otpExpiration = Date.now() + 300000; // 5 minutes
+        await user.save();
 
         await twilioClient.messages.create({
-            body: `Your OTP is: ${otp}`,
+            body: `Votre code est: ${otp}`,
             to: phoneNumber,
             from: process.env.TWILIO_PHONE_NUMBER
         });
 
-        return res.status(200).json('OTP sent successfully')
+        res.status(200).json({ message: 'OTP envoyé avec succès' });
     } catch (error) {
-        return res.status(500).json(error)
+        console.log(error);
+        res.status(500).json({ message: 'Erreur lors de l\'envoi de l\'OTP', error });
     }
 }
 
-const verifyOtp = async(req, res)=>{
-    const {phoneNumber, otp} = req.body;
-    try {
-        const optData = await OtpModel.findOne({phoneNumber, otp});
-        if(!optData){
-            return res.status(400).json('Mauvais otp')
-        }
+const verifyOTP = async (req, res) => {
+  const { phoneNumber, otp } = req.body;
 
-        const isOtpExpired = otpVerification(optData.otpExpiration);
-        if(isOtpExpired){
-            return res.status(400).json('Your otp has already expired')
-        }
-
-        return res.status(200).json('OTP verified sucessfully')
-
-    } catch (error) {
-        return res.status(500).json(error)
+  try {
+    const user = await UserModel.findOne({ phoneNumber });
+    if (!user) {
+      return res.status(404).json({ message: 'Utilisateur non trouvé' });
     }
-}
 
-module.exports={sendOtp, verifyOtp}
+    if (user.otp !== otp || user.otpExpiration < Date.now()) {
+      return res.status(400).json({ message: 'OTP invalide ou expiré' });
+    }
+
+    // Réinitialiser l'OTP après vérification
+    user.otp = null;
+    user.otpExpiration = null;
+    await user.save();
+
+    res.status(200).json({ message: 'OTP vérifié avec succès' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur lors de la vérification de l\'OTP', error });
+  }
+};
+
+module.exports={sendOtp, verifyOTP}

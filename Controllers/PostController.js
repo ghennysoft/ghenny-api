@@ -1,17 +1,19 @@
 import PostModel from "../Models/postModel.js"
 import ProfileModel from "../Models/profileModel.js";
 import NotificationModel from "../Models/notificationModel.js";
+import dotenv from 'dotenv';
+
+dotenv.config(); 
 
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
-    
+
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
             postMedia.push({
-                key: file.key,
-                location: file.location,
-                url: process.env.AWS_CLOUDFRONT_DOMAIN+file.key,
+                type: file.contentType.split("/")[0],
+                url: process.env.SPACES_ENDPOINT_CDN+file.key
             });
         });
     }
@@ -40,7 +42,7 @@ export const createPost = async (req, res) => {
         
         res.status(201).json({newPost, user})
     } catch (error) {
-        // res.status(500).json(error)
+        res.status(500).json(error)
     }
 }
 
