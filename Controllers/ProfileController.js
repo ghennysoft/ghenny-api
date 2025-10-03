@@ -7,10 +7,10 @@ import QuestionModel from "../Models/questionModel.js";
 import AnswerModel from "../Models/answerModel.js";
 import birthdayWishPostModel from "../Models/birthdayWishPostModel.js";
 import PinCategoryModel from "../Models/pinCategoryModel.js";
+import NotificationModel from "../Models/notificationModel.js";
 import {createAccessToken, createRefreshToken} from "../utils/jwtTokens.js"
 import axios from "axios";
 import dotenv from 'dotenv';
-import NotificationModel from "../Models/notificationModel.js";
 
 dotenv.config()
 
@@ -236,16 +236,8 @@ export const followUnfollowUser = async (req, res) => {
 export const completeProfile = async (req, res) => {
     const {gender, birthday, status, school, option, university, filiere, entreprise, profession} = req.body;
     const {profileId, userId} = req.params;
-    console.log(req.file);
-    console.log(req.body);
-    
-    // if(req.file) {
-    //     pictureFile = {
-    //         key: req.file.key,
-    //         location: req.file.location,
-    //         url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
-    //     }        
-    // }
+    console.log({FILES: req.file});
+    console.log({DATA: req.body});
 
     if(profileId) {
         if(!gender, !birthday, !status){
@@ -320,18 +312,19 @@ export const updateProfile = async (req, res) => {
 // Update Profile & Complete profile infos after register
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
-    // let pictureFile = {};
-    // if(req.file) {
-    //     pictureFile = {
-    //         key: req.file.key,
-    //         location: req.file.location,
-    //         url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
-    //     }        
-    // }
+    
+    let pictureFile;
+    if(req.file) {
+        pictureFile = {
+            type: file.contentType.split("/")[0],
+            url: process.env.SPACES_ENDPOINT_CDN+file.key
+        }        
+    }
+
     if(paramId) {
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {profilePicture: req.file}
+                $set: {profilePicture: pictureFile}
             });
             res.status(200).json({"picture": picture})
         } catch (error) {

@@ -9,7 +9,7 @@ const pageSchema = new mongoose.Schema({
   },
   type: {
     type: String,
-    enum: ['personnal', 'business', 'education'],
+    enum: ['professional', 'education'],
     required: true,
   },
   category: {

@@ -15,8 +15,13 @@ export const registerUser = async (req, res) => {
             res.status(400).json("Le mot de passe de confirmation est different")
         } else {
             // Check if the username already exist
-            const user_name = await UserModel.findOne({username: req.body.username})
-            if(user_name) return res.status(400).json("Le nom d'utilisateur existe déjà")
+            let alreadyExists = await UserModel.findOne({username: req.body.username});
+            let user_name = req.body.username;
+            while(alreadyExists) {
+              const nb = Math.floor(100000 + Math.random() * 900000).toString();
+              alreadyExists = await UserModel.findOne({username: req.body.username+nb})
+              user_name = req.body.username+nb;
+            }
 
             // Check the password length
             if(req.body.password.length < 6) res.status(400).json("Le mot de passe doit avoir au moins 6 caractères")
@@ -24,7 +29,7 @@ export const registerUser = async (req, res) => {
             const salt = await bcrypt.genSalt(10)
             const hashedPass = await bcrypt.hash(req.body.password, salt)
             const newUser = new UserModel({
-                username: req.body.username,
+                username: user_name,
                 firstname: req.body.firstname,
                 lastname: req.body.lastname,
                 phone: req.body.phone,
@@ -303,87 +308,5 @@ export const resetPassword = async (req, res) => {
     res.status(200).json({ message: 'Mot de passe réinitialisé avec succès' });
   } catch (error) {
     res.status(500).json({ message: 'Erreur lors de la réinitialisation du mot de passe', error });
-  }
-};
-
-
-
-// From user-services
-const sendResetCode = async (req, res) => {
-  try {
-    const { userId, method } = req.body;
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur est non trouvé' });
-    }
-
-    // Générer un code à 6 chiffres
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-    // Stocker le code dans Redis avec une expiration
-    await redisClient.setEx(
-      `resetCode:${userId}`,
-      resetCode,
-      'EX',
-      900 // 15 minutes en secondes
-    );
-
-    // Envoyer le code par email ou SMS selon la méthode choisie
-    if (method === 'email') {
-      await sendResetPasswordEmail(user.email, resetCode);
-    } else if (method === 'sms') {
-      await sendResetPasswordSMS(user.phoneNumber, resetCode);
-    }
-
-    res.json({ message: 'Code de réinitialisation envoyé avec succès' });
-  } catch (error) {
-    console.error('Erreur lors de l\'envoi du code:', error);
-    res.status(500).json({ message: 'Erreur lors de l\'envoi du code de réinitialisation' });
-  }
-};
-
-const verifyResetCode = async (req, res) => {
-  try {
-    const { userId, code } = req.body;
-    
-    // // Vérifier le code dans Redis
-    // const storedCode = await redisClient.get(`resetCode:${userId}`);
-    
-    // if (!storedCode || storedCode !== code) {
-    //   return res.status(400).json({ message: 'Code invalide ou expiré' });
-    // }
-
-    // Générer un token temporaire pour la réinitialisation
-    const resetToken = jwt.sign(
-      { userId, purpose: 'reset' },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
-
-    // Supprimer le code de Redis
-    // await redisClient.del(`resetCode:${userId}`);
-
-    res.json({ resetToken });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
-const resetPassword_ = async (req, res) => {
-  try {
-    const { userId, password } = req.body;
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ message: 'Utilisateur est non trouvé' });
-    }
-
-    user.password = password;
-    await user.save();
-
-    res.json({ message: 'Mot de passe réinitialisé avec succès' });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
   }
 };
