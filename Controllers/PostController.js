@@ -8,6 +8,7 @@ dotenv.config();
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
     console.log({DATA: req.body});
+    console.log({FILES: req.files});
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -42,7 +43,11 @@ export const createPost = async (req, res) => {
         
         res.status(201).json({newPost, user})
     } catch (error) {
-        res.status(500).json(error)
+        res.status(500).json({
+            FILES: req.files,
+            MEDIA: postMedia,
+            error
+        })
     }
 }
 
