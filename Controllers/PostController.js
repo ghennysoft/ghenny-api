@@ -7,7 +7,7 @@ dotenv.config();
 
 export const createPost = async (req, res) => {
     const {author, content, postBg} = req.body;
-
+    console.log({DATA: req.body});
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -173,7 +173,6 @@ export const getTimelinePosts = async (req, res) => {
         if (!currentUser) {
             return res.status(404).json({ message: "User not found" });
         }
-
         // Définir la requête pour les utilisateurs similaires
         let matchQuery;
         if (currentUser.status === 'Pupil') {
@@ -181,7 +180,7 @@ export const getTimelinePosts = async (req, res) => {
                 $or: [
                     { school: currentUser.school },
                     { option: currentUser.option },
-                    { _id: { $in: currentUser.followings } }
+                    { _id: { $in: currentUser.followings || [] } }
                 ]
             };
         } else if (currentUser.status === 'Student') {
@@ -189,14 +188,14 @@ export const getTimelinePosts = async (req, res) => {
                 $or: [
                     { university: currentUser.university },
                     { filiere: currentUser.filiere },
-                    { _id: { $in: currentUser.followings } }
+                    { _id: { $in: currentUser.followings || [] } }
                 ]
             };
         } else if (currentUser.status === 'Other') {
             matchQuery = {
                 $or: [
                     { status: currentUser.status },
-                    { _id: { $in: currentUser.followings } }
+                    { _id: { $in: currentUser.followings || [] } }
                 ]
             };
         } else {
