@@ -31,7 +31,7 @@ const postSchema = mongoose.Schema({
         // Référence à la Page ou Groupe
         type: mongoose.Schema.Types.ObjectId,
         required: function() {
-        return this.postType !== 'user';
+            return this.postType !== 'user';
         }
     },
     visibility: {

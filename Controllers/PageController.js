@@ -1,3 +1,4 @@
+import NotificationModel from '../Models/notificationModel.js';
 import Page from '../Models/pageModel.js'
 import PostModel from '../Models/postModel.js';
 
@@ -15,7 +16,10 @@ export const createPage = async (req, res) => {
       email,
       phoneNumber,
       createdBy: req.user?._id,
-      admins: [req.user?._id], // L'utilisateur qui crée la page est automatiquement admin
+      admins: [{ 
+        user: req.user?._id, 
+        addedAt: new Date() 
+      } ], // L'utilisateur qui crée la page est automatiquement admin
     });
 
     await page.save();
@@ -50,25 +54,78 @@ export const getSinglePage = async (req, res) => {
 
 // S'abonner à une page
 export const followPage = async (req, res) => {
+  const pageId = req.params.id;
+  const currentUserId = req.user._id;
+
   try {
-    const page = await Page.findById(req.params.id);
+    const page = await Page.findById(pageId);
 
     if (!page) {
       return res.status(404).json({ msg: 'Page not found' });
     }
 
     // Vérifier si l'utilisateur est déjà abonné
-    const isAlreadyFollowing = page.followers.includes({user: req.user._id});
+    const isAlreadyFollowing = page.followers.some(follower => 
+      follower.user.toString() === currentUserId
+    );
 
     if (isAlreadyFollowing) {
-      page.followers.pull({user: req.user._id});
-      await page.save();
+      await Page.findByIdAndUpdate(
+        pageId,
+        { $pull: { followers: { user: currentUserId } } }
+      );
+
+       // CORRECTION : Mettre à jour les stats
+      await Page.findByIdAndUpdate(
+        pageId,
+        { $inc: { 'stats.followerCount': -1 } }
+      );  
+      
+      return res.status(200).json({ 
+        message: "Suivi retiré",
+        action: "removed"
+      });
     } else {
-      page.followers.push({user: req.user._id});
-      await page.save();
+      await Page.findByIdAndUpdate(
+        pageId,
+        { 
+          $push: { 
+            followers: { 
+              user: currentUserId,
+              followedAt: new Date()
+            } 
+          } 
+        }
+      );
+
+      await Page.findByIdAndUpdate(
+        pageId,
+        { $inc: { 'stats.followerCount': 1 } }
+      );
+
+      // CORRECTION : Envoyer une notification seulement si l'utilisateur n'est pas admin
+      const isAdmin = page.admins.some(admin => 
+        admin.user.toString() === currentUserId
+      );
+      
+      if (!isAdmin) {
+        // Créer une notification pour chaque administrateur
+        // const notifications = page.admins.map(admin => ({
+        //   senderId: currentUserId,
+        //   receiverId: admin.user,
+        //   type: 'followPage',
+        //   pageId: pageId,
+        // }));
+        // await NotificationModel.insertMany(notifications);
+      }
+      
+      return res.status(200).json({ 
+        message: "Page suivi",
+        action: "added"
+      });
     }    
-    res.status(200).json(page);
   } catch (err) {
+    // console.log(err);
     res.status(500).json({ error: err.message });
   }
 };
@@ -117,6 +174,35 @@ export const createPagePost = async (req, res) => {
   }
 };
 
+export const getPagePosts = async (req, res) => {
+  try {
+    const post = await PostModel.find({postType: 'page', target: req.params.id})
+    .populate({
+      path: 'comments',
+      populate: {
+        path: 'author',
+        select: 'userId profilePicture birthday status school option university filiere profession entreprise',
+        populate: {
+          path: 'userId',
+          select: 'username firstname lastname',
+        }
+      }
+    })
+    .populate({
+      path: 'author',
+      select: 'userId profilePicture birthday status school option university filiere profession entreprise',
+      populate: {
+        path: 'userId',
+        select: 'username firstname lastname',
+      }
+    })
+    res.status(200).json(post)
+  } catch (error) {
+    console.log(error);
+    res.status(500).json(error)
+  }
+}
+
 // Ajouter un administrateur à une page 
 export const addPageAdmin = async (req, res) => {
   const { userId } = req.body;
@@ -140,6 +226,7 @@ export const addPageAdmin = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 
 

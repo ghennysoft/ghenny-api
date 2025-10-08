@@ -7,8 +7,10 @@ public
 npm-debug.log
 .DS_Store
 
+*env
 .env
 .env/
+env
 
 # Coveralls
 .nyc_output

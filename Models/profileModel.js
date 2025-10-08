@@ -63,9 +63,33 @@ const ProfileSchema = mongoose.Schema(
             maxlength: 200,
             default:'',
         },
-        followings: [{type:mongoose.Types.ObjectId}],
-        followers: [{type:mongoose.Types.ObjectId}],
-        blockedProfiles: [{type:mongoose.Types.ObjectId}],
+        followings: [{
+            user: {
+              type: mongoose.Schema.Types.ObjectId,
+            },
+            followedAt: {
+              type: Date,
+              default: Date.now
+            }
+        }],
+        followers: [{
+            user: {
+              type: mongoose.Schema.Types.ObjectId,
+            },
+            followedAt: {
+              type: Date,
+              default: Date.now
+            }
+        }],
+        blockedProfiles: [{
+            user: {
+              type: mongoose.Schema.Types.ObjectId,
+            },
+            blockedAt: {
+              type: Date,
+              default: Date.now
+            }
+        }],
         subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
         isProfileCompleted: {
             type: Boolean,

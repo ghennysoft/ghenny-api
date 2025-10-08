@@ -1,5 +1,5 @@
 import express from 'express'
-import { createPage, getPages, getSinglePage, editSchoolAndCurrentYear, addPageAdmin, followPage, notePage, commentPage, createPagePost} from '../Controllers/PageController.js'
+import { createPage, getPages, getSinglePage, editSchoolAndCurrentYear, addPageAdmin, followPage, notePage, commentPage, createPagePost, getPagePosts} from '../Controllers/PageController.js'
 import { uploadPost } from '../utils/upload.js'
 import authUser from '../utils/authMiddleware.js'
 
@@ -13,6 +13,7 @@ router.put('/edit', authUser, editSchoolAndCurrentYear)
 router.post('/:id/admins', authUser, addPageAdmin)
 router.put('/:id/follow', authUser, followPage)
 router.put('/:id/post', authUser, createPagePost)
+router.get('/:id/posts', authUser, getPagePosts)
 router.post('/:id/rate', authUser, notePage)
 router.post('/:id/comments', authUser, commentPage)
 

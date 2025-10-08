@@ -172,7 +172,7 @@ export const getFollowData = async (req, res) => {
         let followings = [];
         if(followingUsers.length!==0){
             for(let i=0; i<followingUsers.length; i++){
-                followingsProfile = await ProfileModel.findById(followingUsers[i])
+                followingsProfile = await ProfileModel.findById(followingUsers[i].user)
                 .select('userId profilePicture status school option university filiere profession entreprise')
                 .populate({
                     path: 'userId',
@@ -187,7 +187,7 @@ export const getFollowData = async (req, res) => {
         let followers = [];
         if(followerUsers.length!==0){
             for(let i=0; i<followerUsers.length; i++){
-                followersProfile = await ProfileModel.findById(followerUsers[i])
+                followersProfile = await ProfileModel.findById(followerUsers[i].user)
                 .select('userId profilePicture status school option university filiere profession entreprise')
                 .populate({
                     path: 'userId',
@@ -209,9 +209,41 @@ export const followUnfollowUser = async (req, res) => {
     try {
         const currentProfile = await ProfileModel.findById(currentUserId)
         const foreignProfile = await ProfileModel.findById(foreignUserId)
-        if(!currentProfile.followings.includes(foreignUserId)) {
-            await currentProfile.updateOne({$push: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$push: {followers:currentUserId}});
+        
+        if (!currentProfile || !foreignProfile) {
+            return res.status(404).json({ message: "Profile non trouvé" });
+        }
+
+        // Vérifier si l'utilisateur suit déjà déjà
+        console.log({PROFILE: currentProfile})
+        const alreadyFollowed = currentProfile.followings.find(follow => 
+            follow.user.toString() === foreignUserId
+        );
+        console.log({Followed: alreadyFollowed})
+        if(!alreadyFollowed) {
+            await ProfileModel.findByIdAndUpdate(
+                currentUserId,
+                { 
+                    $push: { 
+                        followings: { 
+                            user: foreignUserId, 
+                            followedAt: new Date() 
+                        } 
+                    } 
+                }
+            );
+
+            await ProfileModel.findByIdAndUpdate(
+                foreignUserId,
+                { 
+                    $push: { 
+                        followers: { 
+                            user: currentUserId, 
+                            followedAt: new Date() 
+                        } 
+                    } 
+                }
+            );
 
             // Envoyer une notification à l'auteur du post
             const notification = new NotificationModel({
@@ -223,11 +255,31 @@ export const followUnfollowUser = async (req, res) => {
 
             res.status(200).json('Profile followed')
         } else {
-            await currentProfile.updateOne({$pull: {followings:foreignUserId}});
-            await foreignProfile.updateOne({$pull: {followers:currentUserId}});
+            await ProfileModel.findByIdAndUpdate(
+                currentUserId,
+                { 
+                    $pull: { 
+                        followings: { 
+                            user: foreignUserId, 
+                        } 
+                    } 
+                }
+            );
+
+            await ProfileModel.findByIdAndUpdate(
+                foreignUserId,
+                { 
+                    $pull: { 
+                        followers: { 
+                            user: currentUserId, 
+                        } 
+                    } 
+                }
+            );
             res.status(200).json('Profile unfollowed!')
         }
     } catch (error) {
+        console.log(error)
         res.status(500).json(error)
     }
 }
@@ -312,14 +364,15 @@ export const updateProfile = async (req, res) => {
 // Update Profile & Complete profile infos after register
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
-    
-    let pictureFile;
-    if(req.file) {
-        pictureFile = {
-            type: file.contentType.split("/")[0],
-            url: process.env.SPACES_ENDPOINT_CDN+file.key
-        }        
+
+    let pictureFile = {};
+    if(req.file){
+        postMedia = {
+            type: req.file.contentType.split("/")[0],
+            url: process.env.SPACES_ENDPOINT_CDN+req.file.key
+        };
     }
+    console.log({FILE: req.file});
 
     if(paramId) {
         try {
@@ -339,14 +392,15 @@ export const updatePicture = async (req, res) => {
 // Update Profile & Complete profile infos after register
 export const updateCoverPicture = async (req, res) => {
     const paramId = req.params.id;
+
     let pictureFile = {};
-    if(req.file) {
-        pictureFile = {
-            key: req.file.key,
-            location: req.file.location,
-            url: process.env.AWS_CLOUDFRONT_DOMAIN+req.file.key,
-        }        
+    if(req.file){
+        postMedia = {
+            type: req.file.contentType.split("/")[0],
+            url: process.env.SPACES_ENDPOINT_CDN+req.file.key
+        };
     }
+
     if(paramId) {
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
@@ -513,23 +567,44 @@ export const getUserData = async (req, res) => {
 
 export const getUsersToFollow = async (req, res) => {
     const { id } = req.params;
-     try {
+    
+    try {
         // Récupérer l'utilisateur actuel avec ses followings
         const currentUser = await ProfileModel.findById(id);
         if (!currentUser) {
             return res.status(404).json({ message: "Utilisateur non trouvé" });
         }
 
-        // Trouver les profils avec le même statut, excluant l'utilisateur actuel et ceux qu'il suit déjà
-        const usersToFollow = await ProfileModel.find({
-            status: currentUser.status, // Même statut
-            _id: { $ne: currentUser._id }, // Exclure l'utilisateur actuel
-            _id: { $nin: currentUser.followings || [] } // Exclure les profils déjà suivis
-        })
-        .select('status school option university filiere profession entreprise')
-        .populate('userId', 'username firstname lastname profilePicture');
+        // Extraire les IDs des utilisateurs déjà suivis
+        const followingIds = currentUser.followings?.map(follow => follow.user) || [];
+        
+        // Ajouter l'ID actuel à exclure
+        followingIds.push(currentUser._id);
 
-        res.status(200).json(usersToFollow);
+        // Construire la requête de suggestion
+        let suggestionQuery = {
+            _id: { $nin: followingIds }
+        };
+
+        // Ajouter des conditions basées sur le statut pour des suggestions pertinentes
+        suggestionQuery.status = currentUser.status;
+
+        // CORRECTION : Utiliser populate avec sélection de champs spécifiques
+        const usersToFollow = await ProfileModel.find(suggestionQuery)
+            .select('status school option university filiere profession entreprise profilePicture bio')
+            .populate({
+                path: 'userId',
+                select: 'username firstname lastname',
+                match: { /* Filtres supplémentaires si besoin */ }
+            })
+            .limit(20) // Limiter le nombre de suggestions
+            .lean(); // Optimisation des performances
+
+        // CORRECTION : Filtrer les résultats où userId est null (si populate échoue)
+        const filteredUsers = usersToFollow.filter(profile => profile.userId !== null);
+
+        res.status(200).json(filteredUsers);
+
     } catch (error) {
         console.error("Erreur dans getUsersToFollow:", error);
         res.status(500).json({ 

@@ -25,12 +25,18 @@ const pageSchema = new mongoose.Schema({
     maxlength: 1000
   },
   profilePicture: {
-    type: String,
-    default: ''
+    url: String,
+    type: {
+      type: String,
+      enum: ['image', 'video', 'document']
+    }
   },
   coverPicture: {
-    type: String,
-   default: ''
+    url: String,
+    type: {
+      type: String,
+      enum: ['image', 'video', 'document']
+    }
   },
   address: String,
   phoneNumber: String,
@@ -41,9 +47,14 @@ const pageSchema = new mongoose.Schema({
     required: true,
   },
   admins: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Profiles',
-    required: true
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Profiles'
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
   }],
   followers: [{
     user: {
@@ -116,7 +127,6 @@ const pageSchema = new mongoose.Schema({
     schoolId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'School',
-      unique: true,
     },
     currentYearId: {
       type: mongoose.Schema.Types.ObjectId,

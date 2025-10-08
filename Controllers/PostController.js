@@ -6,9 +6,7 @@ import dotenv from 'dotenv';
 dotenv.config(); 
 
 export const createPost = async (req, res) => {
-    const {author, content, postBg} = req.body;
-    console.log({DATA: req.body});
-    console.log({FILES: req.files});
+    const {author, postType, target, content, postBg} = req.body;
     let postMedia = [];
     if(req.files.length!==0){
         req.files.forEach(file => {
@@ -22,6 +20,8 @@ export const createPost = async (req, res) => {
     try {
         const newPost = new PostModel({
            author,
+           postType,
+           target,
            content,
            media: postMedia,
            postBg: JSON.parse(postBg),
@@ -43,11 +43,7 @@ export const createPost = async (req, res) => {
         
         res.status(201).json({newPost, user})
     } catch (error) {
-        res.status(500).json({
-            FILES: req.files,
-            MEDIA: postMedia,
-            error
-        })
+        res.status(500).json(error)
     }
 }
 
@@ -142,30 +138,66 @@ export const deletePost = async (req, res) => {
 }
 
 export const likeDislikePost = async (req, res) => {
-    const {currentUserId, postId} = req.body;    
+    const { currentUserId, postId } = req.body;
+    
     try {
-        const post = await PostModel.findById(postId)
-        if(!post.likes.includes(currentUserId)) {
-            await post.updateOne({$push: {likes:currentUserId}});
+        const post = await PostModel.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post non trouvé" });
+        }
+
+        // Vérifier si l'utilisateur a déjà liké
+        const alreadyLiked = post.likes.find(like => 
+            like.user.toString() === currentUserId
+        );
+
+        if (alreadyLiked) {
+            // Retirer le like
+            await PostModel.findByIdAndUpdate(
+                postId,
+                { $pull: { likes: { user: currentUserId } } }
+            );
             
-            // Envoyer une notification à l'auteur du post
-            if(currentUserId !== post.author.toString()) {
+            res.status(200).json({ 
+                message: "Like retiré",
+                action: "removed"
+            });
+        } else {
+            // Ajouter le like
+            await PostModel.findByIdAndUpdate(
+                postId,
+                { 
+                    $push: { 
+                        likes: { 
+                            user: currentUserId, 
+                            likedAt: new Date() 
+                        } 
+                    } 
+                }
+            );
+
+            // Envoyer une notification seulement si l'utilisateur n'est pas l'auteur
+            if (currentUserId !== post.author.toString()) {
                 const notification = new NotificationModel({
                     senderId: currentUserId,
                     receiverId: post.author,
                     type: 'like',
                     postId: post._id,
                 });
-                await notification.save();           
-            };
+                await notification.save();
+            }
             
-            res.status(200).json(post)
-        } else {
-            await post.updateOne({$pull: {likes:currentUserId}});
-            res.status(200).json(post)
+            res.status(200).json({ 
+                message: "Like ajouté",
+                action: "added"
+            });
         }
     } catch (error) {
-        res.status(500).json(error)
+        console.log("Erreur like/dislike:", error);
+        res.status(500).json({ 
+            message: "Erreur serveur",
+            error: error.message 
+        });
     }
 }
 
@@ -178,6 +210,10 @@ export const getTimelinePosts = async (req, res) => {
         if (!currentUser) {
             return res.status(404).json({ message: "User not found" });
         }
+
+        // Extraire les IDs des utilisateurs suivis
+        const followingUserIds = currentUser.followings?.map(follow => follow.user) || [];
+
         // Définir la requête pour les utilisateurs similaires
         let matchQuery;
         if (currentUser.status === 'Pupil') {
@@ -185,7 +221,7 @@ export const getTimelinePosts = async (req, res) => {
                 $or: [
                     { school: currentUser.school },
                     { option: currentUser.option },
-                    { _id: { $in: currentUser.followings || [] } }
+                    { _id: { $in: followingUserIds } }
                 ]
             };
         } else if (currentUser.status === 'Student') {
@@ -193,14 +229,14 @@ export const getTimelinePosts = async (req, res) => {
                 $or: [
                     { university: currentUser.university },
                     { filiere: currentUser.filiere },
-                    { _id: { $in: currentUser.followings || [] } }
+                    { _id: { $in: followingUserIds } }
                 ]
             };
         } else if (currentUser.status === 'Other') {
             matchQuery = {
                 $or: [
                     { status: currentUser.status },
-                    { _id: { $in: currentUser.followings || [] } }
+                    { _id: { $in: followingUserIds } }
                 ]
             };
         } else {
