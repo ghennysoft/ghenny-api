@@ -8,10 +8,11 @@ import {
 } from '../Controllers/messageController.js';
 // import { upload } from '../utils/s3.js';
 import authUser from '../utils/authMiddleware.js'
+import { uploadMessage } from '../utils/upload.js'
 
 const router = express.Router();
 
-router.post('/', authUser, sendMessage);
+router.post('/', authUser, uploadMessage.array('files'), sendMessage);
 router.get('/:conversationId', authUser, getMessages);
 router.put('/:messageId', authUser, editMessage);
 router.delete('/:messageId', authUser, deleteMessage);

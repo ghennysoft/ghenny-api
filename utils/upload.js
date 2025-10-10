@@ -76,6 +76,29 @@ export const uploadProfile = multer({
   // }
 });
 
+// Configure Multer for file uploads to S3
+export const uploadMessage = multer({
+  storage: multerS3({
+    s3: s3Client,
+    bucket: process.env.SPACES_BUCKET,
+    acl: "public-read",
+    metadata: (req, file, cb) => {
+      cb(null, { fieldName: file.originalname }); 
+    },
+    key: (req, file, cb) => {
+      const imageName = crypto.randomBytes(32).toString('hex');
+      const fileExtension = file.originalname.split('.').pop();
+      const finalName = 'message/' + imageName + '.' + fileExtension;
+      cb(null, finalName);
+    },
+    contentType: multerS3.AUTO_CONTENT_TYPE,
+  }),
+  fileFilter: fileFilter,
+  // limits: {
+  //   fileSize: 50 * 1024 * 1024, // 50MB limit pour les vidéos
+  // }
+});
+
 
 const videoUpload = multer({
   storage: multerS3({

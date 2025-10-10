@@ -56,8 +56,20 @@ const ProfileSchema = mongoose.Schema(
         birthday: {
             type: Date,
         },
-        profilePicture: String,
-        coverPicture: String,
+        profilePicture: {
+            url: String,
+            type: {
+                type: String,
+                enum: ['image', 'video', 'document']
+            }
+        },
+        coverPicture: {
+            url: String,
+            type: {
+                type: String,
+                enum: ['image', 'video', 'document']
+            }
+        },
         bio: {
             type: String,
             maxlength: 200,

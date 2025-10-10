@@ -16,7 +16,16 @@ const commentSchema = mongoose.Schema({
         required: true,
     },
     reply: mongoose.Types.ObjectId,
-    likes: [{type:mongoose.Types.ObjectId, ref: 'Profiles'}],
+    likes: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Profiles'
+        },
+        likedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
 },
 {
     timestamps: true

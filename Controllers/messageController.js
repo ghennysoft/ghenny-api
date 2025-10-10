@@ -4,6 +4,7 @@ import Conversation from '../Models/Conversation.js';
 
 // Envoyer un message
 export const sendMessage = async (req, res) => {
+  // console.log({DATA: req.body});
   try {
 
     const attachments = (req.files)?.map(file => file.key) || [];
@@ -12,7 +13,7 @@ export const sendMessage = async (req, res) => {
       conversation: req.body.conversationId,
       sender: req.user._id,
       content: req.body.content,
-      messageType: req.body.messageType,
+      // messageType: req.body.messageType,
       attachments,
       replyTo: req.body.replyTo
     });
@@ -29,12 +30,13 @@ export const sendMessage = async (req, res) => {
     await message.populate('sender', 'username profilePicture lastSeen online');
 
     // Émettre l'événement socket.io
-    console.log({IO: req.app});
+    // console.log({IO: req.app});
     const io = req.app.get('io');
-    io.to(req.body.conversationId).emit('newMessage', message);
+    io?.to(req.body.conversationId)?.emit('newMessage', message);
 
     res.status(201).json(message);
   } catch (error) {
+    console.log({ERROR: error});
     res.status(500).json({ error: error.message });
   }
 };

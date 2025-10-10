@@ -365,23 +365,20 @@ export const updateProfile = async (req, res) => {
 export const updatePicture = async (req, res) => {
     const paramId = req.params.id;
 
-    let pictureFile = {};
-    if(req.file){
-        postMedia = {
-            type: req.file.contentType.split("/")[0],
-            url: process.env.SPACES_ENDPOINT_CDN+req.file.key
-        };
-    }
-    console.log({FILE: req.file});
-
     if(paramId) {
+        let image = {};
+        if(req.file){
+            image = {
+                type: file.contentType.split("/")[0],
+                url: process.env.SPACES_ENDPOINT_CDN+req.file.key
+            };
+        }
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {profilePicture: pictureFile}
+                $set: {profilePicture: image}
             });
             res.status(200).json({"picture": picture})
         } catch (error) {
-            console.log(error)
             res.status(500).json(error)            
         }
     } else {
@@ -393,18 +390,17 @@ export const updatePicture = async (req, res) => {
 export const updateCoverPicture = async (req, res) => {
     const paramId = req.params.id;
 
-    let pictureFile = {};
-    if(req.file){
-        postMedia = {
-            type: req.file.contentType.split("/")[0],
-            url: process.env.SPACES_ENDPOINT_CDN+req.file.key
-        };
-    }
-
     if(paramId) {
+        let image = {};
+        if(req.file){
+            image = {
+                type: file.contentType.split("/")[0],
+                url: process.env.SPACES_ENDPOINT_CDN+req.file.key
+            };
+        }
         try {
             const picture = await ProfileModel.findByIdAndUpdate(paramId, {
-                $set: {coverPicture: pictureFile}
+                $set: {coverPicture: image}
             });
             res.status(200).json({"coverPicture": picture})
         } catch (error) {

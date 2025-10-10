@@ -72,12 +72,56 @@ export const likeDislikeComment = async (req, res) => {
     
     try {
         const comment = await CommentModel.findById(commentId)
-        if(!comment.likes.includes(currentUserId)) {
-            await comment.updateOne({$push: {likes:currentUserId}});
-            res.status(200).json({msg: 'Comment Liked!', comment: comment})
+        if (!comment) {
+            return res.status(404).json({ message: "Post non trouvé" });
+        }
+
+        // Vérifier si l'utilisateur a déjà liké
+        const alreadyLiked = comment.likes.find(like => 
+            like.user.toString() === currentUserId
+        );
+
+        if(alreadyLiked) {
+            // Retirer le like
+            await CommentModel.findByIdAndUpdate(
+                commentId,
+                { $pull: { likes: { user: currentUserId } } }
+            );
+            
+            res.status(200).json({ 
+                message: "Like retiré",
+                action: "removed"
+            });
         } else {
-            await comment.updateOne({$pull: {likes:currentUserId}});
-            res.status(200).json({msg: 'Comment Unliked!', comment: comment})
+            // Ajouter le like
+            await CommentModel.findByIdAndUpdate(
+                commentId,
+                { 
+                    $push: { 
+                        likes: { 
+                            user: currentUserId, 
+                            likedAt: new Date() 
+                        } 
+                    } 
+                }
+            );
+
+            // Envoyer une notification à l'auteur du commentaire
+            if(currentUserId !== comment.author.toString()) {
+                const notification = new NotificationModel({
+                    senderId: currentUserId,
+                    receiverId: comment.author,
+                    type: 'likeComment',
+                    postId: comment.postId,
+                    commentId: commentId,
+                });
+                await notification.save();
+            };
+
+            res.status(200).json({ 
+                message: "Like ajouté",
+                action: "added"
+            });
         }
     } catch (error) {
         res.status(500).json(error)

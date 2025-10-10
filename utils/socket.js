@@ -31,6 +31,27 @@ export const setupSocket = (io) => {
     } catch (error) {
       console.error('Error setting user online:', error);
     }
+    // -----------------------------------------------------------
+
+    // Rejoindre la room personnelle de l'utilisateur
+    // socket.join(`user_${socket.user._id}`);
+
+    // // Rejoindre les conversations de l'utilisateur
+    // try {
+    //   const userConversations = await Conversation.find({
+    //     'participants.userId': socket.user._id
+    //   });
+      
+    //   userConversations.forEach(conversation => {
+    //     socket.join(conversation._id.toString());
+    //     console.log(`User joined conversation: ${conversation._id}`);
+    //   });
+    // } catch (error) {
+    //   console.error('Error joining user conversations:', error);
+    // }
+
+    // -------------------------------------
+
 
     // Vérification sécurisée des conversations
     if (socket.user && Array.isArray(socket.user.conversations)) {
@@ -38,7 +59,7 @@ export const setupSocket = (io) => {
         socket.join(conversationId.toString());
         console.log(`User joined conversation: ${conversationId}`);
       });
-    }
+    } 
 
     // Rejoindre les conversations de l'utilisateur
     socket.on('joinConversation', (conversationId) => {
@@ -74,55 +95,17 @@ export const setupSocket = (io) => {
       }
     });
 
+
+    // ==================== ÉVÉNEMENTS DES MESSAGES ====================
+
+    /**
+     * Événement: Nouveau message
+     * Émis par: Client lorsqu'un utilisateur envoie un message
+     * Re-émit par: Serveur à tous les participants de la conversation
+     */
     socket.on('newMessage', async (data) => {
       try {
-        console.log('New message received:', data);
-        
-        const { conversationId, content, messageType, attachments = [], replyTo } = data;
-
-        // Vérifier que l'utilisateur fait partie de la conversation
-        const conversation = await Conversation.findOne({
-          _id: conversationId,
-          'participants.userId': socket.user._id
-        });
-
-        if (!conversation) {
-          socket.emit('error', { message: 'Vous ne faites pas partie de cette conversation' });
-          return;
-        }
-
-        // Créer le message
-        const message = new Message({
-          conversation: conversationId,
-          sender: socket.user._id,
-          content,
-          messageType: messageType || 'text',
-          attachments,
-          replyTo,
-          status: 'sent'
-        });
-
-        await message.save();
-
-        // Populer le message avec les données de l'expéditeur
-        await message.populate('sender', 'username profilePicture online lastSeen');
-        if (replyTo) {
-          await message.populate('replyTo');
-        }
-
-        // Mettre à jour la dernière message de la conversation
-        await Conversation.findByIdAndUpdate(conversationId, {
-          lastMessage: message._id,
-          updatedAt: new Date()
-        });
-
-        // Émettre le message à tous les participants de la conversation
-        io.to(conversationId).emit('newMessage', message);
-
-        // Marquer le message comme délivré pour l'expéditeur
-        socket.emit('messageDelivered', { messageId: message._id });
-
-        console.log(`Message ${message._id} sent to conversation ${conversationId}`);
+        io.to(data.conversation).emit('newMessage', data);
 
       } catch (error) {
         console.error('Error in newMessage event:', error);
@@ -169,7 +152,7 @@ export const setupSocket = (io) => {
         console.error('Error in editMessage event:', error);
         socket.emit('error', { message: 'Erreur lors de la modification du message' });
       }
-    });
+    }); 
 
     /**
      * Événement: Message supprimé
