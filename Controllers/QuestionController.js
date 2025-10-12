@@ -1,6 +1,7 @@
 import QuestionModel from "../Models/questionModel.js"
 import SubjectModel from "../Models/subjectModel.js"
 import ProfileModel from "../Models/profileModel.js";
+import GamificationService from "../utils/gamification.js";
 
 export const addSubject = async (req, res) => {
     try {
@@ -43,12 +44,25 @@ export const addUserSubject = async (req, res) => {
 }
 
 export const addQuestion = async (req, res) => {
+    const { title, content, tags, category, type } = req.body;
     try {
-        if(!req.body.content) {
+        if(!content) {
             res.status(400).json('Ajoutez du contenu...')
         } else {
-            const newQuestion = new QuestionModel(req.body);
+            const newQuestion = await QuestionModel.create({
+                title,
+                content,
+                tags,
+                category,
+                type,
+                author: req.user._id,
+                etablissment: req.user.status==='student'?req.user.university:req.user.school
+            });
             await newQuestion.save();
+
+            // Add point
+            await GamificationService.awardPoints(req.user._id, 'ask_question', question._id);
+            
             res.status(200).json(newQuestion)
         }
     } catch (error) {

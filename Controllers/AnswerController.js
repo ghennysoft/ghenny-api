@@ -14,6 +14,13 @@ export const addAnswer = async (req, res) => {
             const find_question = await QuestionModel.findById(req.body.questionId)
             await find_question.updateOne({$push: {"answers": newAnswer._id}})
             find_question.save()
+
+            // Points pour la réponse
+            await GamificationService.awardPoints(req.user._id, 'answer_question', answer._id);
+
+            // Points pour celui qui a posé la question
+            await GamificationService.awardPoints(find_question.author, 'receive_answer', answer._id);
+
             res.status(200).json({
                 message: "Reponse ajouté avec success!", 
                 answer: newAnswer,
@@ -24,6 +31,24 @@ export const addAnswer = async (req, res) => {
         res.status(500).json(error)
     }
 }
+
+export const acceptAnswer = async (req,res) => {
+    const { id } = req.params; // answer id
+    const ans = await AnswerModel.findById(id).populate('questionId');
+    if(!ans) return res.status(404).json({message:'Answer not found'});
+    // Only question author or teacher/admin can accept
+    const question = await QuestionModel.findById(ans.question._id);
+    if(!question) return res.status(404).json({message:'Question not found'});
+    if(question.author.toString() !== req.user._id.toString()){
+        return res.status(403).json({message:'Not allowed'});
+    }
+    ans.isAccepted = true;
+    await ans.save();
+    question.isSolved = true;
+    await question.save();
+
+    // Add point to answer author
+} 
 
 export const updateComment = async (req, res) => {
     const commentId = req.params.id;

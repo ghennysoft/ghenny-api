@@ -11,6 +11,7 @@ import { app, server } from './socket.js';
 import AuthRoute from './Routes/AuthRoute.js';
 import UserRoute from './Routes/ProfileRoute.js';
 import PostRoute from './Routes/PostRoute.js';
+import StoryRoute from './Routes/StoryRoute.js';
 import QuestionRoute from './Routes/QuestionRoute.js';
 import AnswerRoute from './Routes/AnswerRoute.js';
 import CommentRoute from './Routes/CommentRoute.js';
@@ -26,9 +27,7 @@ const port = process.env.PORT || 5000;
 const corsOptions = {
     origin: [
         "http://localhost:3000", 
-        "http://localhost:3001",
-        "http://localhost:5000", 
-        "http://localhost:5001",  
+        "http://localhost:5000",
         "https://ghenny.vercel.app",
         "https://ghenny.com",
         "https://www.ghenny.com",
@@ -54,16 +53,21 @@ app.use(express.static('public'));
 
 let MONGO_URL;
 
-if(process.env.NODE_ENV == 'production') {
-    MONGO_URL = mongoose.connect(process.env.MONGODB_PRODUCTION_URL, {
-        serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
-    });
-    console.log('On production');
-} else {
+if(process.env.NODE_ENV == 'developpement') {
     MONGO_URL = mongoose.connect(process.env.MONGODB_LOCAL_URL, {
         serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
     });
     console.log('On developpment');
+} else if(process.env.NODE_ENV == 'test') {
+    MONGO_URL = mongoose.connect(process.env.MONGODB_TEST_URL, {
+        serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
+    });
+    console.log('On test');
+} else {
+    MONGO_URL = mongoose.connect(process.env.MONGODB_PRODUCTION_URL, {
+        serverSelectionTimeoutMS: 30000, // 30s au lieu de 10s
+    });
+    console.log('On production');
 }
 
 MONGO_URL
@@ -78,6 +82,7 @@ MONGO_URL
 app.use('/api/auth', AuthRoute)
 app.use('/api/profile', UserRoute)
 app.use('/api/post', PostRoute)
+app.use('/api/story', StoryRoute)
 app.use('/api/comment', CommentRoute)
 app.use('/api/question', QuestionRoute)
 app.use('/api/answer', AnswerRoute)

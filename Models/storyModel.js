@@ -1,27 +1,36 @@
 import mongoose from "mongoose";
 
-const storySchema = mongoose.Schema({
+const storySchema = new mongoose.Schema({
     author: {
-        type:mongoose.Types.ObjectId, 
-        ref: 'Profiles', 
-        required: true,
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Profiles',
+        required: true
     },
-    type: {
+    mediaType: {
         type: String,
-        enum: ["image", "video"],
+        enum: ['image', 'video', 'text'],
+        required: true
     },
-    media: {
-        type: Array,
-        default: [],
+    mediaUrl: {
+        type: String
     },
-    viewers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
-    createdAt: { 
-        type: Date, 
-        default: Date.now,
-        expires: 86400,
+    textContent: {
+        type: String
     },
-},
-{
+    backgroundColor: {
+        type: String,
+        default: '#000000'
+    },
+    views: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Profiles'
+    }],
+    expiresAt: {
+        type: Date,
+        default: () => new Date(Date.now() + 24 * 60 * 60 * 1000),
+        index: { expires: '24h' }
+    }
+}, {
     timestamps: true
 });
 
