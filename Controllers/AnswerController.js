@@ -1,25 +1,29 @@
 import AnswerModel from "../Models/answerModel.js";
 import QuestionModel from "../Models/questionModel.js";
+import GamificationService from "../utils/gamification.js";
 
 export const addAnswer = async (req, res) => {
+    const author = req.user._id
     try {
         if(!req.body.content) {
             res.status(400).json('Tapez votre reponse...')
         } else if(!req.body.questionId) {
             res.status(400).json('Question id empty...')
         } else {
-            const newAnswer = new AnswerModel(req.body);
+            const newAnswer = new AnswerModel({
+                content: req.body.content,
+                questionId: req.body.questionId,
+                author
+            });
             await newAnswer.save();
 
             const find_question = await QuestionModel.findById(req.body.questionId)
             await find_question.updateOne({$push: {"answers": newAnswer._id}})
             find_question.save()
 
-            // Points pour la réponse
-            await GamificationService.awardPoints(req.user._id, 'answer_question', answer._id);
-
-            // Points pour celui qui a posé la question
-            await GamificationService.awardPoints(find_question.author, 'receive_answer', answer._id);
+            // Add point
+            await GamificationService.awardPoints(req.user._id, 'answer_question', newAnswer._id, 'answer');
+            await GamificationService.awardPoints(find_question?.author?._id, 'receive_answer', find_question?._id, 'question');
 
             res.status(200).json({
                 message: "Reponse ajouté avec success!", 
@@ -28,6 +32,7 @@ export const addAnswer = async (req, res) => {
             })
         }
     } catch (error) {
+        console.log(error);        
         res.status(500).json(error)
     }
 }

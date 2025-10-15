@@ -46,7 +46,7 @@ export const addUserSubject = async (req, res) => {
 export const addQuestion = async (req, res) => {
     const { title, content, tags, category, type } = req.body;
     try {
-        if(!content) {
+        if(!title, !content, !category, !type) {
             res.status(400).json('Ajoutez du contenu...')
         } else {
             const newQuestion = await QuestionModel.create({
@@ -56,16 +56,16 @@ export const addQuestion = async (req, res) => {
                 category,
                 type,
                 author: req.user._id,
-                etablissment: req.user.status==='student'?req.user.university:req.user.school
+                etablissment: req.user.status==='student' ? req.user.university : req.user.school
             });
             await newQuestion.save();
 
             // Add point
-            await GamificationService.awardPoints(req.user._id, 'ask_question', question._id);
-            
+            await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
             res.status(200).json(newQuestion)
         }
     } catch (error) {
+        console.log({error});
         res.status(500).json(error)
     }
 }
@@ -77,7 +77,7 @@ export const getQuestions = async (req, res) => {
         const questions = await QuestionModel.find({$or: [{author: getUser._id}, {subjects: {$in: getUser.subjects}}]}).sort({createdAt: -1})
         .populate({
             path: 'author',
-            select: 'userId profilePicture -_id',
+            select: 'userId profilePicture privileges reputation level experience badges',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
@@ -94,12 +94,14 @@ export const getQuestions = async (req, res) => {
                 }
             }
         })
-        .populate({
-            path: 'subjects',
-            select: '_id name color',
-        })
+        // .populate({
+        //     path: 'subjects',
+        //     select: '_id name color',
+        // })
+        // console.log({questions});
         res.status(200).json(questions)
     } catch (error) {
+        console.log({error});
         res.status(500).json(error)
     }
 }
@@ -144,7 +146,7 @@ export const getSingleQuestion = async (req, res) => {
         const question = await QuestionModel.findById(id)
         .populate({
             path: 'author',
-            select: 'userId profilePicture',
+            select: 'userId profilePicture privileges reputation level experience badges',
             populate: {
                 path: 'userId',
                 select: 'username firstname lastname',
@@ -161,10 +163,10 @@ export const getSingleQuestion = async (req, res) => {
                 }
             }
         })
-        .populate({
-            path: 'subjects',
-            select: '_id name color',
-        })
+        // .populate({
+        //     path: 'subjects',
+        //     select: '_id name color',
+        // })
 
         // Add viewer
         if(userId){
@@ -245,21 +247,28 @@ export const deleteQuestion = async (req, res) => {
 }
 
 export const likeQuestion = async (req, res) => {
-    const {currentUserId, questionId} = req.body;
+    const {questionId} = req.body;
+    const currentUserId = req.user._id
     
     try {
         const question = await QuestionModel.findById(questionId)
         if(!question.likes.includes(currentUserId)) {
             if(!question.dislikes.includes(currentUserId)) {
                 await question.updateOne({$push: {likes:currentUserId}});
+                // Add point
+                await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
                 res.status(200).json('Question push Like!')
             } else {
                 await question.updateOne({$pull: {dislikes:currentUserId}});
                 await question.updateOne({$push: {likes:currentUserId}});
+                // Add point
+                await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
                 res.status(200).json('Question pull dislike & push like!')
             }
         } else {
             await question.updateOne({$pull: {likes:currentUserId}});
+            // Add point
+            await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
             res.status(200).json('Question pull like!')
         }
     } catch (error) {
