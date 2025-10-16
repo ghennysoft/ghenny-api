@@ -65,7 +65,7 @@ export const addQuestion = async (req, res) => {
             res.status(200).json(newQuestion)
         }
     } catch (error) {
-        console.log({error});
+        // console.log({error});
         res.status(500).json(error)
     }
 }
@@ -101,7 +101,7 @@ export const getQuestions = async (req, res) => {
         // console.log({questions});
         res.status(200).json(questions)
     } catch (error) {
-        console.log({error});
+        // console.log({error});
         res.status(500).json(error)
     }
 }
@@ -246,54 +246,169 @@ export const deleteQuestion = async (req, res) => {
     }
 }
 
-export const likeQuestion = async (req, res) => {
-    const {questionId} = req.body;
-    const currentUserId = req.user._id
+export const voteQuestion = async (req, res) => {
+  try {
+    const { voteType } = req.body; // 'up' or 'down'
+    const post = await Post.findById(req.params.postId);
     
-    try {
-        const question = await QuestionModel.findById(questionId)
-        if(!question.likes.includes(currentUserId)) {
-            if(!question.dislikes.includes(currentUserId)) {
-                await question.updateOne({$push: {likes:currentUserId}});
-                // Add point
-                await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
-                res.status(200).json('Question push Like!')
-            } else {
-                await question.updateOne({$pull: {dislikes:currentUserId}});
-                await question.updateOne({$push: {likes:currentUserId}});
-                // Add point
-                await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
-                res.status(200).json('Question pull dislike & push like!')
-            }
-        } else {
-            await question.updateOne({$pull: {likes:currentUserId}});
-            // Add point
-            await GamificationService.awardPoints(req.user._id, 'ask_question', newQuestion._id, 'question');
-            res.status(200).json('Question pull like!')
-        }
-    } catch (error) {
-        res.status(500).json(error)
+    if (!post) {
+      return res.status(404).json({ error: 'Post non trouvé' });
     }
-}
 
-export const dislikeQuestion = async (req, res) => {
-    const {currentUserId, questionId} = req.body;
-    try {
-        const question = await QuestionModel.findById(questionId)
-        if(!question.dislikes.includes(currentUserId)) {
-            if(!question.likes.includes(currentUserId)) {
-                await question.updateOne({$push: {dislikes:currentUserId}});
-                res.status(200).json('Question push dislike!')
-            } else {
-                await question.updateOne({$pull: {likes:currentUserId}});
-                await question.updateOne({$push: {dislikes:currentUserId}});
-                res.status(200).json('Question pull like & push dislike!')
-            }
+    // Vérifier si l'utilisateur a déjà voté
+    const existingVoteIndex = post.votes.voters.findIndex(
+      v => v.userId.toString() === req.user.id
+    );
+
+    if (existingVoteIndex > -1) {
+      const existingVote = post.votes.voters[existingVoteIndex];
+      
+      // Si même vote, annuler
+      if (existingVote.voteType === voteType) {
+        post.votes.voters.splice(existingVoteIndex, 1);
+        if (voteType === 'up') post.votes.upvotes -= 1;
+        else post.votes.downvotes -= 1;
+      } else {
+        // Changer de vote
+        existingVote.voteType = voteType;
+        if (voteType === 'up') {
+          post.votes.upvotes += 1;
+          post.votes.downvotes -= 1;
         } else {
-            await question.updateOne({$pull: {dislikes:currentUserId}});
-            res.status(200).json('Question pull dislike!')
+          post.votes.downvotes += 1;
+          post.votes.upvotes -= 1;
         }
-    } catch (error) {
-        res.status(500).json(error)
+      }
+    } else {
+      // Nouveau vote
+      post.votes.voters.push({ userId: req.user.id, voteType });
+      if (voteType === 'up') post.votes.upvotes += 1;
+      else post.votes.downvotes += 1;
     }
-}
+
+    await post.save();
+
+    // Attribution des points pour le vote
+    if (post.author.toString() !== req.user.id) {
+      const points = voteType === 'up' ? 3 : -3;
+      await require('../services/gamificationService').awardPoints(
+        post.author, 
+        voteType === 'up' ? 'receive_upvote' : 'receive_downvote',
+        post._id
+      );
+    }
+
+    res.json({
+      upvotes: post.votes.upvotes,
+      downvotes: post.votes.downvotes,
+      userVote: post.votes.voters.find(v => v.userId.toString() === req.user.id)?.voteType
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+export const searchQuestion = async (req, res) => {
+  try {
+    const { 
+      q: searchQuery, 
+      category, 
+      tags, 
+      type, 
+      university,
+      sortBy = 'recent',
+      page = 1,
+      limit = 20
+    } = req.query;
+
+    let query = { type: { $in: ['question', 'discussion'] } };
+    
+    // Recherche texte
+    if (searchQuery) {
+      query.$or = [
+        { title: { $regex: searchQuery, $options: 'i' } },
+        { content: { $regex: searchQuery, $options: 'i' } },
+        { tags: { $in: [new RegExp(searchQuery, 'i')] } }
+      ];
+    }
+
+    // Filtres
+    if (category) query.category = category;
+    if (type) query.type = type;
+    if (university) query.university = university;
+    if (tags) {
+      const tagArray = tags.split(',');
+      query.tags = { $in: tagArray.map(tag => new RegExp(tag, 'i')) };
+    }
+
+    // Tri
+    let sortOptions = {};
+    switch (sortBy) {
+      case 'recent':
+        sortOptions = { createdAt: -1 };
+        break;
+      case 'popular':
+        sortOptions = { 'votes.upvotes': -1, createdAt: -1 };
+        break;
+      case 'trending':
+        sortOptions = { viewCount: -1, 'votes.upvotes': -1 };
+        break;
+      case 'unanswered':
+        query.answerCount = 0;
+        sortOptions = { createdAt: -1 };
+        break;
+      default:
+        sortOptions = { createdAt: -1 };
+    }
+
+    const posts = await QuestionModel.find(query)
+      .populate('author', 'username reputation level avatar university')
+      .sort(sortOptions)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
+
+    const total = await QuestionModel.countDocuments(query);
+
+    res.json({
+      posts,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Signaler un post
+export const reportQuestion =  async (req, res) => {
+  try {
+    const { reason } = req.body;
+    // Implémentation de la logique de signalement
+    res.json({ message: 'Contenu signalé avec succès' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Sauvegarder un post
+export const saveQuestion =  async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const postId = req.params.postId;
+
+    const isSaved = user.savedPosts.includes(postId);
+    
+    if (isSaved) {
+      user.savedPosts = user.savedPosts.filter(id => id.toString() !== postId);
+    } else {
+      user.savedPosts.push(postId);
+    }
+
+    await user.save();
+    res.json({ saved: !isSaved });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

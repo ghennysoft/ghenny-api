@@ -52,7 +52,6 @@ export const gschoolConnection = async (req, res) => {
             // console.log({ RESULTAT: 'NO GSCHOOL CONNECTION' });
         }
     } catch (error) {
-        console.log({ERROR: error.message});
         res.status(500).json({error: error.message});
     }
 }
@@ -112,11 +111,9 @@ export const searchData = async (req, res) => {
 
 export const getProfileById = async (req, res) => {
     const paramId = req.params.id;
-    console.log(req.params.id);
     try {
         const profile = await UserModel.findById(paramId)
         .select("firstname lastname")
-        console.log({profile});
 
         if(!profile){
             return res.status(404).json("No such profile exist");
@@ -135,22 +132,22 @@ export const getProfile = async (req, res) => {
         const profile = await ProfileModel.findOne({userId: user._id})
         .select('userId profilePicture coverPicture status school option university filiere profession entreprise bio birthday createdAt followings followers gender subjects')
         .populate("userId", "city country firstname lastname phone_code username")
-        // .populate({
-        //     path: "followings",
-        //     select: 'userId profilePicture status school option university filiere profession entreprise',
-        //     populate: {
-        //         path: 'userId',
-        //         select: 'username firstname lastname',
-        //     }
-        // })
-        // .populate({
-        //     path: "followers",
-        //     select: 'userId profilePicture status school option university filiere profession entreprise',
-        //     populate: {
-        //         path: 'userId',
-        //         select: 'username firstname lastname',
-        //     }
-        // })
+        .populate({
+            path: "followings.user",
+            select: 'userId profilePicture status school option university filiere profession entreprise',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
+        .populate({
+            path: "followers.user",
+            select: 'userId profilePicture status school option university filiere profession entreprise',
+            populate: {
+                path: 'userId',
+                select: 'username firstname lastname',
+            }
+        })
 
         if(profile){
             res.status(200).json(profile)
@@ -166,7 +163,6 @@ export const getFollowData = async (req, res) => {
     const paramId = req.params.id;  
     try {
         const profile = await ProfileModel.findById(paramId)
-        
         const followingUsers = profile.followings
         let followingsProfile = {};
         let followings = [];
@@ -196,7 +192,6 @@ export const getFollowData = async (req, res) => {
                 followers.push(followersProfile);
             }
         }
-
         res.status(200).json({followings, followers});        
     } catch (error) {
         res.status(500).json(error)
@@ -215,11 +210,9 @@ export const followUnfollowUser = async (req, res) => {
         }
 
         // Vérifier si l'utilisateur suit déjà déjà
-        console.log({PROFILE: currentProfile})
         const alreadyFollowed = currentProfile.followings.find(follow => 
             follow.user.toString() === foreignUserId
         );
-        console.log({Followed: alreadyFollowed})
         if(!alreadyFollowed) {
             await ProfileModel.findByIdAndUpdate(
                 currentUserId,
@@ -279,7 +272,6 @@ export const followUnfollowUser = async (req, res) => {
             res.status(200).json('Profile unfollowed!')
         }
     } catch (error) {
-        console.log(error)
         res.status(500).json(error)
     }
 }
@@ -288,8 +280,8 @@ export const followUnfollowUser = async (req, res) => {
 export const completeProfile = async (req, res) => {
     const {gender, birthday, status, school, option, university, filiere, entreprise, profession} = req.body;
     const {profileId, userId} = req.params;
-    console.log({FILES: req.file});
-    console.log({DATA: req.body});
+    // console.log({FILES: req.file});
+    // console.log({DATA: req.body});
 
     if(profileId) {
         if(!gender, !birthday, !status){
@@ -308,7 +300,6 @@ export const completeProfile = async (req, res) => {
 
                 res.status(200).json(profile)
             } catch (error) {
-                console.log(error)
                 res.status(500).json(error)
             }
         }
@@ -353,7 +344,6 @@ export const updateProfile = async (req, res) => {
                 'refreshToken': new_refresh_token,
             })
         } catch (error) {
-            console.log(error);
             res.status(500).json(error);
         }
     } else {
@@ -485,7 +475,6 @@ export const getBirthdayWishes = async (req, res) => {
         }
         res.status(200).json(wishes)
     } catch (error) {
-        console.log(error)
         res.status(500).json(error)
     }
 }
@@ -602,7 +591,6 @@ export const getUsersToFollow = async (req, res) => {
         res.status(200).json(filteredUsers);
 
     } catch (error) {
-        console.error("Erreur dans getUsersToFollow:", error);
         res.status(500).json({ 
             message: "Erreur serveur lors de la récupération des utilisateurs à suivre",
             error: error.message 

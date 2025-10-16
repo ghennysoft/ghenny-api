@@ -37,6 +37,53 @@ export const addAnswer = async (req, res) => {
     }
 }
 
+
+export const acceptAnswer2 = async (req, res) => {
+  try {
+    const { answerId } = req.body;
+    const question = await Post.findById(req.params.questionId);
+    const answer = await Post.findById(answerId);
+
+    if (!question || !answer) {
+      return res.status(404).json({ error: 'Question ou réponse non trouvée' });
+    }
+
+    // Vérifier que l'utilisateur est l'auteur de la question
+    if (question.author.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Non autorisé' });
+    }
+
+    // Empêcher d'accepter sa propre réponse
+    if (answer.author.toString() === req.user.id) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas accepter votre propre réponse' });
+    }
+
+    // Réinitialiser l'ancienne réponse acceptée
+    await Post.updateMany(
+      { parentPost: question._id, isAccepted: true },
+      { isAccepted: false }
+    );
+
+    // Accepter la nouvelle réponse
+    answer.isAccepted = true;
+    await answer.save();
+
+    question.acceptedAnswer = answerId;
+    await question.save();
+
+    // Points pour la réponse acceptée
+    await require('../services/gamificationService').awardPoints(
+      answer.author,
+      'answer_accepted',
+      answer._id
+    );
+
+    res.json({ message: 'Réponse acceptée avec succès' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 export const acceptAnswer = async (req,res) => {
     const { id } = req.params; // answer id
     const ans = await AnswerModel.findById(id).populate('questionId');

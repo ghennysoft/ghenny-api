@@ -11,8 +11,8 @@ const io = new Server(server, {
   cors: {
     origin: [
       "http://localhost:3000", 
-      "http://localhost:5000", 
-      "https://ghenny.vercel.app",
+      "http://localhost:5000",
+      "https://ghenny-1.onrender.com",
       "https://ghenny.com",
       "https://www.ghenny.com",
     ],
