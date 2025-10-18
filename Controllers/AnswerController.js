@@ -37,70 +37,52 @@ export const addAnswer = async (req, res) => {
     }
 }
 
+export const acceptAnswer = async (req, res) => {
+    try {
+        const { answerId } = req.body;
+        const question = await QuestionModel.findById(req.params.questionId);
+        const answer = await AnswerModel.findById(answerId);
 
-export const acceptAnswer2 = async (req, res) => {
-  try {
-    const { answerId } = req.body;
-    const question = await Post.findById(req.params.questionId);
-    const answer = await Post.findById(answerId);
+        if (!question || !answer) {
+        return res.status(404).json({ error: 'Question ou réponse non trouvée' });
+        }
 
-    if (!question || !answer) {
-      return res.status(404).json({ error: 'Question ou réponse non trouvée' });
+        // Vérifier que l'utilisateur est l'auteur de la question
+        if (question.author.toString() !== req.user._id) {
+        return res.status(403).json({ error: 'Non autorisé' });
+        }
+
+        // Empêcher d'accepter sa propre réponse
+        if (answer.author.toString() === req.user._id) {
+        return res.status(400).json({ error: 'Vous ne pouvez pas accepter votre propre réponse' });
+        }
+
+        // Réinitialiser l'ancienne réponse acceptée
+        // await AnswerModel.updateMany(
+        // { questionId: question._id, isAccepted: true },
+        // { isAccepted: false }
+        // );
+
+        // Accepter la nouvelle réponse
+        answer.isAccepted = true;
+        await answer.save();
+
+        question.acceptedAnswer = answerId;
+        await question.save();
+
+        // Points pour la réponse acceptée
+        await GamificationService.awardPoints(
+            answer.author._id, 
+            'answer_accepted',
+            answer._id, 
+            'answer'
+        );
+
+        res.status(200).json({ message: 'Réponse acceptée avec succès' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
     }
-
-    // Vérifier que l'utilisateur est l'auteur de la question
-    if (question.author.toString() !== req.user.id) {
-      return res.status(403).json({ error: 'Non autorisé' });
-    }
-
-    // Empêcher d'accepter sa propre réponse
-    if (answer.author.toString() === req.user.id) {
-      return res.status(400).json({ error: 'Vous ne pouvez pas accepter votre propre réponse' });
-    }
-
-    // Réinitialiser l'ancienne réponse acceptée
-    await Post.updateMany(
-      { parentPost: question._id, isAccepted: true },
-      { isAccepted: false }
-    );
-
-    // Accepter la nouvelle réponse
-    answer.isAccepted = true;
-    await answer.save();
-
-    question.acceptedAnswer = answerId;
-    await question.save();
-
-    // Points pour la réponse acceptée
-    await require('../services/gamificationService').awardPoints(
-      answer.author,
-      'answer_accepted',
-      answer._id
-    );
-
-    res.json({ message: 'Réponse acceptée avec succès' });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 };
-
-export const acceptAnswer = async (req,res) => {
-    const { id } = req.params; // answer id
-    const ans = await AnswerModel.findById(id).populate('questionId');
-    if(!ans) return res.status(404).json({message:'Answer not found'});
-    // Only question author or teacher/admin can accept
-    const question = await QuestionModel.findById(ans.question._id);
-    if(!question) return res.status(404).json({message:'Question not found'});
-    if(question.author.toString() !== req.user._id.toString()){
-        return res.status(403).json({message:'Not allowed'});
-    }
-    ans.isAccepted = true;
-    await ans.save();
-    question.isSolved = true;
-    await question.save();
-
-    // Add point to answer author
-} 
 
 export const updateComment = async (req, res) => {
     const commentId = req.params.id;
@@ -134,46 +116,104 @@ export const deleteComment = async (req, res) => {
     }
 }
 
-export const likeAnswer = async (req, res) => {
-    const {currentUserId, answerId} = req.body;
-    try {
-        const answer = await AnswerModel.findById(answerId)
-        if(!answer.likes.includes(currentUserId)) {
-            if(!answer.dislikes.includes(currentUserId)) {
-                await answer.updateOne({$push: {likes:currentUserId}});
-                res.status(200).json('Answer push Like!')
-            } else {
-                await answer.updateOne({$pull: {dislikes:currentUserId}});
-                await answer.updateOne({$push: {likes:currentUserId}});
-                res.status(200).json('Answer pull dislike & push like!')
-            }
-        } else {
-            await answer.updateOne({$pull: {likes:currentUserId}});
-            res.status(200).json('Answer pull like!')
-        }
-    } catch (error) {
-        res.status(500).json(error)
+export const voteAnswer = async (req, res) => {
+  try {
+    const { voteType } = req.body; // 'up' or 'down'
+    const post = await AnswerModel.findById(req.params.answerId);
+    
+    if (!post) {
+      console.log('Post non trouvé');
+      return res.status(404).json({ error: 'Post non trouvé' });
     }
-}
 
-export const dislikeAnswer = async (req, res) => {
-    const {currentUserId, answerId} = req.body;
-    try {
-        const answer = await AnswerModel.findById(answerId)
-        if(!answer.dislikes.includes(currentUserId)) {
-            if(!answer.likes.includes(currentUserId)) {
-                await answer.updateOne({$push: {dislikes:currentUserId}});
-                res.status(200).json('Answer push dislike!')
-            } else {
-                await answer.updateOne({$pull: {likes:currentUserId}});
-                await answer.updateOne({$push: {dislikes:currentUserId}});
-                res.status(200).json('Answer pull like & push dislike!')
-            }
+    // Vérifier si l'utilisateur a déjà voté
+    const existingVoteIndex = post.votes.voters.findIndex(
+      v => v?.userId?.toString() === req.user._id
+    );
+
+    if (existingVoteIndex > -1) {
+      const existingVote = post.votes.voters[existingVoteIndex];
+      
+      // Si même vote, annuler
+      if (existingVote.voteType === voteType) {
+        post.votes.voters.splice(existingVoteIndex, 1);
+        if (voteType === 'up') post.votes.upvotes -= 1;
+        else post.votes.downvotes -= 1;
+      } else {
+        // Changer de vote
+        existingVote.voteType = voteType;
+        if (voteType === 'up') {
+          post.votes.upvotes += 1;
+          post.votes.downvotes -= 1;
         } else {
-            await answer.updateOne({$pull: {dislikes:currentUserId}});
-            res.status(200).json('Answer pull dislike!')
+          post.votes.downvotes += 1;
+          post.votes.upvotes -= 1;
         }
-    } catch (error) {
-        res.status(500).json(error)
+      }
+    } else {
+      // Nouveau vote
+      post.votes.voters.push({ userId: req.user._id, voteType });
+      if (voteType === 'up') post.votes.upvotes += 1;
+      else post.votes.downvotes += 1;
     }
-}
+
+    await post.save();
+
+    // Attribution des points pour le vote
+    if (post?.author?.toString() !== req.user._id) {
+      await GamificationService.awardPoints(
+        post.author, 
+        voteType === 'up' ? 'receive_answer_upvote' : 'receive_answer_downvote',
+        post._id, 
+        'answer'
+      );
+      await GamificationService.awardPoints(
+        req.user._id, 
+        voteType === 'up' ? 'give_answer_upvote' : 'give_answer_downvote',
+        post._id, 
+        'answer'
+      );
+    }
+
+    res.status(200).json({
+      upvotes: post.votes.upvotes,
+      downvotes: post.votes.downvotes,
+      userVote: post.votes.voters.find(v => v?.userId?.toString() === req.user._id)?.voteType
+    });
+  } catch (error) {
+    // console.log(error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Signaler un post
+export const reportQuestion =  async (req, res) => {
+  try {
+    const { reason } = req.body;
+    // Implémentation de la logique de signalement
+    res.json({ message: 'Contenu signalé avec succès' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Sauvegarder un post
+export const saveQuestion =  async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const postId = req.params.postId;
+
+    const isSaved = user.savedPosts.includes(postId);
+    
+    if (isSaved) {
+      user.savedPosts = user.savedPosts.filter(id => id.toString() !== postId);
+    } else {
+      user.savedPosts.push(postId);
+    }
+
+    await user.save();
+    res.json({ saved: !isSaved });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

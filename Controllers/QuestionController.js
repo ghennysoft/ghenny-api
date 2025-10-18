@@ -79,15 +79,15 @@ export const getQuestions = async (req, res) => {
             path: 'author',
             select: 'userId profilePicture privileges reputation level experience badges',
             populate: {
-                path: 'userId',
-                select: 'username firstname lastname',
+              path: 'userId',
+              select: 'username firstname lastname',
             }
         })
         .populate({
             path: 'answers',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture studyAt domain',
+                select: 'userId profilePicture privileges reputation level experience badges',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -156,7 +156,7 @@ export const getSingleQuestion = async (req, res) => {
             path: 'answers',
             populate: {
                 path: 'author',
-                select: 'userId profilePicture studyAt domain',
+                select: 'userId profilePicture privileges reputation level experience badges',
                 populate: {
                     path: 'userId',
                     select: 'username firstname lastname',
@@ -249,15 +249,16 @@ export const deleteQuestion = async (req, res) => {
 export const voteQuestion = async (req, res) => {
   try {
     const { voteType } = req.body; // 'up' or 'down'
-    const post = await Post.findById(req.params.postId);
+    const post = await QuestionModel.findById(req.params.questionId);
     
     if (!post) {
+      console.log('Post non trouvé');
       return res.status(404).json({ error: 'Post non trouvé' });
     }
 
     // Vérifier si l'utilisateur a déjà voté
     const existingVoteIndex = post.votes.voters.findIndex(
-      v => v.userId.toString() === req.user.id
+      v => v?.userId?.toString() === req.user._id
     );
 
     if (existingVoteIndex > -1) {
@@ -281,7 +282,7 @@ export const voteQuestion = async (req, res) => {
       }
     } else {
       // Nouveau vote
-      post.votes.voters.push({ userId: req.user.id, voteType });
+      post.votes.voters.push({ userId: req.user._id, voteType });
       if (voteType === 'up') post.votes.upvotes += 1;
       else post.votes.downvotes += 1;
     }
@@ -289,21 +290,28 @@ export const voteQuestion = async (req, res) => {
     await post.save();
 
     // Attribution des points pour le vote
-    if (post.author.toString() !== req.user.id) {
-      const points = voteType === 'up' ? 3 : -3;
-      await require('../services/gamificationService').awardPoints(
+    if (post?.author?.toString() !== req.user._id) {
+      await GamificationService.awardPoints(
         post.author, 
-        voteType === 'up' ? 'receive_upvote' : 'receive_downvote',
-        post._id
+        voteType === 'up' ? 'receive_question_upvote' : 'receive_question_downvote',
+        post._id, 
+        'question'
+      );
+      await GamificationService.awardPoints(
+        req.user._id, 
+        voteType === 'up' ? 'give_question_upvote' : 'give_question_downvote',
+        post._id, 
+        'question'
       );
     }
 
-    res.json({
+    res.status(200).json({
       upvotes: post.votes.upvotes,
       downvotes: post.votes.downvotes,
-      userVote: post.votes.voters.find(v => v.userId.toString() === req.user.id)?.voteType
+      userVote: post.votes.voters.find(v => v?.userId?.toString() === req.user._id)?.voteType
     });
   } catch (error) {
+    // console.log(error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -362,7 +370,14 @@ export const searchQuestion = async (req, res) => {
     }
 
     const posts = await QuestionModel.find(query)
-      .populate('author', 'username reputation level avatar university')
+      .populate({
+        path: 'author',
+        select: 'userId profilePicture privileges reputation level experience badges',
+        populate: {
+          path: 'userId',
+          select: 'username firstname lastname',
+        }
+      })
       .sort(sortOptions)
       .limit(limit * 1)
       .skip((page - 1) * limit)

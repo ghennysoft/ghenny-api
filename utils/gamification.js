@@ -8,10 +8,16 @@ export default class GamificationService {
       'receive_answer': 1,
       'answer_question': 5,
       'answer_accepted': 15,
-      'receive_upvote': 3,
-      'receive_downvote': -3,
-      'give_upvoted': 2,
-      'give_downvoted': -1,
+
+      'receive_question_upvote': 3,
+      'receive_question_downvote': -3,
+      'give_question_upvote': 1,
+      'give_question_downvote': -1,
+
+      'receive_answer_upvote': 3,
+      'receive_answer_downvote': -3,
+      'give_answer_upvote': 1,
+      'give_answer_downvote': -1,
     };
 
     const points = pointsConfig[action];

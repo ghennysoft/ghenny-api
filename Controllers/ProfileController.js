@@ -130,7 +130,7 @@ export const getProfile = async (req, res) => {
         const user = await UserModel.findOne({username: paramId});
         
         const profile = await ProfileModel.findOne({userId: user._id})
-        .select('userId profilePicture coverPicture status school option university filiere profession entreprise bio birthday createdAt followings followers gender subjects')
+        .select('userId profilePicture coverPicture status school option university filiere profession entreprise bio birthday createdAt followings followers gender subjects reputation level experience privileges badges')
         .populate("userId", "city country firstname lastname phone_code username")
         .populate({
             path: "followings.user",
@@ -280,8 +280,6 @@ export const followUnfollowUser = async (req, res) => {
 export const completeProfile = async (req, res) => {
     const {gender, birthday, status, school, option, university, filiere, entreprise, profession} = req.body;
     const {profileId, userId} = req.params;
-    // console.log({FILES: req.file});
-    // console.log({DATA: req.body});
 
     if(profileId) {
         if(!gender, !birthday, !status){

@@ -16,6 +16,7 @@ const questionSchema = mongoose.Schema({
     // isSolved: { type: Boolean, default: false },
     // subjects: [{type:mongoose.Types.ObjectId, ref: 'Subjects'}],
     answers: [{type:mongoose.Types.ObjectId, ref: 'Answers'}],
+    acceptedAnswer: { type: mongoose.Schema.Types.ObjectId, ref: 'Answers' },
     votes: {
         upvotes: { type: Number, default: 0 },
         downvotes: { type: Number, default: 0 },
